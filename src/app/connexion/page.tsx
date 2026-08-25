@@ -8,6 +8,14 @@ const errorMessages: Record<string, string> = {
   pseudo: "Le nom affiché ne peut pas dépasser 64 caractères.",
   "mot-de-passe": "Le mot de passe doit contenir au moins 10 caractères.",
   inscription: "L’inscription n’a pas pu être finalisée. Vérifiez l’adresse utilisée ou réessayez plus tard.",
+  confirmation: "Le lien de confirmation est invalide ou a expiré. Vous pouvez recommencer la connexion ou l’inscription.",
+  profil: "Votre session est valide, mais votre profil membre n’a pas pu être chargé.",
+};
+
+const statusMessages: Record<string, string> = {
+  confirmation: "Votre compte est créé. Consultez votre boîte mail pour confirmer votre adresse avant la première connexion.",
+  "connexion-requise": "Connectez-vous pour accéder à cet espace réservé aux membres.",
+  deconnexion: "Vous êtes maintenant déconnecté d’Imetheran.",
 };
 
 export default async function ConnexionPage({
@@ -17,7 +25,7 @@ export default async function ConnexionPage({
 }) {
   const query = await searchParams;
   const error = query.erreur ? errorMessages[query.erreur] ?? "Une erreur est survenue." : null;
-  const confirmation = query.message === "confirmation";
+  const status = query.message ? statusMessages[query.message] : null;
 
   return (
     <main className="site-shell auth-page">
@@ -35,11 +43,7 @@ export default async function ConnexionPage({
 
       <section className="content-frame auth-workspace">
         {error ? <div className="auth-message auth-message--error">{error}</div> : null}
-        {confirmation ? (
-          <div className="auth-message auth-message--success">
-            Votre compte est créé. Consultez votre boîte mail pour confirmer votre adresse avant la première connexion.
-          </div>
-        ) : null}
+        {status ? <div className="auth-message auth-message--success">{status}</div> : null}
 
         <div className="auth-grid">
           <section className="auth-card" aria-labelledby="login-title">
