@@ -1,14 +1,14 @@
-/* High-resolution artwork overrides.
-   Keep source images crisp: no artificial scaling/filtering on large header surfaces. */
+/* High-resolution artwork and per-surface crops.
+   Sources are hosted on the official FINAL FANTASY XIV CDN. */
 
 html[data-theme="dawntrail"] {
-  --hero-image: url("https://www.rpgfan.com/wp-content/uploads/2023/07/Final-Fantasy-XIV-Dawntrail-Screenshot-134.webp");
-  --hero-position: center 46%;
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/promo/h/o/6F9d70QYOM7hm9l0UvcOk6QUmA.jpg");
+  --hero-position: center 52%;
 }
 
 html[data-theme="evercold"] {
   --hero-image: url("https://lds-img.finalfantasyxiv.com/promo/h/b/IsIWQSvkiOGMfTAEcb97ehqVT4.jpg");
-  --hero-position: center 48%;
+  --hero-position: center 46%;
 }
 
 .hero__image,
@@ -21,10 +21,29 @@ html[data-theme="evercold"] {
   image-rendering: auto;
 }
 
+/* Main portal: keep the city and horizon visible rather than centering blindly. */
+.hero__image { background-position: center 50%; }
+html[data-theme="evercold"] .hero__image { background-position: center 44%; }
+
+/* Interior headers are shallower, so bias upward to retain the focal point. */
+.section-hero__image,
+.forum-hero__image,
+.gazette-hero__image { background-position: center 42%; }
+html[data-theme="evercold"] .section-hero__image,
+html[data-theme="evercold"] .forum-hero__image,
+html[data-theme="evercold"] .gazette-hero__image { background-position: center 38%; }
+
+/* Chronicle teaser can afford a tighter crop. */
+.chronicle-feature__art {
+  background-position: center 52% !important;
+  filter: none !important;
+}
+
 .gazette-cover,
-.gazette-library-card__image {
+.gazette-library-card__image,
+.gazette-issue__hero {
   background-size: cover;
-  background-position: center;
+  background-position: center 48%;
   background-repeat: no-repeat;
   filter: none !important;
   image-rendering: auto;
@@ -32,7 +51,8 @@ html[data-theme="evercold"] {
 
 /* Avoid softening the large editorial visual through inherited effects. */
 .gazette-feature,
-.gazette-library-card {
+.gazette-library-card,
+.gazette-issue {
   backdrop-filter: none;
 }
 
@@ -43,4 +63,12 @@ html[data-theme="evercold"] {
   .gazette-hero__image {
     background-size: cover;
   }
+}
+
+@media (max-width: 700px) {
+  .hero__image { background-position: 56% center; }
+  html[data-theme="evercold"] .hero__image { background-position: 52% center; }
+  .section-hero__image,
+  .forum-hero__image,
+  .gazette-hero__image { background-position: 58% center; }
 }
