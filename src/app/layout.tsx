@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./content-hub.css";
 import "./image-quality.css";
+import "./gazette-issue.css";
 
 export const metadata: Metadata = {
   title: {
