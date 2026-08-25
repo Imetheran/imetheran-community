@@ -1,0 +1,37 @@
+.characters-hero__actions {
+  margin-top: 1.4rem;
+  display: flex;
+  align-items: flex-start;
+  gap: .9rem;
+  flex-wrap: wrap;
+}
+
+.characters-hero__actions .theme-selector {
+  margin-top: 0;
+}
+
+.character-profile-hero__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+.character-profile-hero__nav .button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 680px) {
+  .characters-hero__actions,
+  .character-profile-hero__nav {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .characters-hero__actions .button,
+  .characters-hero__actions .theme-selector,
+  .character-profile-hero__nav .button {
+    width: 100%;
+  }
+}
