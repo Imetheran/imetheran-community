@@ -29,7 +29,7 @@ export const gazettes: GazettePublication[] = [
     status: "published",
     featured: true,
     coverImage:
-      "https://lds-img.finalfantasyxiv.com/promo/h/E/1SEHYS4KGCBLDdODP8sXDovJPg.jpg",
+      "https://www.rpgfan.com/wp-content/uploads/2023/07/Final-Fantasy-XIV-Dawntrail-Screenshot-078.webp",
     highlights: ["Vie communautaire", "Carnet rôleplay", "Cuisine & curiosités"],
   },
 ];
