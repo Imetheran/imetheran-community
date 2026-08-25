@@ -9,6 +9,7 @@ import "./character-editor.css";
 import "./character-actions.css";
 import "./sociogram.css";
 import "./forum-hub.css";
+import "./forum-access.css";
 
 export const metadata: Metadata = {
   title: {
