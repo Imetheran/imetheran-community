@@ -138,7 +138,7 @@ export default function Home() {
 
               <div className="gazette-feature__actions">
                 <Link className="button button--primary" href={`/gazettes#${featuredGazette.slug}`}>Lire la gazette</Link>
-                <span className="gazette-feature__cms-note">Ce bloc sera pilotable depuis l’administration.</span>
+                <span className="gazette-feature__cms-note">Numéro d’essai · contenu provisoire</span>
               </div>
             </div>
           </article>
