@@ -1,0 +1,31 @@
+/* Connected forum states and controls */
+.forum-reply-box__identity select {
+  min-height: 36px;
+  padding: .42rem 2rem .42rem .62rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--text);
+  font: 600 .64rem var(--font-ui);
+}
+
+.forum-reply-box__identity select:focus-visible {
+  outline: 1px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.forum-editor-notice--error {
+  border-color: color-mix(in srgb, #d9776b 58%, var(--border));
+  background: color-mix(in srgb, #9d3930 10%, var(--surface));
+  color: #f0c0b9;
+}
+
+.forum-topic-editor button:disabled,
+.forum-thread-actions button:disabled {
+  cursor: wait;
+  opacity: .62;
+}
+
+.forum-post__content p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
