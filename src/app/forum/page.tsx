@@ -14,24 +14,10 @@ function BoardIcon({ kind }: { kind: string }) {
   );
 }
 
-function SectionMeta({ mode, access, campaign }: {
-  mode: "rp" | "non-rp";
-  access?: "guest-read" | "members";
-  campaign?: boolean;
-}) {
-  return (
-    <div className="forum-section__meta" aria-label="Nature et accès de la catégorie">
-      <span className={`forum-section__mode forum-section__mode--${mode}`}>
-        {mode === "rp" ? "RP" : "Hors-RP"}
-      </span>
-      {access ? (
-        <span className={`forum-section__access forum-section__access--${access}`}>
-          {access === "guest-read" ? "Lecture invités" : "Membres uniquement"}
-        </span>
-      ) : null}
-      {campaign ? <span className="status-pill">Campagne active</span> : null}
-    </div>
-  );
+function accessLabel(access?: string) {
+  if (access === "guest-read") return "Lecture invités";
+  if (access === "members") return "Membres uniquement";
+  return null;
 }
 
 export default function ForumPage() {
@@ -62,8 +48,8 @@ export default function ForumPage() {
             <p className="eyebrow">Index communautaire</p>
             <h2 id="forum-index-title">Les espaces du forum</h2>
             <p>
-              Les zones RP et hors-RP sont maintenant séparées explicitement. Les droits indiqués ici
-              serviront ensuite de base aux permissions du backend.
+              Les zones RP et hors-RP sont séparées explicitement. Les droits indiqués ici serviront ensuite
+              de base aux permissions du backend.
             </p>
           </div>
           <div className="forum-index__summary" aria-label="Résumé du forum">
@@ -78,10 +64,10 @@ export default function ForumPage() {
             <span className="forum-index__notice-mark" aria-hidden="true">✦</span>
             <div>
               <strong>Forum en préparation</strong>
-              <p>La hiérarchie et les règles d’accès sont définies, mais aucune activité fictive n’est affichée avant l’ouverture du backend.</p>
+              <p>La hiérarchie et les règles d’accès sont définies. Les sujets visibles dans certaines sections sont des démonstrations.</p>
             </div>
           </div>
-          <span className="status-pill status-pill--quiet">Structure en cours</span>
+          <span className="status-pill status-pill--quiet">Prototype navigable</span>
         </div>
 
         <div className="forum-sections">
@@ -96,16 +82,16 @@ export default function ForumPage() {
                   </div>
                 </div>
                 <p className="forum-section__subtitle">{section.subtitle}</p>
-                <SectionMeta
-                  mode={section.mode}
-                  access={section.access}
-                  campaign={section.kind === "campaign"}
-                />
+                <div className="forum-section__meta" aria-label="Nature et accès de la catégorie">
+                  <span className={`forum-section__mode forum-section__mode--${section.mode}`}>{section.mode === "rp" ? "RP" : "Hors-RP"}</span>
+                  {section.access ? <span className={`forum-section__access forum-section__access--${section.access}`}>{accessLabel(section.access)}</span> : null}
+                  {section.kind === "campaign" ? <span className="status-pill">Campagne active</span> : null}
+                </div>
               </header>
 
               <div className="forum-board-list">
                 {section.boards.map((board) => (
-                  <article className="forum-board" key={board.id}>
+                  <Link className="forum-board" href={`/forum/${board.slug}`} key={board.id}>
                     <BoardIcon kind={section.kind} />
                     <div className="forum-board__main">
                       <div className="forum-board__title-row">
@@ -121,10 +107,10 @@ export default function ForumPage() {
                     <div className="forum-board__last">
                       <small>Dernier message</small>
                       <strong>{board.lastActivity ?? "Aucune activité"}</strong>
-                      <span>En attente de l’ouverture</span>
+                      <span>{board.slug === "roleplay-libre" ? "Démonstration disponible" : "En attente de l’ouverture"}</span>
                     </div>
                     <span className="forum-board__arrow" aria-hidden="true">→</span>
-                  </article>
+                  </Link>
                 ))}
               </div>
             </section>
