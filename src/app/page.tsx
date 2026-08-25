@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { featuredChronicle, featuredGazette, formatPublicationDate } from "@/content/editorial-content";
+import { characters } from "@/content/character-content";
 
 const forumCategories = [
   { title: "La communauté", description: "Présentations, discussions générales et vie d’Imetheran.", meta: "Accueil & échanges" },
@@ -12,7 +13,7 @@ const forumCategories = [
 
 const editorialItems = [
   { kicker: "Guides", title: "Préparer son personnage", text: "Retrouvez progressivement les bases du RP et les futurs modes d’emploi des outils communautaires.", href: "/guides" },
-  { kicker: "Personnages", title: "Donner vie à son histoire", text: "Les futures fiches RP réuniront identité, histoire et relations de chaque personnage.", href: "/personnages" },
+  { kicker: "Personnages", title: "Donner vie à son histoire", text: "Les fiches RP réunissent identité, histoire, accroches de jeu et relations de chaque personnage.", href: "/personnages" },
   { kicker: "Liens", title: "Tisser les relations", text: "Le futur sociogramme permettra d’explorer les liens, alliances, rivalités et rencontres entre personnages.", href: "/liens" },
 ];
 
@@ -208,20 +209,33 @@ export default function Home() {
           <header className="section-heading section-heading--row">
             <div>
               <p className="eyebrow">Carnet de rencontres</p>
-              <h2 id="characters-title">Personnages récemment actifs</h2>
+              <h2 id="characters-title">Personnages à découvrir</h2>
             </div>
-            <Link className="text-link" href="/personnages">Voir les personnages <span aria-hidden="true">→</span></Link>
+            <Link className="text-link" href="/personnages">Tous les personnages <span aria-hidden="true">→</span></Link>
           </header>
 
-          <div className="character-empty panel">
-            <div className="character-empty__portraits" aria-hidden="true">
-              <span>?</span><span>?</span><span>?</span><span>?</span>
-            </div>
-            <div>
-              <h3>Les visages d’Imetheran apparaîtront ici</h3>
-              <p>Une fois les fiches de personnages ouvertes, cette zone mettra en avant les personnages ayant récemment participé aux discussions, chroniques et événements RP.</p>
-            </div>
+          <div className="character-grid">
+            {characters.slice(0, 3).map((character) => (
+              <Link className="character-card" href={`/personnages/${character.slug}`} key={character.id}>
+                <div className="character-card__portrait" aria-hidden="true">
+                  <span>{character.initials}</span>
+                </div>
+                <div className="character-card__body">
+                  <small>{character.people} · {character.world}</small>
+                  <h3>{character.displayName}</h3>
+                  <p className="character-card__epithet">{character.epithet}</p>
+                  <p>{character.summary}</p>
+                  <div className="character-card__tags">
+                    {character.traits.slice(0, 3).map((trait) => <span key={trait}>{trait}</span>)}
+                  </div>
+                </div>
+                <span className="character-card__arrow" aria-hidden="true">→</span>
+              </Link>
+            ))}
           </div>
+          <p className="character-profile-section__empty" style={{ marginTop: "1rem" }}>
+            Profils fictifs de démonstration — ils seront remplacés par les fiches créées par les membres.
+          </p>
         </div>
       </section>
 
