@@ -5,13 +5,12 @@ import { useMemo, useState } from "react";
 import type { CharacterProfile, CharacterVisibility } from "@/content/character-content";
 
 type EditorMode = "create" | "edit";
+type EditableHook = { title: string; text: string };
 
 type CharacterEditorProps = {
   mode: EditorMode;
   initialCharacter?: CharacterProfile;
 };
-
-type EditableHook = { title: string; text: string };
 
 const emptyHooks: EditableHook[] = [
   { title: "", text: "" },
@@ -20,14 +19,12 @@ const emptyHooks: EditableHook[] = [
 ];
 
 function getInitials(value: string) {
-  const initials = value
+  return value
     .trim()
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-
-  return initials || "?";
+    .join("") || "?";
 }
 
 export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps) {
@@ -45,16 +42,14 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
   const [traits, setTraits] = useState(initialCharacter?.traits.join(", ") ?? "");
   const [biography, setBiography] = useState(initialCharacter?.biography.join("\n\n") ?? "");
   const [visibility, setVisibility] = useState<CharacterVisibility>(initialCharacter?.visibility ?? "public");
-  const [hooks, setHooks] = useState<EditableHook>(undefined as never);
   const [hookList, setHookList] = useState<EditableHook[]>(initialCharacter?.hooks.length ? initialCharacter.hooks : emptyHooks);
-  const [portraitName, setPortraitName] = useState<string>("");
-  const [savedMessage, setSavedMessage] = useState<string>("");
+  const [portraitName, setPortraitName] = useState("");
+  const [savedMessage, setSavedMessage] = useState("");
 
   const parsedTraits = useMemo(
     () => traits.split(",").map((trait) => trait.trim()).filter(Boolean).slice(0, 6),
     [traits],
   );
-
   const initials = getInitials(displayName);
   const title = mode === "create" ? "Créer mon personnage" : `Modifier ${initialCharacter?.displayName ?? "mon personnage"}`;
 
@@ -63,12 +58,9 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
   }
 
   function simulateSave() {
-    setSavedMessage("Maquette enregistrée localement dans l’interface uniquement. Aucune donnée n’est encore envoyée au serveur.");
+    setSavedMessage("Maquette enregistrée dans l’interface uniquement. Aucune donnée n’est encore envoyée au serveur.");
     window.setTimeout(() => setSavedMessage(""), 4500);
   }
-
-  void hooks;
-  void setHooks;
 
   return (
     <div className="character-editor-shell">
@@ -88,34 +80,25 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
         <strong>Mode démonstration.</strong>
         <span>Les champs sont interactifs, mais aucune donnée n’est persistée tant que l’authentification et Supabase ne sont pas connectés.</span>
       </div>
-
       {savedMessage ? <div className="character-editor-toast" role="status">{savedMessage}</div> : null}
 
       <div className="character-editor-layout">
         <form className="character-editor-form" onSubmit={(event) => event.preventDefault()}>
-          <section className="character-editor-section">
-            <div className="character-editor-section__heading">
-              <span>01</span>
-              <div><small>Identité</small><h2>Présenter le personnage</h2></div>
-            </div>
+          <EditorSection number="01" kicker="Identité" title="Présenter le personnage">
             <div className="character-editor-grid character-editor-grid--two">
-              <label><span>Nom du personnage</span><input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Ex. Aelys Vardane" /></label>
-              <label><span>Surnom / épithète</span><input value={epithet} onChange={(event) => setEpithet(event.target.value)} placeholder="Ex. Cartographe des chemins oubliés" /></label>
-              <label><span>Peuple</span><input value={people} onChange={(event) => setPeople(event.target.value)} placeholder="Hyur, Miqo'te…" /></label>
-              <label><span>Âge RP</span><input value={age} onChange={(event) => setAge(event.target.value)} placeholder="Ex. 28 ans" /></label>
-              <label><span>Monde</span><input value={world} onChange={(event) => setWorld(event.target.value)} placeholder="Moogle" /></label>
-              <label><span>Origine</span><input value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="Ul'dah" /></label>
-              <label><span>Résidence</span><input value={residence} onChange={(event) => setResidence(event.target.value)} placeholder="Tuliyollal" /></label>
-              <label><span>Occupation</span><input value={occupation} onChange={(event) => setOccupation(event.target.value)} placeholder="Cartographe, mercenaire…" /></label>
-              <label className="character-editor-grid__wide"><span>Affiliation</span><input value={affiliation} onChange={(event) => setAffiliation(event.target.value)} placeholder="Libre, compagnie, organisation…" /></label>
+              <Field label="Nom du personnage"><input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Ex. Aelys Vardane" /></Field>
+              <Field label="Surnom / épithète"><input value={epithet} onChange={(event) => setEpithet(event.target.value)} placeholder="Ex. Cartographe des chemins oubliés" /></Field>
+              <Field label="Peuple"><input value={people} onChange={(event) => setPeople(event.target.value)} placeholder="Hyur, Miqo'te…" /></Field>
+              <Field label="Âge RP"><input value={age} onChange={(event) => setAge(event.target.value)} placeholder="Ex. 28 ans" /></Field>
+              <Field label="Monde"><input value={world} onChange={(event) => setWorld(event.target.value)} placeholder="Moogle" /></Field>
+              <Field label="Origine"><input value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="Ul'dah" /></Field>
+              <Field label="Résidence"><input value={residence} onChange={(event) => setResidence(event.target.value)} placeholder="Tuliyollal" /></Field>
+              <Field label="Occupation"><input value={occupation} onChange={(event) => setOccupation(event.target.value)} placeholder="Cartographe, mercenaire…" /></Field>
+              <Field label="Affiliation" className="character-editor-grid__wide"><input value={affiliation} onChange={(event) => setAffiliation(event.target.value)} placeholder="Libre, compagnie, organisation…" /></Field>
             </div>
-          </section>
+          </EditorSection>
 
-          <section className="character-editor-section">
-            <div className="character-editor-section__heading">
-              <span>02</span>
-              <div><small>Portrait & tonalité</small><h2>Donner un visage à la fiche</h2></div>
-            </div>
+          <EditorSection number="02" kicker="Portrait & tonalité" title="Donner un visage à la fiche">
             <div className="character-editor-media-row">
               <label className="character-editor-upload">
                 <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setPortraitName(event.target.files?.[0]?.name ?? "")} />
@@ -124,42 +107,30 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
                 <small>PNG, JPG ou WebP · stockage prévu dans Supabase Storage</small>
               </label>
               <div className="character-editor-media-copy">
-                <label><span>Citation</span><input value={quote} onChange={(event) => setQuote(event.target.value)} placeholder="Une phrase qui résume le personnage" /></label>
-                <label><span>Traits</span><input value={traits} onChange={(event) => setTraits(event.target.value)} placeholder="Curieuse, pragmatique, observatrice" /><small>Séparez les traits par des virgules.</small></label>
+                <Field label="Citation"><input value={quote} onChange={(event) => setQuote(event.target.value)} placeholder="Une phrase qui résume le personnage" /></Field>
+                <Field label="Traits" help="Séparez les traits par des virgules."><input value={traits} onChange={(event) => setTraits(event.target.value)} placeholder="Curieuse, pragmatique, observatrice" /></Field>
               </div>
             </div>
-          </section>
+          </EditorSection>
 
-          <section className="character-editor-section">
-            <div className="character-editor-section__heading">
-              <span>03</span>
-              <div><small>Présentation</small><h2>Résumé et histoire</h2></div>
-            </div>
-            <label><span>Résumé court</span><textarea rows={3} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Quelques lignes visibles dans le répertoire…" /></label>
-            <label><span>Biographie</span><textarea rows={10} value={biography} onChange={(event) => setBiography(event.target.value)} placeholder="Racontez le parcours du personnage…" /><small>Les sauts de ligne seront conservés dans la future fiche.</small></label>
-          </section>
+          <EditorSection number="03" kicker="Présentation" title="Résumé et histoire">
+            <Field label="Résumé court"><textarea rows={3} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Quelques lignes visibles dans le répertoire…" /></Field>
+            <Field label="Biographie" help="Les sauts de ligne seront conservés dans la future fiche."><textarea rows={10} value={biography} onChange={(event) => setBiography(event.target.value)} placeholder="Racontez le parcours du personnage…" /></Field>
+          </EditorSection>
 
-          <section className="character-editor-section">
-            <div className="character-editor-section__heading">
-              <span>04</span>
-              <div><small>Rencontres possibles</small><h2>Accroches RP</h2></div>
-            </div>
+          <EditorSection number="04" kicker="Rencontres possibles" title="Accroches RP">
             <div className="character-editor-hooks">
               {hookList.map((hook, index) => (
                 <div className="character-editor-hook" key={index}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
-                  <label><span>Titre</span><input value={hook.title} onChange={(event) => updateHook(index, "title", event.target.value)} placeholder="Ex. Courrier en retard" /></label>
-                  <label><span>Accroche</span><textarea rows={3} value={hook.text} onChange={(event) => updateHook(index, "text", event.target.value)} placeholder="Comment un autre personnage peut-il entrer en jeu ?" /></label>
+                  <Field label="Titre"><input value={hook.title} onChange={(event) => updateHook(index, "title", event.target.value)} placeholder="Ex. Courrier en retard" /></Field>
+                  <Field label="Accroche"><textarea rows={3} value={hook.text} onChange={(event) => updateHook(index, "text", event.target.value)} placeholder="Comment un autre personnage peut-il entrer en jeu ?" /></Field>
                 </div>
               ))}
             </div>
-          </section>
+          </EditorSection>
 
-          <section className="character-editor-section">
-            <div className="character-editor-section__heading">
-              <span>05</span>
-              <div><small>Publication</small><h2>Visibilité de la fiche</h2></div>
-            </div>
+          <EditorSection number="05" kicker="Publication" title="Visibilité de la fiche">
             <div className="character-editor-visibility">
               {([
                 ["public", "Publique", "Visible dans le répertoire et accessible par URL."],
@@ -173,7 +144,7 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
                 </label>
               ))}
             </div>
-          </section>
+          </EditorSection>
         </form>
 
         <aside className="character-editor-preview" aria-label="Aperçu de la fiche">
@@ -201,5 +172,27 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
         </aside>
       </div>
     </div>
+  );
+}
+
+function EditorSection({ number, kicker, title, children }: { number: string; kicker: string; title: string; children: React.ReactNode }) {
+  return (
+    <section className="character-editor-section">
+      <div className="character-editor-section__heading">
+        <span>{number}</span>
+        <div><small>{kicker}</small><h2>{title}</h2></div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Field({ label, help, className, children }: { label: string; help?: string; className?: string; children: React.ReactNode }) {
+  return (
+    <label className={className}>
+      <span>{label}</span>
+      {children}
+      {help ? <small>{help}</small> : null}
+    </label>
   );
 }
