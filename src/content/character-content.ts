@@ -85,19 +85,14 @@ export const characters: CharacterProfile[] = [
     ],
     relations: [
       {
-        name: "Personnage B",
+        name: "Rhydan Sorel",
         relation: "Confiance prudente",
-        note: "Une relation de démonstration destinée au futur sociogramme.",
+        note: "Ils ont déjà partagé plusieurs routes. Aelys fait confiance au jugement de Rhydan, sans toujours expliquer pourquoi.",
       },
       {
-        name: "Personnage C",
-        relation: "Dette ancienne",
-        note: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      },
-      {
-        name: "À définir",
-        relation: "Lien ouvert",
-        note: "Emplacement libre pour illustrer les relations à créer avec d’autres membres.",
+        name: "Nahla Rahn",
+        relation: "Une histoire contre une dette",
+        note: "Nahla connaît un détail sur une ancienne carte d’Aelys, et leur accord reste volontairement ambigu.",
       },
     ],
     activity: [
@@ -140,7 +135,18 @@ export const characters: CharacterProfile[] = [
     traits: ["Patient", "Loyal", "Taciturne"],
     biography: ["Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum vitae neque sit amet nibh egestas vulputate."],
     hooks: [{ title: "Anciennes routes", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." }],
-    relations: [],
+    relations: [
+      {
+        name: "Aelys Vardane",
+        relation: "Confiance prudente",
+        note: "Une confiance construite sur les routes parcourues ensemble et les problèmes réglés sans trop de questions.",
+      },
+      {
+        name: "Nahla Rahn",
+        relation: "Désaccord familier",
+        note: "Ils se contredisent souvent et coopèrent presque aussi souvent. La rivalité est devenue une habitude.",
+      },
+    ],
     activity: [],
   },
   {
@@ -165,7 +171,18 @@ export const characters: CharacterProfile[] = [
     traits: ["Sociable", "Malicieuse", "Perspicace"],
     biography: ["Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vel dui ac arcu consequat ultrices."],
     hooks: [{ title: "Histoires contre histoires", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." }],
-    relations: [],
+    relations: [
+      {
+        name: "Aelys Vardane",
+        relation: "Une histoire contre une dette",
+        note: "Nahla laisse volontairement planer le doute sur ce qu’Aelys lui doit réellement.",
+      },
+      {
+        name: "Rhydan Sorel",
+        relation: "Désaccord familier",
+        note: "Une rivalité légère faite de piques, de désaccords et d’une coopération étonnamment efficace.",
+      },
+    ],
     activity: [],
   },
 ];
