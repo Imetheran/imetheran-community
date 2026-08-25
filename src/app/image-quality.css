@@ -1,0 +1,46 @@
+/* High-resolution artwork overrides.
+   Keep source images crisp: no artificial scaling/filtering on large header surfaces. */
+
+html[data-theme="dawntrail"] {
+  --hero-image: url("https://www.rpgfan.com/wp-content/uploads/2023/07/Final-Fantasy-XIV-Dawntrail-Screenshot-134.webp");
+  --hero-position: center 46%;
+}
+
+html[data-theme="evercold"] {
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/promo/h/b/IsIWQSvkiOGMfTAEcb97ehqVT4.jpg");
+  --hero-position: center 48%;
+}
+
+.hero__image,
+.section-hero__image,
+.forum-hero__image,
+.gazette-hero__image {
+  transform: none !important;
+  filter: none !important;
+  background-repeat: no-repeat;
+  image-rendering: auto;
+}
+
+.gazette-cover,
+.gazette-library-card__image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: none !important;
+  image-rendering: auto;
+}
+
+/* Avoid softening the large editorial visual through inherited effects. */
+.gazette-feature,
+.gazette-library-card {
+  backdrop-filter: none;
+}
+
+@media (min-width: 1600px) {
+  .hero__image,
+  .section-hero__image,
+  .forum-hero__image,
+  .gazette-hero__image {
+    background-size: cover;
+  }
+}
