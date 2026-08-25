@@ -1,52 +1,65 @@
-# Imetheran — phase 1
+# Imetheran
 
-Première base de développement du site communautaire Final Fantasy XIV.
+Site communautaire francophone Final Fantasy XIV consacré au rôleplay, aux personnages, aux chroniques et aux échanges entre membres.
 
-## Ce qui est déjà en place
+Production : `https://imetheran-community.vercel.app`
 
-- Next.js 16 / App Router / TypeScript
-- Accueil responsive
-- Menu : Accueil, Guides, Chroniques, Gazettes, Personnages, Liens, Administration
-- Bascule complète Dawntrail / Evercold
-- Thèmes pilotés par variables CSS
-- Titre **Imetheran** personnalisable dans `src/app/globals.css`
-- Routes fonctionnelles pour toutes les rubriques
-- Visuels distants provenant uniquement des domaines officiels `finalfantasyxiv.com`
-- Structure prête pour l'ajout de Supabase
+## Socle technique
 
-## Modifier le titre
+- Next.js 16 / App Router / React 19 / TypeScript
+- Déploiement Vercel depuis la branche `main`
+- Supabase pour l'authentification, PostgreSQL et les règles RLS
+- Sessions SSR via `@supabase/ssr`
+- Thèmes Dawntrail / Evercold pilotés par variables CSS
+- Visuels Final Fantasy XIV issus de sources officielles
 
-Dans `src/app/globals.css` :
+## Fonctionnalités déjà en place
 
-```css
---brand-font-family: Georgia, "Times New Roman", serif;
---brand-font-size: clamp(3.4rem, 8vw, 7.8rem);
---brand-font-weight: 500;
---brand-letter-spacing: 0.08em;
-```
+- portail d'accueil communautaire ;
+- Gazette et Chroniques éditoriales de démonstration ;
+- annuaire, fiche et éditeur de personnages ;
+- sociogramme interactif ;
+- authentification membre avec confirmation e-mail ;
+- page **Mon compte** protégée ;
+- forum connecté à Supabase : 5 catégories et 15 forums ;
+- permissions invité / membre appliquées par RLS ;
+- création atomique d'un sujet et de son premier message ;
+- réponses, suivi des sujets et état lu / non lu ;
+- identité personnage optionnelle dans les espaces RP.
 
-La transformation du titre en logo pourra se faire directement dans `src/app/page.tsx`.
+Le forum n'injecte aucune fausse activité : les sujets et messages affichés sont ceux réellement visibles pour la session courante.
 
 ## Démarrage local
+
+Créer les variables d'environnement décrites dans `.env.example`, puis :
 
 ```bash
 npm install
 npm run dev
 ```
 
-Puis ouvrir `http://localhost:3000`.
+Le site local est alors disponible sur `http://localhost:3000`.
 
-## Suite prévue
+## Architecture du forum
 
-1. Brancher le dépôt GitHub et le projet Vercel.
-2. Créer le projet Supabase et la couche d'authentification.
-3. Concevoir le schéma : profils, personnages, chroniques, gazettes, guides et liens sociaux.
-4. Ajouter l'administration avec rôles et RLS Supabase.
-5. Développer la fiche personnage puis le sociogramme interactif.
+Les catégories actuellement initialisées sont :
 
-## Sources visuelles officielles utilisées
+1. **La Communauté** — lecture possible pour les invités ;
+2. **Univers & Rôleplay** — espace hors-RP réservé aux membres ;
+3. **Chroniques** — espace RP réservé aux membres ;
+4. **Evercold** — campagne RP saisonnière réservée aux membres ;
+5. **Final Fantasy XIV** — espace hors-RP actuellement réservé aux membres.
 
-- Dawntrail : site officiel / univers de Tural
-- Evercold : site officiel / médias
+Le compte Supabase reste toujours l'auteur technique d'une publication. Dans les espaces RP, un personnage appartenant au membre peut être associé au sujet ou au message.
 
-Les images restent hébergées par Square Enix dans cette première phase. Une validation de la politique d'utilisation des matériaux doit être faite avant une mise en production publique.
+## Sécurité
+
+- RLS activé sur les tables exposées ;
+- rôles d'autorisation stockés dans `app_metadata` ;
+- aucune clé `service_role` ou clé secrète côté client ;
+- chemins de retour après authentification limités aux routes internes ;
+- écritures principales du forum encapsulées dans des fonctions transactionnelles respectant le RLS.
+
+## Suite
+
+Les prochaines étapes concernent principalement le CMS d'administration, la persistance complète des fiches personnages et relations, la modération du forum, les notifications et l'enrichissement de l'éditeur de messages.
