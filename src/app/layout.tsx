@@ -13,6 +13,7 @@ import "./forum-access.css";
 import "./forum-thread.css";
 import "./forum-form-focus.css";
 import "./forum-daily-use.css";
+import "./auth.css";
 
 export const metadata: Metadata = {
   title: {
