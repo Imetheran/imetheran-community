@@ -1,27 +1,83 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { ForumTopicEditor } from "@/components/forum-topic-editor";
-import { forumSections } from "@/content/forum-content";
+import { createClient } from "@/lib/supabase/server";
 
-export function generateStaticParams() {
-  return forumSections.flatMap((section) => section.boards.map((board) => ({ board: board.slug })));
-}
+export const dynamic = "force-dynamic";
 
-function findBoard(slug: string) {
-  for (const section of forumSections) {
-    const board = section.boards.find((item) => item.slug === slug);
-    if (board) return { board, section };
+const errorMessages: Record<string, string> = {
+  champs: "Le titre et le premier message sont requis. Vérifiez également leur longueur.",
+  publication: "Le sujet n’a pas pu être publié. Vérifiez vos droits dans ce forum ou réessayez dans un instant.",
+};
+
+export default async function NewForumTopicPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ board: string }>;
+  searchParams: Promise<{ erreur?: string }>;
+}) {
+  const [{ board: boardSlug }, query] = await Promise.all([params, searchParams]);
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  const userId = claims?.sub;
+
+  if (claimsError || !claims || typeof userId !== "string") {
+    redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/nouveau`)}`);
   }
-  return null;
-}
 
-export default async function NewForumTopicPage({ params }: { params: Promise<{ board: string }> }) {
-  const { board: boardSlug } = await params;
-  const match = findBoard(boardSlug);
-  if (!match) notFound();
+  const { data: boardRow, error: boardError } = await supabase
+    .from("forum_boards")
+    .select(`
+      id,
+      slug,
+      title,
+      description,
+      topic_creation,
+      is_active,
+      forum_sections!inner (
+        id,
+        title,
+        mode,
+        access_scope,
+        is_active
+      )
+    `)
+    .eq("slug", boardSlug)
+    .eq("is_active", true)
+    .maybeSingle();
 
-  const { board, section } = match;
+  if (boardError || !boardRow) notFound();
+
+  const section = Array.isArray(boardRow.forum_sections)
+    ? boardRow.forum_sections[0]
+    : boardRow.forum_sections;
+  if (!section || !section.is_active) notFound();
+
+  const appMetadata = claims.app_metadata;
+  const role = appMetadata && typeof appMetadata === "object" && "role" in appMetadata
+    ? String(appMetadata.role)
+    : "member";
+  const creationPolicy = boardRow.topic_creation.toLocaleLowerCase("fr");
+  const staffOnly = creationPolicy.includes("admin") || creationPolicy.includes("staff") || creationPolicy.includes("moderator");
+
+  if (staffOnly && role !== "admin" && role !== "moderator") {
+    redirect(`/forum/${boardRow.slug}`);
+  }
+
+  const characters = section.mode === "rp"
+    ? (await supabase
+        .from("characters")
+        .select("id, name")
+        .eq("owner_id", userId)
+        .order("name"))
+    : { data: [] as { id: string; name: string }[] };
+
+  const errorMessage = query.erreur
+    ? errorMessages[query.erreur] ?? "Une erreur est survenue pendant la préparation du sujet."
+    : null;
 
   return (
     <main className="site-shell forum-new-topic-page">
@@ -32,22 +88,26 @@ export default async function NewForumTopicPage({ params }: { params: Promise<{ 
           <nav className="forum-breadcrumbs" aria-label="Fil d’Ariane">
             <Link href="/forum">Forum</Link><span>›</span>
             <span>{section.title}</span><span>›</span>
-            <Link href={`/forum/${board.slug}`}>{board.title}</Link><span>›</span><strong>Nouveau sujet</strong>
+            <Link href={`/forum/${boardRow.slug}`}>{boardRow.title}</Link><span>›</span><strong>Nouveau sujet</strong>
           </nav>
-          <p className="eyebrow">Prototype membre</p>
+          <p className="eyebrow">Espace membre</p>
           <h1>Nouveau sujet</h1>
-          <p>Une première maquette de l’éditeur qui servira aussi bien aux discussions hors-RP qu’aux scènes rôleplay.</p>
+          <p>Le sujet et son premier message seront enregistrés ensemble dans Supabase au moment de la publication.</p>
         </div>
       </section>
 
       <section className="content-frame forum-compose-workspace">
-        {section.access === "members" ? (
-          <div className="forum-access-note">
-            <span aria-hidden="true">◇</span>
-            <p><strong>Création réservée aux membres.</strong> L’écran reste visible en démonstration tant que l’authentification n’est pas branchée.</p>
-          </div>
-        ) : null}
-        <ForumTopicEditor boardTitle={board.title} isRoleplay={section.mode === "rp"} />
+        <div className="forum-access-note">
+          <span aria-hidden="true">✦</span>
+          <p><strong>Publication réelle.</strong> Votre compte est l’auteur technique. Dans un espace RP, vous pouvez aussi associer l’un de vos personnages au sujet.</p>
+        </div>
+        <ForumTopicEditor
+          boardSlug={boardRow.slug}
+          boardTitle={boardRow.title}
+          isRoleplay={section.mode === "rp"}
+          characters={characters.data ?? []}
+          errorMessage={errorMessage}
+        />
       </section>
     </main>
   );
