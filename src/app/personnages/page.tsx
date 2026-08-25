@@ -18,7 +18,10 @@ export default function CharactersPage() {
             Les fiches rôleplay des membres d’Imetheran : identité, histoire, accroches de jeu,
             relations et traces laissées dans les chroniques de la communauté.
           </p>
-          <ThemeToggle />
+          <div className="characters-hero__actions">
+            <Link className="button button--primary" href="/personnages/nouveau">Créer mon personnage</Link>
+            <ThemeToggle />
+          </div>
         </div>
       </section>
 
