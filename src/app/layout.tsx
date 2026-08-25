@@ -4,6 +4,7 @@ import "./content-hub.css";
 import "./image-quality.css";
 import "./gazette-issue.css";
 import "./chronicle-hub.css";
+import "./character-hub.css";
 
 export const metadata: Metadata = {
   title: {
