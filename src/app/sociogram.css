@@ -1,0 +1,562 @@
+/* Interactive character sociogram */
+.links-page {
+  --relation-trust: #73b6a5;
+  --relation-friendship: #7da9dd;
+  --relation-rivalry: #d77c69;
+  --relation-debt: #d3a252;
+  --relation-family: #a58bd1;
+  --relation-romance: #d989a8;
+  --relation-unknown: #9b9b98;
+  background: var(--page-bg);
+}
+
+.links-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 390px;
+  display: grid;
+  align-items: center;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.links-hero__image,
+.links-hero__veil {
+  position: absolute;
+  inset: 0;
+}
+
+.links-hero__image {
+  z-index: -2;
+  background-image: var(--hero-image);
+  background-size: cover;
+  background-position: center 48%;
+}
+
+html[data-theme="evercold"] .links-hero__image {
+  background-position: center 42%;
+}
+
+.links-hero__veil {
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, .9) 0%, rgba(5, 5, 5, .63) 48%, rgba(5, 5, 5, .38) 100%),
+    linear-gradient(180deg, rgba(0,0,0,.08), var(--page-bg));
+}
+
+.links-hero__content {
+  padding-block: clamp(3rem, 7vw, 5.5rem);
+}
+
+.links-hero__content > p:not(.eyebrow) {
+  max-width: 690px;
+  margin-bottom: 1.25rem;
+  color: var(--muted);
+  font-size: clamp(.96rem, 1.5vw, 1.08rem);
+}
+
+.links-hero h1 {
+  margin: .1rem 0 .65rem;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5.7rem);
+  font-weight: 500;
+  line-height: .95;
+}
+
+.links-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.links-intro {
+  padding-block: clamp(2.6rem, 6vw, 5rem);
+}
+
+.links-intro > .section-heading p:last-child {
+  max-width: 760px;
+  margin: .65rem 0 0;
+  color: var(--muted);
+}
+
+.sociogram-workspace {
+  margin-top: 1.5rem;
+  border: 1px solid var(--border-strong);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--surface-raised) 64%, transparent), var(--surface));
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
+}
+
+.sociogram-toolbar {
+  min-height: 78px;
+  padding: .85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--page-bg) 66%, var(--surface));
+}
+
+.sociogram-toolbar__label {
+  display: block;
+  margin-bottom: .4rem;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.sociogram-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.sociogram-filters button {
+  padding: .36rem .58rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .65rem;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+
+.sociogram-filters button:hover,
+.sociogram-filters button.is-active {
+  border-color: var(--accent-bright);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--text);
+}
+
+.sociogram-toolbar__meta {
+  display: flex;
+  gap: 1rem;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.sociogram-toolbar__meta strong {
+  margin-right: .2rem;
+  color: var(--accent-bright);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.sociogram-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 355px);
+  min-height: 650px;
+}
+
+.sociogram-canvas {
+  position: relative;
+  min-height: 650px;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 50% 48%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 19rem),
+    color-mix(in srgb, var(--page-bg) 82%, var(--surface));
+}
+
+.sociogram-canvas__grid {
+  position: absolute;
+  inset: 0;
+  opacity: .34;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(circle at center, black, transparent 76%);
+}
+
+.sociogram-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sociogram-line {
+  stroke: var(--relation-unknown);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  opacity: .38;
+  transition: opacity .18s ease, stroke-width .18s ease;
+}
+
+.sociogram-line.is-focused {
+  stroke-width: 2.4;
+  opacity: .92;
+}
+
+.sociogram-line--trust { stroke: var(--relation-trust); }
+.sociogram-line--friendship { stroke: var(--relation-friendship); }
+.sociogram-line--rivalry { stroke: var(--relation-rivalry); stroke-dasharray: 2.5 2.5; }
+.sociogram-line--debt { stroke: var(--relation-debt); }
+.sociogram-line--family { stroke: var(--relation-family); }
+.sociogram-line--romance { stroke: var(--relation-romance); }
+.sociogram-line--unknown { stroke: var(--relation-unknown); }
+
+.sociogram-node {
+  position: absolute;
+  z-index: 3;
+  width: min(230px, 28%);
+  min-width: 178px;
+  padding: .7rem;
+  display: grid;
+  grid-template-columns: 58px minmax(0,1fr);
+  gap: .72rem;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-glass) 93%, transparent);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 16px 44px rgba(0,0,0,.34);
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.sociogram-node:hover,
+.sociogram-node.is-selected {
+  transform: translate(-50%, -50%) scale(1.025);
+  border-color: var(--accent-bright);
+  background: var(--surface-raised);
+}
+
+.sociogram-node.is-selected {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent), 0 18px 52px rgba(0,0,0,.42);
+}
+
+.sociogram-node__portrait {
+  width: 58px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: radial-gradient(circle, var(--surface-raised), var(--page-bg));
+  color: var(--accent-bright);
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+}
+
+.sociogram-node__copy {
+  min-width: 0;
+  display: grid;
+}
+
+.sociogram-node__copy small {
+  color: var(--accent-bright);
+  font-family: var(--font-ui);
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.sociogram-node__copy strong {
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.03rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sociogram-node__copy > span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sociogram-edge-label {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  padding: .28rem .42rem;
+  border: 1px solid currentColor;
+  background: var(--page-bg);
+  color: var(--relation-unknown);
+  font-family: var(--font-ui);
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0,0,0,.4);
+}
+
+.sociogram-edge-label:hover,
+.sociogram-edge-label.is-selected {
+  background: var(--surface-raised);
+  outline: 2px solid color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.sociogram-edge-label--trust { color: var(--relation-trust); }
+.sociogram-edge-label--friendship { color: var(--relation-friendship); }
+.sociogram-edge-label--rivalry { color: var(--relation-rivalry); }
+.sociogram-edge-label--debt { color: var(--relation-debt); }
+.sociogram-edge-label--family { color: var(--relation-family); }
+.sociogram-edge-label--romance { color: var(--relation-romance); }
+.sociogram-edge-label--unknown { color: var(--relation-unknown); }
+
+.sociogram-canvas__hint {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  color: var(--muted);
+  font-size: .68rem;
+}
+
+.sociogram-inspector {
+  min-width: 0;
+  background: var(--surface);
+}
+
+.sociogram-inspector > section {
+  padding: 1.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sociogram-inspector__character {
+  display: grid;
+  grid-template-columns: 64px minmax(0,1fr);
+  gap: .8rem;
+  align-items: center;
+}
+
+.sociogram-inspector__character > .text-link {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.sociogram-inspector__portrait {
+  width: 64px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--accent-bright);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+
+.sociogram-inspector__character h2 {
+  margin: .05rem 0 .1rem;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 500;
+}
+
+.sociogram-inspector__character p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: .84rem;
+  font-style: italic;
+}
+
+.sociogram-inspector__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: .65rem;
+}
+
+.sociogram-inspector__heading .panel__kicker { margin: 0; }
+.sociogram-inspector__heading > span {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .65rem;
+}
+
+.sociogram-relation-list {
+  display: grid;
+  gap: .45rem;
+}
+
+.sociogram-relation-item {
+  width: 100%;
+  padding: .7rem;
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr);
+  gap: .65rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-soft) 65%, transparent);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sociogram-relation-item:hover,
+.sociogram-relation-item.is-active {
+  border-color: var(--accent-bright);
+  background: var(--surface-raised);
+}
+
+.sociogram-relation-item__avatar {
+  width: 42px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  font-family: var(--font-display);
+}
+
+.sociogram-relation-item > span:last-child {
+  min-width: 0;
+  display: grid;
+}
+
+.sociogram-relation-item small {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .55rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sociogram-relation-item strong {
+  font-family: var(--font-display);
+  font-size: .95rem;
+  font-weight: 500;
+}
+
+.sociogram-relation-item > span:last-child > span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .67rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sociogram-inspector__detail {
+  position: relative;
+}
+
+.sociogram-inspector__detail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--relation-unknown);
+}
+
+.sociogram-inspector__detail--trust::before { background: var(--relation-trust); }
+.sociogram-inspector__detail--friendship::before { background: var(--relation-friendship); }
+.sociogram-inspector__detail--rivalry::before { background: var(--relation-rivalry); }
+.sociogram-inspector__detail--debt::before { background: var(--relation-debt); }
+.sociogram-inspector__detail--family::before { background: var(--relation-family); }
+.sociogram-inspector__detail--romance::before { background: var(--relation-romance); }
+
+.sociogram-inspector__detail h3 {
+  margin: .2rem 0 .45rem;
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  font-weight: 500;
+}
+
+.sociogram-inspector__detail > p {
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.sociogram-inspector__detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.sociogram-inspector__detail-meta span {
+  padding: .25rem .4rem;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .57rem;
+  text-transform: uppercase;
+}
+
+.sociogram-legend {
+  padding: .75rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .9rem 1.15rem;
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--page-bg) 70%, var(--surface));
+}
+
+.sociogram-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .38rem;
+  color: var(--muted);
+  font-size: .65rem;
+}
+
+.sociogram-legend__mark {
+  width: 22px;
+  height: 2px;
+  display: inline-block;
+  background: var(--relation-unknown);
+}
+.sociogram-legend__mark--trust { background: var(--relation-trust); }
+.sociogram-legend__mark--friendship { background: var(--relation-friendship); }
+.sociogram-legend__mark--rivalry { background: var(--relation-rivalry); }
+.sociogram-legend__mark--debt { background: var(--relation-debt); }
+.sociogram-legend__mark--family { background: var(--relation-family); }
+.sociogram-legend__mark--romance { background: var(--relation-romance); }
+
+@media (max-width: 980px) {
+  .sociogram-layout { grid-template-columns: 1fr; }
+  .sociogram-canvas { border-right: 0; border-bottom: 1px solid var(--border); min-height: 570px; }
+  .sociogram-layout { min-height: 0; }
+  .sociogram-inspector { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .sociogram-inspector__detail { grid-column: 1 / -1; }
+}
+
+@media (max-width: 720px) {
+  .links-hero { min-height: 350px; }
+  .links-hero__actions { align-items: stretch; flex-direction: column; }
+  .links-hero__actions .theme-selector { width: 100%; }
+  .sociogram-toolbar { align-items: flex-start; flex-direction: column; }
+  .sociogram-toolbar__meta { width: 100%; justify-content: space-between; }
+  .sociogram-canvas { min-height: 610px; }
+  .sociogram-node { width: 158px; min-width: 0; grid-template-columns: 44px minmax(0,1fr); padding: .55rem; }
+  .sociogram-node__portrait { width: 44px; font-size: .95rem; }
+  .sociogram-node__copy strong { font-size: .85rem; }
+  .sociogram-node__copy > span { display: none; }
+  .sociogram-edge-label { font-size: .5rem; }
+  .sociogram-inspector { grid-template-columns: 1fr; }
+  .sociogram-inspector__detail { grid-column: auto; }
+}
+
+@media (max-width: 470px) {
+  .sociogram-canvas { min-height: 560px; }
+  .sociogram-node { width: 132px; grid-template-columns: 36px minmax(0,1fr); gap: .45rem; }
+  .sociogram-node__portrait { width: 36px; }
+  .sociogram-node__copy small { display: none; }
+  .sociogram-node__copy strong { font-size: .78rem; }
+  .sociogram-edge-label { padding: .2rem .3rem; }
+}
