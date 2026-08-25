@@ -28,6 +28,37 @@ export type GazettePublication = {
   articles: GazetteArticle[];
 };
 
+export type ChronicleStatus = "upcoming" | "open" | "closed";
+export type ChronicleChapterStatus = "completed" | "active" | "upcoming";
+
+export type ChronicleChapter = {
+  id: string;
+  act: string;
+  title: string;
+  summary: string;
+  body: string[];
+  status: ChronicleChapterStatus;
+  forumLabel?: string;
+};
+
+export type ChroniclePublication = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  synopsis: string;
+  hook: string;
+  status: ChronicleStatus;
+  featured: boolean;
+  coverImage: string;
+  startedAt: string;
+  location: string;
+  organizer: string;
+  participants: string[];
+  tags: string[];
+  chapters: ChronicleChapter[];
+};
+
 export const gazettes: GazettePublication[] = [
   {
     id: "gazette-demo-001",
@@ -105,9 +136,76 @@ export const gazettes: GazettePublication[] = [
   },
 ];
 
+export const chronicles: ChroniclePublication[] = [
+  {
+    id: "chronicle-demo-001",
+    slug: "les-echos-de-la-veille",
+    title: "Les Échos de la Veille",
+    subtitle: "Chronique communautaire · scénario de démonstration",
+    synopsis:
+      "Une série de messages incomplets circule entre plusieurs voyageurs. Aucun ne semble destiné au même destinataire, pourtant tous évoquent un rendez-vous oublié, une lumière au large et une dette que personne ne reconnaît.",
+    hook:
+      "Une chronique d’exemple conçue pour montrer comment un fil rouge pourra réunir scénario, progression, personnages et sujets de forum au même endroit.",
+    status: "open",
+    featured: true,
+    coverImage:
+      "https://lds-img.finalfantasyxiv.com/promo/h/b/IsIWQSvkiOGMfTAEcb97ehqVT4.jpg",
+    startedAt: "2026-08-25",
+    location: "Tural · environs de Tuliyollal",
+    organizer: "Équipe RP d’Imetheran",
+    participants: ["Personnage A", "Personnage B", "Personnage C", "Place libre"],
+    tags: ["Enquête", "Exploration", "Mystère", "Ouvert aux inscriptions"],
+    chapters: [
+      {
+        id: "acte-i",
+        act: "Acte I",
+        title: "Les lettres sans destinataire",
+        summary:
+          "Plusieurs plis semblables apparaissent dans des mains qui ne devaient jamais les recevoir. Les premières pistes convergent vers un même lieu.",
+        status: "completed",
+        forumLabel: "Sujet RP · archive de démonstration",
+        body: [
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed posuere purus vitae justo congue, quis malesuada arcu facilisis. Integer vitae feugiat lorem, vitae faucibus lectus.",
+          "Mauris blandit, risus ut consequat feugiat, nulla ligula feugiat eros, vitae placerat lectus nibh vel elit. Suspendisse potenti. Curabitur id justo a erat interdum posuere.",
+        ],
+      },
+      {
+        id: "acte-ii",
+        act: "Acte II",
+        title: "La lumière derrière la brume",
+        summary:
+          "La piste mène au littoral. Quelque chose répond aux signaux des voyageurs, mais rien ne permet encore de savoir s’il s’agit d’un appel ou d’un avertissement.",
+        status: "active",
+        forumLabel: "Sujet RP actif · exemple",
+        body: [
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sagittis, lacus sed pulvinar vulputate, sem nibh interdum erat, sed volutpat massa turpis vitae mi.",
+          "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; pellentesque vel urna vitae neque tristique dictum. Donec volutpat luctus nibh.",
+          "Nam aliquet elit non nibh volutpat, vitae vestibulum lorem gravida. Donec vitae faucibus eros. Nulla facilisi. Integer feugiat mauris sed velit faucibus, at varius est finibus.",
+        ],
+      },
+      {
+        id: "acte-iii",
+        act: "Acte III",
+        title: "Ce qui attend au retour",
+        summary:
+          "La conclusion reste volontairement ouverte. Les choix faits pendant l’acte précédent détermineront les personnages, lieux et sujets qui apparaîtront ici.",
+        status: "upcoming",
+        forumLabel: "Sujet à ouvrir",
+        body: [
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vel lorem sed erat hendrerit suscipit. Duis vitae tincidunt nisi, sit amet vulputate neque.",
+        ],
+      },
+    ],
+  },
+];
+
 export const featuredGazette = gazettes.find(
   (gazette) => gazette.featured && gazette.status === "published",
 ) ?? gazettes[0];
+
+export const featuredChronicle = chronicles.find(
+  (chronicle) => chronicle.featured && chronicle.status !== "closed",
+) ?? chronicles[0];
 
 export function formatPublicationDate(value: string) {
   return new Intl.DateTimeFormat("fr-FR", {
