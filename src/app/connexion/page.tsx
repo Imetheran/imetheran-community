@@ -18,14 +18,21 @@ const statusMessages: Record<string, string> = {
   deconnexion: "Vous êtes maintenant déconnecté d’Imetheran.",
 };
 
+function safeReturnTo(value?: string) {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\0")) return "/compte";
+  return value;
+}
+
 export default async function ConnexionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erreur?: string; message?: string; mode?: string }>;
+  searchParams: Promise<{ erreur?: string; message?: string; mode?: string; retour?: string }>;
 }) {
   const query = await searchParams;
   const error = query.erreur ? errorMessages[query.erreur] ?? "Une erreur est survenue." : null;
   const status = query.message ? statusMessages[query.message] : null;
+  const returnTo = safeReturnTo(query.retour);
+  const forumReturn = returnTo.startsWith("/forum") ? returnTo.split("#")[0] : "/forum";
 
   return (
     <main className="site-shell auth-page">
@@ -51,6 +58,7 @@ export default async function ConnexionPage({
             <h2 id="login-title">Connexion</h2>
             <p>Retrouvez votre compte, vos personnages et les espaces réservés aux membres.</p>
             <form className="auth-form" action={login}>
+              <input type="hidden" name="return_to" value={returnTo} />
               <label>
                 <span>Adresse e-mail</span>
                 <input name="email" type="email" autoComplete="email" required />
@@ -68,6 +76,7 @@ export default async function ConnexionPage({
             <h2 id="signup-title">Créer un compte</h2>
             <p>L’inscription ouvre l’accès aux espaces membres. Votre adresse devra être confirmée par e-mail.</p>
             <form className="auth-form" action={signup}>
+              <input type="hidden" name="return_to" value={returnTo} />
               <label>
                 <span>Nom affiché</span>
                 <input name="display_name" type="text" maxLength={64} autoComplete="nickname" required />
@@ -87,7 +96,7 @@ export default async function ConnexionPage({
         </div>
 
         <footer className="auth-workspace__footer">
-          <Link className="text-link" href="/forum">← Retour au forum</Link>
+          <Link className="text-link" href={forumReturn}>← Retour au forum</Link>
           <span>Authentification sécurisée par Supabase.</span>
         </footer>
       </section>
