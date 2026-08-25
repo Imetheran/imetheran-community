@@ -258,7 +258,7 @@
   background: var(--surface);
 }
 .account-next strong {
-  font-family: var(--display-font);
+  font-family: var(--font-display);
   font-weight: 600;
 }
 .account-next p {
