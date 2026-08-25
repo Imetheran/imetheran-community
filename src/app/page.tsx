@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { featuredGazette, formatPublicationDate } from "@/content/editorial-content";
 
 const forumCategories = [
   { title: "La communauté", description: "Présentations, discussions générales et vie d’Imetheran.", meta: "Accueil & échanges" },
@@ -10,9 +11,9 @@ const forumCategories = [
 ];
 
 const editorialItems = [
-  { kicker: "Gazette", title: "Les nouvelles d’Imetheran", text: "Potins, événements, recettes et récits présentés comme un véritable journal rôleplay.", href: "/gazettes" },
   { kicker: "Guides", title: "Préparer son personnage", text: "Retrouvez progressivement les bases du RP et les futurs modes d’emploi des outils communautaires.", href: "/guides" },
   { kicker: "Personnages", title: "Donner vie à son histoire", text: "Les futures fiches RP réuniront identité, histoire et relations de chaque personnage.", href: "/personnages" },
+  { kicker: "Liens", title: "Tisser les relations", text: "Le futur sociogramme permettra d’explorer les liens, alliances, rivalités et rencontres entre personnages.", href: "/liens" },
 ];
 
 export default function Home() {
@@ -91,6 +92,56 @@ export default function Home() {
               </article>
             </aside>
           </div>
+        </div>
+      </section>
+
+      <section className="home-section home-section--gazette" aria-labelledby="gazette-title">
+        <div className="content-frame">
+          <header className="section-heading section-heading--row">
+            <div>
+              <p className="eyebrow">La presse d’Imetheran</p>
+              <h2 id="gazette-title">Gazette à la une</h2>
+            </div>
+            <Link className="text-link" href="/gazettes">Toutes les gazettes <span aria-hidden="true">→</span></Link>
+          </header>
+
+          <article className="gazette-feature">
+            <div
+              className="gazette-cover"
+              style={{ backgroundImage: `linear-gradient(180deg, rgba(7,7,7,.08), rgba(7,7,7,.66)), url(${featuredGazette.coverImage})` }}
+              aria-hidden="true"
+            >
+              <div className="gazette-cover__topline">
+                <span>Édition {String(featuredGazette.issueNumber).padStart(2, "0")}</span>
+                <span>{formatPublicationDate(featuredGazette.publishedAt)}</span>
+              </div>
+              <div className="gazette-cover__masthead">{featuredGazette.title}</div>
+              <div className="gazette-cover__headline">{featuredGazette.headline}</div>
+              <span className="gazette-cover__demo">Exemple éditorial</span>
+            </div>
+
+            <div className="gazette-feature__story">
+              <div className="gazette-feature__meta">
+                <span className="status-pill">Publié</span>
+                <span>{featuredGazette.edition}</span>
+              </div>
+              <p className="panel__kicker">Numéro mis en avant</p>
+              <h3>{featuredGazette.headline}</h3>
+              <p className="gazette-feature__excerpt">{featuredGazette.excerpt}</p>
+
+              <div className="gazette-feature__contents">
+                <span>Dans ce numéro</span>
+                <ul>
+                  {featuredGazette.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}
+                </ul>
+              </div>
+
+              <div className="gazette-feature__actions">
+                <Link className="button button--primary" href={`/gazettes#${featuredGazette.slug}`}>Lire la gazette</Link>
+                <span className="gazette-feature__cms-note">Ce bloc sera pilotable depuis l’administration.</span>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
