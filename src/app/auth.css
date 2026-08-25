@@ -1,0 +1,300 @@
+.topbar__member {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .75rem;
+  white-space: nowrap;
+}
+
+.topbar__account {
+  padding: .38rem .58rem;
+  border: 1px solid var(--border);
+  color: var(--accent-bright);
+  font-family: var(--font-ui);
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: border-color .16s ease, background .16s ease, color .16s ease;
+}
+
+.topbar__account:hover,
+.topbar__account:focus-visible {
+  outline: none;
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  color: var(--text);
+}
+
+.auth-hero,
+.account-hero {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.88), rgba(0,0,0,.52), rgba(0,0,0,.82)),
+    var(--hero-image) center 42% / cover no-repeat;
+}
+
+.auth-hero__content {
+  min-height: 310px;
+  padding-block: clamp(3rem, 8vw, 6rem);
+  display: grid;
+  align-content: end;
+}
+
+.auth-hero h1,
+.account-hero h1 {
+  margin: .15rem 0 .65rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 7vw, 5.2rem);
+  font-weight: 500;
+  line-height: .95;
+}
+
+.auth-hero__content > p:last-child,
+.account-hero__layout > div:first-child > p:last-child {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--muted);
+}
+
+.auth-workspace,
+.account-workspace {
+  padding-block: clamp(1.5rem, 4vw, 3rem) 5rem;
+}
+
+.auth-grid,
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.auth-card,
+.account-card {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 18px 60px rgba(0,0,0,.18);
+}
+
+.auth-card--signup {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 5%, var(--surface)), var(--surface));
+  border-color: var(--border-strong);
+}
+
+.auth-card h2,
+.account-card h2 {
+  margin: .1rem 0 .5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 500;
+}
+
+.auth-card > p:not(.eyebrow),
+.account-card > p:not(.eyebrow) {
+  max-width: 60ch;
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: .85rem;
+  margin-top: 1.2rem;
+}
+
+.auth-form label {
+  display: grid;
+  align-content: start;
+  gap: .35rem;
+  font-family: var(--font-ui);
+  font-size: .64rem;
+  font-weight: 700;
+}
+
+.auth-form label > span {
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.auth-form label > small {
+  color: var(--muted);
+  font-size: .58rem;
+  font-weight: 400;
+}
+
+.auth-form input,
+.auth-form textarea {
+  width: 100%;
+  padding: .72rem .8rem;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  font: inherit;
+}
+
+.auth-form textarea {
+  min-height: 130px;
+  resize: vertical;
+  font-family: var(--font-body);
+  line-height: 1.55;
+}
+
+.auth-form input:focus,
+.auth-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.auth-form input:focus-visible,
+.auth-form textarea:focus-visible {
+  outline: 1px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.auth-form .button {
+  justify-self: start;
+  margin-top: .25rem;
+}
+
+.auth-message {
+  margin-bottom: 1rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--border);
+  font-size: .76rem;
+}
+
+.auth-message--error {
+  border-color: color-mix(in srgb, #d9776b 58%, var(--border));
+  background: color-mix(in srgb, #9d3930 10%, var(--surface));
+  color: #f0c0b9;
+}
+
+.auth-message--success {
+  border-color: color-mix(in srgb, var(--accent-bright) 58%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  color: var(--text);
+}
+
+.auth-workspace__footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .62rem;
+}
+
+.account-hero__layout {
+  min-height: 270px;
+  padding-block: clamp(2.5rem, 7vw, 4.8rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  align-items: end;
+}
+
+.account-hero__status {
+  display: grid;
+  justify-items: end;
+  gap: .35rem;
+}
+
+.account-hero__status small {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .58rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.account-grid {
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
+}
+
+.account-card--summary {
+  align-self: start;
+  background: var(--surface-soft);
+}
+
+.account-summary {
+  margin: 1.2rem 0;
+  display: grid;
+  border: 1px solid var(--border);
+}
+
+.account-summary > div {
+  padding: .7rem .8rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.account-summary > div + div { border-top: 1px solid var(--border); }
+.account-summary dt {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .58rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.account-summary dd {
+  margin: 0;
+  color: var(--text);
+  font-size: .7rem;
+  text-align: right;
+}
+
+.account-next {
+  padding: .9rem;
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+}
+.account-next strong {
+  font-family: var(--display-font);
+  font-weight: 600;
+}
+.account-next p {
+  margin: .3rem 0 0;
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+.account-card__links {
+  margin: 1rem 0;
+  display: grid;
+  gap: .45rem;
+}
+
+@media (max-width: 1050px) {
+  .topbar__status { display: none; }
+  .topbar__member { gap: 0; }
+}
+
+@media (max-width: 820px) {
+  .auth-grid,
+  .account-grid,
+  .account-hero__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .account-hero__status { justify-items: start; }
+  .auth-workspace__footer { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 680px) {
+  .topbar__account {
+    padding: .32rem .42rem;
+    font-size: .54rem;
+  }
+  .auth-hero__content { min-height: 250px; }
+  .auth-card,
+  .account-card { padding: 1rem; }
+}
