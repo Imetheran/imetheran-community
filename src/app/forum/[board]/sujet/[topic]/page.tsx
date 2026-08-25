@@ -221,7 +221,10 @@ export default async function ForumTopicPage({
           {postRows.map((post, index) => {
             const authorName = profileMap.get(post.author_id) ?? "Membre";
             const character = post.character_id ? characterMap.get(post.character_id) : null;
-            const paragraphs = post.content.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
+            const paragraphs: string[] = String(post.content)
+              .split(/\n{2,}/)
+              .map((paragraph: string) => paragraph.trim())
+              .filter(Boolean);
 
             return (
               <article className={`forum-post${index === 0 ? " forum-post--topic-author" : ""}`} id={post.id} key={post.id}>
@@ -252,7 +255,7 @@ export default async function ForumTopicPage({
                   </header>
 
                   <div className="forum-post__content">
-                    {(paragraphs.length ? paragraphs : [post.content]).map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}
+                    {(paragraphs.length ? paragraphs : [String(post.content)]).map((paragraph: string, paragraphIndex: number) => <p key={paragraphIndex}>{paragraph}</p>)}
                   </div>
                 </div>
               </article>
