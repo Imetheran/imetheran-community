@@ -2,19 +2,23 @@ import Link from "next/link";
 
 const links = [
   ["Accueil", "/"],
-  ["Guides", "/guides"],
+  ["Forum", "/forum"],
   ["Chroniques", "/chroniques"],
   ["Gazettes", "/gazettes"],
+  ["Guides", "/guides"],
   ["Personnages", "/personnages"],
   ["Liens", "/liens"],
-  ["Administration", "/administration"],
 ] as const;
 
 export function SiteHeader() {
   return (
     <header className="topbar">
       <div className="topbar__inner content-frame">
-        <div className="topbar__ornament" aria-hidden="true">✦</div>
+        <Link className="topbar__brand" href="/" aria-label="Accueil Imetheran">
+          <span aria-hidden="true">✦</span>
+          <strong>Imetheran</strong>
+        </Link>
+
         <nav className="main-nav" aria-label="Navigation principale">
           {links.map(([label, href]) => (
             <Link key={href} href={href} className="main-nav__link">
@@ -22,7 +26,8 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="topbar__ornament" aria-hidden="true">✦</div>
+
+        <span className="topbar__status">Communauté RP</span>
       </div>
     </header>
   );
