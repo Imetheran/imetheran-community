@@ -25,7 +25,7 @@ export default async function ComptePage({
   const claims = claimsData?.claims;
   const userId = claims?.sub;
 
-  if (claimsError || typeof userId !== "string") {
+  if (claimsError || !claims || typeof userId !== "string") {
     redirect("/connexion?message=connexion-requise");
   }
 
