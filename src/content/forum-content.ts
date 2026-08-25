@@ -1,4 +1,6 @@
-export type ForumSectionKind = "community" | "roleplay" | "chronicles" | "campaign" | "game";
+export type ForumSectionKind = "community" | "universe" | "chronicles" | "campaign" | "game";
+export type ForumSectionMode = "rp" | "non-rp";
+export type ForumSectionAccess = "guest-read" | "members";
 
 export type ForumBoard = {
   id: string;
@@ -16,6 +18,8 @@ export type ForumSection = {
   title: string;
   subtitle: string;
   kind: ForumSectionKind;
+  mode: ForumSectionMode;
+  access?: ForumSectionAccess;
   eyebrow: string;
   boards: ForumBoard[];
 };
@@ -26,6 +30,8 @@ export const forumSections: ForumSection[] = [
     title: "La Communauté",
     subtitle: "Les portes d’entrée d’Imetheran, les nouvelles importantes et la vie quotidienne de la communauté.",
     kind: "community",
+    mode: "non-rp",
+    access: "guest-read",
     eyebrow: "Vie communautaire",
     boards: [
       {
@@ -58,15 +64,17 @@ export const forumSections: ForumSection[] = [
   {
     id: "universe-roleplay",
     title: "Univers & Rôleplay",
-    subtitle: "Tout ce qui aide à créer, comprendre et trouver du jeu autour de vos personnages.",
-    kind: "roleplay",
+    subtitle: "Espace hors-RP consacré à la préparation du jeu, aux personnages et à la recherche de partenaires.",
+    kind: "universe",
+    mode: "non-rp",
+    access: "members",
     eyebrow: "Préparer le jeu",
     boards: [
       {
         id: "roleplay-guide",
         slug: "guide-du-roliste",
         title: "Guide du Rôliste",
-        description: "Questions, conseils et échanges autour des pratiques RP. Les guides finalisés pourront être publiés dans la rubrique Guides du site.",
+        description: "Questions, conseils et échanges hors-RP autour des pratiques de jeu de rôle. Les guides finalisés pourront ensuite être publiés dans la rubrique Guides du site.",
         topics: 0,
         posts: 0,
       },
@@ -74,7 +82,7 @@ export const forumSections: ForumSection[] = [
         id: "characters",
         slug: "personnages",
         title: "Personnages",
-        description: "Atelier de création, demandes d’avis et discussions autour des fiches personnages hébergées sur Imetheran.",
+        description: "Atelier hors-RP de création, demandes d’avis et discussions autour des fiches personnages hébergées sur Imetheran.",
         topics: 0,
         posts: 0,
       },
@@ -82,8 +90,8 @@ export const forumSections: ForumSection[] = [
         id: "roleplay-search",
         slug: "recherches-de-roleplay",
         title: "Recherches de Rôleplay",
-        description: "Proposez une idée de scène, cherchez des partenaires ou rejoignez une intrigue ouverte.",
-        badge: "Ouvert au jeu",
+        description: "Organisez une future scène, cherchez des partenaires ou proposez une idée de jeu avant son lancement en RP.",
+        badge: "Organisation HRP",
         topics: 0,
         posts: 0,
       },
@@ -92,31 +100,36 @@ export const forumSections: ForumSection[] = [
   {
     id: "chronicles",
     title: "Chroniques",
-    subtitle: "Les récits partagés, expéditions et scènes libres qui constituent la mémoire RP de la communauté.",
+    subtitle: "La grande zone RP d’Imetheran : scènes libres, scénarios fil rouge et histoires ciblées entre membres.",
     kind: "chronicles",
-    eyebrow: "Récits partagés",
+    mode: "rp",
+    access: "members",
+    eyebrow: "Rôleplay communautaire",
     boards: [
-      {
-        id: "eorzea-chronicles",
-        slug: "chroniques-eorzea",
-        title: "Chroniques d’Éorzéa",
-        description: "Les grands récits communautaires et leurs sujets RP associés. Les dossiers de chronique restent consultables dans la rubrique Chroniques du site.",
-        topics: 0,
-        posts: 0,
-      },
-      {
-        id: "expeditions",
-        slug: "expeditions-quetes",
-        title: "Expéditions & Quêtes",
-        description: "Aventures ponctuelles, missions, explorations et propositions de jeu avec un objectif précis.",
-        topics: 0,
-        posts: 0,
-      },
       {
         id: "free-roleplay",
         slug: "roleplay-libre",
         title: "Rôleplay Libre",
-        description: "Scènes ouvertes ou spontanées qui ne dépendent pas d’une chronique ou d’un événement particulier.",
+        description: "Scènes ouvertes, rencontres spontanées et récits qui ne dépendent pas d’un scénario communautaire particulier.",
+        badge: "RP ouvert",
+        topics: 0,
+        posts: 0,
+      },
+      {
+        id: "storylines",
+        slug: "scenarios-fil-rouge",
+        title: "Scénarios fil rouge",
+        description: "Les grandes intrigues suivies dans le temps, leurs différents actes et les sujets RP qui composent leur progression.",
+        badge: "Scénarios",
+        topics: 0,
+        posts: 0,
+      },
+      {
+        id: "targeted-roleplay",
+        slug: "roleplay-cible",
+        title: "Rôleplays ciblés",
+        description: "Scènes prévues entre certains membres ou personnages, pour développer une relation, une intrigue ou un objectif précis.",
+        badge: "Entre membres",
         topics: 0,
         posts: 0,
       },
@@ -125,9 +138,11 @@ export const forumSections: ForumSection[] = [
   {
     id: "evercold",
     title: "Evercold",
-    subtitle: "Espace saisonnier dédié à la campagne active. Cette catégorie est pensée pour être remplacée ou archivée depuis l’administration.",
+    subtitle: "Espace RP saisonnier dédié à la campagne active. Cette catégorie pourra être remplacée ou archivée depuis l’administration.",
     kind: "campaign",
-    eyebrow: "Campagne en cours",
+    mode: "rp",
+    access: "members",
+    eyebrow: "Campagne RP en cours",
     boards: [
       {
         id: "fourth-reflection",
@@ -158,9 +173,10 @@ export const forumSections: ForumSection[] = [
   },
   {
     id: "ffxiv",
-    title: "FINAL FANTASY XIV",
+    title: "Final Fantasy XIV",
     subtitle: "Le jeu en dehors du rôleplay : actualités, contenu, entraide et discussions entre joueurs.",
     kind: "game",
+    mode: "non-rp",
     eyebrow: "Autour du jeu",
     boards: [
       {
