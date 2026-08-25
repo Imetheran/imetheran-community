@@ -1,9 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imetheran-community.vercel.app";
 
 function readField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -33,16 +34,13 @@ export async function signup(formData: FormData) {
   if (displayName.length > 64) redirect("/connexion?erreur=pseudo&mode=inscription");
   if (password.length < 10) redirect("/connexion?erreur=mot-de-passe&mode=inscription");
 
-  const requestHeaders = await headers();
-  const origin = requestHeaders.get("origin") ?? "https://imetheran-community.vercel.app";
   const supabase = await createClient();
-
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { display_name: displayName },
-      emailRedirectTo: `${origin}/auth/confirm`,
+      emailRedirectTo: `${siteUrl}/auth/confirm`,
     },
   });
 
