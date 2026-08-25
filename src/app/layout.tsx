@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./content-hub.css";
+import "./image-quality.css";
 
 export const metadata: Metadata = {
   title: {
