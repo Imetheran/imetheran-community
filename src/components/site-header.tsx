@@ -13,15 +13,17 @@ const links = [
 export function SiteHeader() {
   return (
     <header className="topbar">
-      <div className="topbar__ornament" aria-hidden="true">✦</div>
-      <nav className="main-nav" aria-label="Navigation principale">
-        {links.map(([label, href]) => (
-          <Link key={href} href={href} className="main-nav__link">
-            {label}
-          </Link>
-        ))}
-      </nav>
-      <div className="topbar__ornament" aria-hidden="true">✦</div>
+      <div className="topbar__inner content-frame">
+        <div className="topbar__ornament" aria-hidden="true">✦</div>
+        <nav className="main-nav" aria-label="Navigation principale">
+          {links.map(([label, href]) => (
+            <Link key={href} href={href} className="main-nav__link">
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <div className="topbar__ornament" aria-hidden="true">✦</div>
+      </div>
     </header>
   );
 }
