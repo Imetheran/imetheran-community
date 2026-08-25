@@ -14,6 +14,26 @@ function BoardIcon({ kind }: { kind: string }) {
   );
 }
 
+function SectionMeta({ mode, access, campaign }: {
+  mode: "rp" | "non-rp";
+  access?: "guest-read" | "members";
+  campaign?: boolean;
+}) {
+  return (
+    <div className="forum-section__meta" aria-label="Nature et accès de la catégorie">
+      <span className={`forum-section__mode forum-section__mode--${mode}`}>
+        {mode === "rp" ? "RP" : "Hors-RP"}
+      </span>
+      {access ? (
+        <span className={`forum-section__access forum-section__access--${access}`}>
+          {access === "guest-read" ? "Lecture invités" : "Membres uniquement"}
+        </span>
+      ) : null}
+      {campaign ? <span className="status-pill">Campagne active</span> : null}
+    </div>
+  );
+}
+
 export default function ForumPage() {
   return (
     <main className="site-shell forum-page">
@@ -26,8 +46,8 @@ export default function ForumPage() {
           <p className="eyebrow">Place publique</p>
           <h1 id="forum-title">Forum</h1>
           <p>
-            Le cœur des échanges d’Imetheran : vie communautaire, recherches de rôleplay,
-            chroniques partagées, campagnes saisonnières et discussions autour de Final Fantasy XIV.
+            Le cœur des échanges d’Imetheran : espaces communautaires hors-RP, préparation du jeu,
+            scènes rôleplay, campagnes saisonnières et discussions autour de Final Fantasy XIV.
           </p>
           <div className="forum-hero__actions">
             <ThemeToggle />
@@ -42,8 +62,8 @@ export default function ForumPage() {
             <p className="eyebrow">Index communautaire</p>
             <h2 id="forum-index-title">Les espaces du forum</h2>
             <p>
-              Cette structure reprend le squelette historique du forum. Les compteurs, sujets et derniers messages
-              seront alimentés automatiquement lorsque le backend sera connecté.
+              Les zones RP et hors-RP sont maintenant séparées explicitement. Les droits indiqués ici
+              serviront ensuite de base aux permissions du backend.
             </p>
           </div>
           <div className="forum-index__summary" aria-label="Résumé du forum">
@@ -58,10 +78,10 @@ export default function ForumPage() {
             <span className="forum-index__notice-mark" aria-hidden="true">✦</span>
             <div>
               <strong>Forum en préparation</strong>
-              <p>La hiérarchie est réelle, mais aucune activité fictive n’est affichée avant l’ouverture du backend.</p>
+              <p>La hiérarchie et les règles d’accès sont définies, mais aucune activité fictive n’est affichée avant l’ouverture du backend.</p>
             </div>
           </div>
-          <span className="status-pill status-pill--quiet">Structure validable</span>
+          <span className="status-pill status-pill--quiet">Structure en cours</span>
         </div>
 
         <div className="forum-sections">
@@ -76,7 +96,11 @@ export default function ForumPage() {
                   </div>
                 </div>
                 <p className="forum-section__subtitle">{section.subtitle}</p>
-                {section.kind === "campaign" ? <span className="status-pill">Campagne active</span> : null}
+                <SectionMeta
+                  mode={section.mode}
+                  access={section.access}
+                  campaign={section.kind === "campaign"}
+                />
               </header>
 
               <div className="forum-board-list">
