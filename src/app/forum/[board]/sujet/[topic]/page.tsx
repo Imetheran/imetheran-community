@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { ForumThreadActions } from "@/components/forum-thread-actions";
 import { forumSections } from "@/content/forum-content";
 import { demoTopics, getDemoTopic } from "@/content/forum-demo-content";
 
@@ -27,9 +28,11 @@ export default async function ForumTopicPage({
 
   if (!match || !topic) notFound();
   const { board, section } = match;
+  const firstPostId = topic.posts.at(0)?.id;
+  const lastPostId = topic.posts.at(-1)?.id;
 
   return (
-    <main className="site-shell forum-thread-page">
+    <main className="site-shell forum-thread-page" id="forum-thread-top">
       <SiteHeader />
 
       <section className="forum-thread-head">
@@ -45,13 +48,14 @@ export default async function ForumTopicPage({
               <div className="forum-thread-head__badges">
                 {topic.pinned ? <span className="forum-board__badge">Épinglé</span> : null}
                 {topic.locked ? <span className="forum-board__badge">Verrouillé</span> : null}
+                {topic.status === "finished" ? <span className="forum-board__badge">Terminé</span> : null}
                 {topic.tags.map((tag) => <span key={tag}>{tag}</span>)}
               </div>
               <h1>{topic.title}</h1>
               <p>{topic.excerpt}</p>
             </div>
             <div className="forum-thread-head__stats">
-              <span><strong>{topic.replies}</strong><small>Réponses</small></span>
+              <span><strong>{topic.posts.length || topic.replies + 1}</strong><small>Messages</small></span>
               <span><strong>{topic.views}</strong><small>Vues</small></span>
             </div>
           </div>
@@ -60,11 +64,11 @@ export default async function ForumTopicPage({
 
       <section className="forum-thread content-frame">
         <div className="forum-thread__toolbar">
-          <Link className="text-link" href={`/forum/${board.slug}`}>← Retour aux sujets</Link>
-          <div>
-            <button className="button button--ghost button--small" type="button" disabled>Suivre le sujet</button>
-            {!topic.locked ? <a className="button button--primary button--small" href="#repondre">Répondre</a> : null}
+          <div className="forum-thread__toolbar-left">
+            <Link className="text-link" href={`/forum/${board.slug}`}>← Retour aux sujets</Link>
+            <span>Page 1 sur 1</span>
           </div>
+          <ForumThreadActions locked={topic.locked} />
         </div>
 
         <div className="forum-thread__demo-note">
@@ -72,13 +76,24 @@ export default async function ForumTopicPage({
           <p><strong>Sujet fictif de démonstration.</strong> Il sert à valider la lecture, les identités membre/personnage et la future structure des messages.</p>
         </div>
 
+        {topic.posts.length > 1 ? (
+          <nav className="forum-thread-jump" aria-label="Navigation dans le sujet">
+            <span>1–{topic.posts.length} sur {topic.posts.length} messages</span>
+            <div>
+              {firstPostId ? <a href={`#${firstPostId}`}>Premier message</a> : null}
+              {lastPostId ? <a href={`#${lastPostId}`}>Dernier message ↓</a> : null}
+            </div>
+          </nav>
+        ) : null}
+
         <div className="forum-posts">
           {topic.posts.length > 0 ? topic.posts.map((post, index) => (
-            <article className="forum-post" id={post.id} key={post.id}>
+            <article className={`forum-post${index === 0 ? " forum-post--topic-author" : ""}`} id={post.id} key={post.id}>
               <aside className="forum-post__author">
                 <div className="forum-post__avatar" aria-hidden="true">{post.author.initials}</div>
                 <strong>{post.author.name}</strong>
                 <span className={`forum-post__role forum-post__role--${post.author.role}`}>{post.author.role === "staff" ? "Équipe" : "Membre"}</span>
+                {index === 0 ? <span className="forum-post__starter">Auteur du sujet</span> : null}
                 {post.author.characterName && post.author.characterSlug ? (
                   <Link className="forum-post__character" href={`/personnages/${post.author.characterSlug}`}>
                     <small>Écrit avec</small>
@@ -90,7 +105,7 @@ export default async function ForumTopicPage({
               <div className="forum-post__body">
                 <header>
                   <div>
-                    <span className="forum-post__number">#{index + 1}</span>
+                    <a className="forum-post__number" href={`#${post.id}`} aria-label={`Lien vers le message ${index + 1}`}>#{index + 1}</a>
                     <time>{post.postedAt}</time>
                     {post.editedAt ? <small>Modifié {post.editedAt}</small> : null}
                   </div>
@@ -119,6 +134,13 @@ export default async function ForumTopicPage({
             </div>
           )}
         </div>
+
+        {topic.posts.length > 1 ? (
+          <nav className="forum-thread-jump forum-thread-jump--bottom" aria-label="Fin du sujet">
+            <span>Page 1 sur 1</span>
+            <div><a href="#forum-thread-top">↑ Retour en haut</a></div>
+          </nav>
+        ) : null}
 
         {!topic.locked ? (
           <section className="forum-reply-box" id="repondre" aria-labelledby="reply-title">
