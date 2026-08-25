@@ -1,4 +1,4 @@
-/* Consistent focus states for forum composer controls */
+/* Consistent focus states and field alignment for forum composer controls */
 .forum-topic-editor input:focus,
 .forum-topic-editor select:focus,
 .forum-topic-editor textarea:focus,
@@ -15,4 +15,21 @@
 .forum-reply-box textarea:focus-visible {
   outline: 1px solid var(--accent-bright);
   outline-offset: 2px;
+}
+
+/* Keep paired fields aligned even when only one label has helper text. */
+.forum-editor-grid {
+  align-items: start;
+}
+
+.forum-editor-grid > label {
+  align-self: start;
+  align-content: start;
+  grid-auto-rows: max-content;
+}
+
+.forum-editor-grid > label > input,
+.forum-editor-grid > label > select,
+.forum-editor-grid > label > textarea {
+  align-self: start;
 }
