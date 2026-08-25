@@ -5,10 +5,11 @@ import { featuredChronicle, featuredGazette, formatPublicationDate } from "@/con
 import { characters } from "@/content/character-content";
 
 const forumCategories = [
-  { title: "La communauté", description: "Présentations, discussions générales et vie d’Imetheran.", meta: "Accueil & échanges" },
-  { title: "Rôleplay", description: "Recherche de partenaires, RP libre, événements et archives.", meta: "Le cœur du forum" },
-  { title: "Chroniques", description: "Les fils rouges communautaires et les sujets liés aux scénarios.", meta: "Histoires partagées" },
-  { title: "Lore & création", description: "Univers, personnages, écriture et ressources pour enrichir vos récits.", meta: "Documentation RP" },
+  { title: "La Communauté", description: "Annonces, présentations et discussions générales accessibles en lecture aux invités.", meta: "Hors-RP · Lecture invités" },
+  { title: "Univers & Rôleplay", description: "Préparation du jeu, personnages et recherches de partenaires dans un espace réservé aux membres.", meta: "Hors-RP · Membres" },
+  { title: "Chroniques", description: "RP libres, scénarios fil rouge et scènes ciblées entre membres.", meta: "RP · Membres" },
+  { title: "Evercold", description: "La campagne RP saisonnière active et ses intrigues associées.", meta: "RP · Campagne" },
+  { title: "Final Fantasy XIV", description: "Actualités, gameplay, entraide et discussions hors-RP autour du jeu.", meta: "Hors-RP" },
 ];
 
 const editorialItems = [
@@ -185,13 +186,13 @@ export default function Home() {
           <header className="section-heading section-heading--center">
             <p className="eyebrow">Place publique</p>
             <h2 id="forum-title">Le forum</h2>
-            <p>Un espace pour discuter, écrire, organiser du RP et conserver la mémoire de la communauté.</p>
+            <p>Des espaces hors-RP pour la communauté et la préparation du jeu, puis des sections RP dédiées aux scènes et campagnes.</p>
           </header>
 
           <div className="forum-grid">
             {forumCategories.map((category, index) => (
               <Link className="forum-category" href="/forum" key={category.title}>
-                <span className="forum-category__index">0{index + 1}</span>
+                <span className="forum-category__index">{String(index + 1).padStart(2, "0")}</span>
                 <span className="forum-category__content">
                   <small>{category.meta}</small>
                   <strong>{category.title}</strong>
