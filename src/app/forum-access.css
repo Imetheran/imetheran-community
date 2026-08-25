@@ -1,0 +1,76 @@
+/* Forum RP / access metadata */
+.forum-section__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .45rem;
+  flex-wrap: wrap;
+}
+
+.forum-section__mode,
+.forum-section__access {
+  min-height: 27px;
+  padding: .3rem .5rem;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: .55rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.forum-section__mode--rp {
+  border-color: color-mix(in srgb, var(--accent-bright) 68%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent-bright);
+}
+
+.forum-section__mode--non-rp {
+  background: color-mix(in srgb, var(--surface-raised) 82%, transparent);
+  color: var(--muted);
+}
+
+.forum-section__access--guest-read {
+  border-color: color-mix(in srgb, #9fc8a8 42%, var(--border));
+  color: color-mix(in srgb, #bfe0c4 78%, var(--text));
+}
+
+.forum-section__access--members {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  color: var(--text);
+}
+
+.forum-section__meta .status-pill {
+  min-height: 27px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The section name is a proper title, not branding in all caps. */
+.forum-section--game .forum-section__identity h2 {
+  text-transform: none;
+}
+
+@media (max-width: 1080px) {
+  .forum-section__meta {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding-left: 50px;
+  }
+}
+
+@media (max-width: 780px) {
+  .forum-section__meta {
+    padding-left: 50px;
+  }
+}
+
+@media (max-width: 560px) {
+  .forum-section__meta {
+    padding-left: 0;
+  }
+}
