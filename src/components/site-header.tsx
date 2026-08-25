@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthNav } from "@/components/auth-nav";
 
 const links = [
   ["Accueil", "/"],
@@ -27,7 +28,10 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <span className="topbar__status">Communauté RP</span>
+        <div className="topbar__member">
+          <span className="topbar__status">Communauté RP</span>
+          <AuthNav />
+        </div>
       </div>
     </header>
   );
