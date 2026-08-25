@@ -1,0 +1,18 @@
+/* Consistent focus states for forum composer controls */
+.forum-topic-editor input:focus,
+.forum-topic-editor select:focus,
+.forum-topic-editor textarea:focus,
+.forum-reply-box textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 24%, transparent);
+  background: var(--surface-soft);
+}
+
+.forum-topic-editor input:focus-visible,
+.forum-topic-editor select:focus-visible,
+.forum-topic-editor textarea:focus-visible,
+.forum-reply-box textarea:focus-visible {
+  outline: 1px solid var(--accent-bright);
+  outline-offset: 2px;
+}
