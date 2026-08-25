@@ -6,6 +6,7 @@ import "./gazette-issue.css";
 import "./chronicle-hub.css";
 import "./character-hub.css";
 import "./character-editor.css";
+import "./character-actions.css";
 
 export const metadata: Metadata = {
   title: {
