@@ -25,7 +25,10 @@ export default async function CharacterProfilePage({
         <div className="character-profile-hero__image" aria-hidden="true" />
         <div className="character-profile-hero__veil" aria-hidden="true" />
         <div className="content-frame character-profile-hero__content">
-          <Link className="character-profile-hero__back" href="/personnages">← Tous les personnages</Link>
+          <div className="character-profile-hero__nav">
+            <Link className="character-profile-hero__back" href="/personnages">← Tous les personnages</Link>
+            <Link className="button button--ghost button--small" href={`/personnages/${character.slug}/modifier`}>Modifier cette fiche</Link>
+          </div>
           <div className="character-profile-hero__layout">
             <div className="character-profile-portrait" aria-hidden="true">
               <span>{character.initials}</span>
