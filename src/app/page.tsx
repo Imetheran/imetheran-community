@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { featuredGazette, formatPublicationDate } from "@/content/editorial-content";
+import { featuredChronicle, featuredGazette, formatPublicationDate } from "@/content/editorial-content";
 
 const forumCategories = [
   { title: "La communauté", description: "Présentations, discussions générales et vie d’Imetheran.", meta: "Accueil & échanges" },
@@ -150,19 +150,30 @@ export default function Home() {
           <header className="section-heading section-heading--row">
             <div>
               <p className="eyebrow">Les fils rouges</p>
-              <h2 id="chronicles-title">Chroniques en cours</h2>
+              <h2 id="chronicles-title">Chronique mise en avant</h2>
             </div>
             <Link className="text-link" href="/chroniques">Toutes les chroniques <span aria-hidden="true">→</span></Link>
           </header>
 
           <article className="chronicle-feature">
-            <div className="chronicle-feature__art" aria-hidden="true" />
+            <div
+              className="chronicle-feature__art"
+              style={{
+                backgroundImage: `linear-gradient(90deg, transparent 58%, var(--surface)), linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.56)), url(${featuredChronicle.coverImage})`,
+              }}
+              aria-hidden="true"
+            />
             <div className="chronicle-feature__body">
-              <span className="status-pill">À venir</span>
-              <p className="panel__kicker">Première chronique</p>
-              <h3>Les prochains récits prendront place ici</h3>
-              <p>Chaque chronique réunira son synopsis, son statut, les personnages impliqués et les sujets de forum associés. Cette section deviendra le fil conducteur des grandes histoires de la communauté.</p>
-              <Link className="button button--small" href="/chroniques">Explorer les chroniques</Link>
+              <span className="status-pill">Ouverte · Démo</span>
+              <p className="chronicle-feature__meta">{featuredChronicle.subtitle}</p>
+              <h3>{featuredChronicle.title}</h3>
+              <p>{featuredChronicle.synopsis}</p>
+              <div className="chronicle-feature__details">
+                <span>{featuredChronicle.location}</span>
+                <span>{featuredChronicle.chapters.length} actes</span>
+                <span>{featuredChronicle.participants.length} places affichées</span>
+              </div>
+              <Link className="button button--small" href={`/chroniques#${featuredChronicle.slug}`}>Ouvrir le dossier</Link>
             </div>
           </article>
         </div>
