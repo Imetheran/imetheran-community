@@ -11,6 +11,7 @@ import "./sociogram.css";
 import "./forum-hub.css";
 import "./forum-access.css";
 import "./forum-thread.css";
+import "./forum-form-focus.css";
 
 export const metadata: Metadata = {
   title: {
