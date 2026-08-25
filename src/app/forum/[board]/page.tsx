@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { ForumBoardTopics } from "@/components/forum-board-topics";
 import { forumSections } from "@/content/forum-content";
 import { getDemoTopicsForBoard } from "@/content/forum-demo-content";
 
@@ -23,8 +24,6 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
 
   const { board, section } = match;
   const topics = getDemoTopicsForBoard(board.slug);
-  const pinned = topics.filter((topic) => topic.pinned);
-  const regular = topics.filter((topic) => !topic.pinned);
 
   return (
     <main className="site-shell forum-board-page">
@@ -69,23 +68,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
         ) : null}
 
         {topics.length > 0 ? (
-          <div className="forum-topic-groups">
-            {pinned.length > 0 ? (
-              <section className="forum-topic-group">
-                <header><span>Épinglés</span><small>{pinned.length} sujet{pinned.length > 1 ? "s" : ""}</small></header>
-                <div className="forum-topic-list">
-                  {pinned.map((topic) => <TopicRow key={topic.id} boardSlug={board.slug} topic={topic} />)}
-                </div>
-              </section>
-            ) : null}
-
-            <section className="forum-topic-group">
-              <header><span>Sujets</span><small>{regular.length} sujet{regular.length > 1 ? "s" : ""}</small></header>
-              <div className="forum-topic-list">
-                {regular.map((topic) => <TopicRow key={topic.id} boardSlug={board.slug} topic={topic} />)}
-              </div>
-            </section>
-          </div>
+          <ForumBoardTopics boardSlug={board.slug} topics={topics} />
         ) : (
           <div className="forum-empty-board">
             <span aria-hidden="true">✦</span>
@@ -99,32 +82,5 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
         )}
       </section>
     </main>
-  );
-}
-
-function TopicRow({ boardSlug, topic }: { boardSlug: string; topic: ReturnType<typeof getDemoTopicsForBoard>[number] }) {
-  return (
-    <Link className={`forum-topic-row${topic.pinned ? " forum-topic-row--pinned" : ""}`} href={`/forum/${boardSlug}/sujet/${topic.slug}`}>
-      <span className="forum-topic-row__state" aria-hidden="true">{topic.locked ? "◆" : topic.pinned ? "✦" : "◇"}</span>
-      <div className="forum-topic-row__main">
-        <div className="forum-topic-row__title">
-          <h2>{topic.title}</h2>
-          {topic.pinned ? <span>Épinglé</span> : null}
-          {topic.locked ? <span>Verrouillé</span> : null}
-          {topic.status === "finished" ? <span>Terminé</span> : null}
-        </div>
-        <p>{topic.excerpt}</p>
-        <div className="forum-topic-row__tags">{topic.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-      </div>
-      <div className="forum-topic-row__author">
-        <span>{topic.author.initials}</span>
-        <div><small>Ouvert par</small><strong>{topic.author.name}</strong><em>{topic.createdAt}</em></div>
-      </div>
-      <div className="forum-topic-row__numbers">
-        <span><strong>{topic.replies}</strong><small>Réponses</small></span>
-        <span><strong>{topic.views}</strong><small>Vues</small></span>
-      </div>
-      <div className="forum-topic-row__last"><small>Dernière activité</small><strong>{topic.lastActivity}</strong></div>
-    </Link>
   );
 }
