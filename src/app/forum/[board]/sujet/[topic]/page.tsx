@@ -26,6 +26,12 @@ function initials(name: string) {
   return result || "IM";
 }
 
+function readRole(claims: Record<string, unknown> | undefined) {
+  const appMetadata = claims?.app_metadata;
+  if (!appMetadata || typeof appMetadata !== "object" || !("role" in appMetadata)) return "member";
+  return String((appMetadata as { role?: unknown }).role ?? "member");
+}
+
 export default async function ForumTopicPage({
   params,
   searchParams,
@@ -36,8 +42,10 @@ export default async function ForumTopicPage({
   const [{ board: boardSlug, topic: topicSlug }, query] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
-  const claims = claimsData?.claims;
+  const claims = claimsData?.claims as Record<string, unknown> | undefined;
   const userId = typeof claims?.sub === "string" ? claims.sub : null;
+  const role = readRole(claims);
+  const canModerate = role === "admin" || role === "moderator";
 
   const { data: boardRow, error: boardError } = await supabase
     .from("forum_boards")
@@ -152,6 +160,7 @@ export default async function ForumTopicPage({
   const loginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardRow.slug}/sujet/${topic.slug}#repondre`)}`;
   const firstPostId = postRows.at(0)?.id ?? null;
   const lastPostId = postRows.at(-1)?.id ?? topic.last_post_id;
+  const repliesOpen = topic.status === "open" && !topic.is_locked;
   const replyError = query.erreur === "reponse"
     ? "Votre réponse doit contenir au moins quelques caractères."
     : query.erreur === "publication"
@@ -177,6 +186,7 @@ export default async function ForumTopicPage({
                 {topic.is_pinned ? <span className="forum-board__badge">Épinglé</span> : null}
                 {topic.is_locked ? <span className="forum-board__badge">Verrouillé</span> : null}
                 {topic.status === "finished" ? <span className="forum-board__badge">Terminé</span> : null}
+                {topic.status === "archived" ? <span className="forum-board__badge">Archivé</span> : null}
                 {topic.topic_type ? <span>{topic.topic_type}</span> : null}
                 {topic.rp_location ? <span>{topic.rp_location}</span> : null}
                 {(Array.isArray(topic.tags) ? topic.tags : []).map((tag) => <span key={tag}>{tag}</span>)}
@@ -200,9 +210,14 @@ export default async function ForumTopicPage({
           </div>
           <ForumThreadActions
             topicId={topic.id}
+            boardSlug={boardRow.slug}
+            topicSlug={topic.slug}
             locked={topic.is_locked}
+            pinned={topic.is_pinned}
+            status={topic.status}
             authenticated={Boolean(userId)}
             initialFollowing={initialFollowing}
+            canModerate={canModerate}
             loginHref={loginHref}
           />
         </div>
@@ -270,7 +285,7 @@ export default async function ForumTopicPage({
           </nav>
         ) : null}
 
-        {!topic.is_locked ? (
+        {repliesOpen ? (
           userId ? (
             <section className="forum-reply-box" id="repondre" aria-labelledby="reply-title">
               <div className="forum-reply-box__heading">
@@ -308,7 +323,13 @@ export default async function ForumTopicPage({
             </div>
           )
         ) : (
-          <div className="forum-thread-locked">Ce sujet est verrouillé. Aucune nouvelle réponse ne peut être publiée.</div>
+          <div className="forum-thread-locked">
+            {topic.status === "archived"
+              ? "Ce sujet est archivé. Aucune nouvelle réponse ne peut être publiée."
+              : topic.status === "finished"
+                ? "Ce sujet est terminé. Il peut être rouvert par l’équipe si nécessaire."
+                : "Ce sujet est verrouillé. Aucune nouvelle réponse ne peut être publiée."}
+          </div>
         )}
       </section>
     </main>
