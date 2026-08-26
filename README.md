@@ -4,6 +4,8 @@ Site communautaire francophone Final Fantasy XIV consacré au rôleplay, aux per
 
 Production : `https://imetheran-community.vercel.app`
 
+Les mises à jour de la branche `main` sont destinées à la production Vercel.
+
 ## Socle technique
 
 - Next.js 16 / App Router / React 19 / TypeScript
