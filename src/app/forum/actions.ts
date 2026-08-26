@@ -8,6 +8,15 @@ import { createClient } from "@/lib/supabase/server";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const slugPattern = /^[a-z0-9-]+$/;
 
+type ForumModerationAction =
+  | "pin"
+  | "unpin"
+  | "lock"
+  | "unlock"
+  | "finish"
+  | "archive"
+  | "reopen";
+
 function readField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
@@ -42,13 +51,23 @@ function readTags(value: string) {
   ).slice(0, 5);
 }
 
-async function getAuthenticatedUserId() {
+function readRole(claims: Record<string, unknown> | undefined) {
+  const appMetadata = claims?.app_metadata;
+  if (!appMetadata || typeof appMetadata !== "object" || !("role" in appMetadata)) return "member";
+  return String((appMetadata as { role?: unknown }).role ?? "member");
+}
+
+async function getAuthenticatedUser() {
   const supabase = await createClient();
   const { data: claimsData, error } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims?.sub;
+  const claims = claimsData?.claims as Record<string, unknown> | undefined;
+  const userId = claims?.sub;
 
-  if (error || typeof userId !== "string") return { supabase, userId: null };
-  return { supabase, userId };
+  if (error || typeof userId !== "string") {
+    return { supabase, userId: null, role: "member" };
+  }
+
+  return { supabase, userId, role: readRole(claims) };
 }
 
 export async function createForumTopic(formData: FormData) {
@@ -65,7 +84,7 @@ export async function createForumTopic(formData: FormData) {
     redirect(`/forum/${boardSlug}/nouveau?erreur=champs`);
   }
 
-  const { supabase, userId } = await getAuthenticatedUserId();
+  const { supabase, userId } = await getAuthenticatedUser();
   if (!userId) {
     redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/nouveau`)}`);
   }
@@ -104,7 +123,7 @@ export async function createForumPost(formData: FormData) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=reponse#repondre`);
   }
 
-  const { supabase, userId } = await getAuthenticatedUserId();
+  const { supabase, userId } = await getAuthenticatedUser();
   if (!userId) {
     redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}#repondre`)}`);
   }
@@ -129,7 +148,7 @@ export async function markTopicRead(topicId: string, lastPostId: string | null) 
   if (!uuidPattern.test(topicId)) return { ok: false };
   if (lastPostId && !uuidPattern.test(lastPostId)) return { ok: false };
 
-  const { supabase, userId } = await getAuthenticatedUserId();
+  const { supabase, userId } = await getAuthenticatedUser();
   if (!userId) return { ok: false };
 
   const { error } = await supabase
@@ -150,7 +169,7 @@ export async function markTopicRead(topicId: string, lastPostId: string | null) 
 export async function setTopicFollow(topicId: string, shouldFollow: boolean) {
   if (!uuidPattern.test(topicId)) return { ok: false, following: false };
 
-  const { supabase, userId } = await getAuthenticatedUserId();
+  const { supabase, userId } = await getAuthenticatedUser();
   if (!userId) return { ok: false, following: false };
 
   if (shouldFollow) {
@@ -167,4 +186,71 @@ export async function setTopicFollow(topicId: string, shouldFollow: boolean) {
     .eq("user_id", userId);
 
   return { ok: !error, following: error ? true : false };
+}
+
+export async function moderateForumTopic(
+  topicId: string,
+  boardSlugValue: string,
+  topicSlugValue: string,
+  action: ForumModerationAction,
+) {
+  const boardSlug = safeSlug(boardSlugValue);
+  const topicSlug = safeSlug(topicSlugValue);
+  if (!uuidPattern.test(topicId) || !boardSlug || !topicSlug) {
+    return { ok: false as const, error: "invalid" as const };
+  }
+
+  const { supabase, userId, role } = await getAuthenticatedUser();
+  if (!userId || (role !== "admin" && role !== "moderator")) {
+    return { ok: false as const, error: "forbidden" as const };
+  }
+
+  const update: { is_pinned?: boolean; is_locked?: boolean; status?: string } = {};
+  switch (action) {
+    case "pin":
+      update.is_pinned = true;
+      break;
+    case "unpin":
+      update.is_pinned = false;
+      break;
+    case "lock":
+      update.is_locked = true;
+      break;
+    case "unlock":
+      update.is_locked = false;
+      break;
+    case "finish":
+      update.status = "finished";
+      break;
+    case "archive":
+      update.status = "archived";
+      update.is_locked = true;
+      break;
+    case "reopen":
+      update.status = "open";
+      update.is_locked = false;
+      break;
+    default:
+      return { ok: false as const, error: "invalid" as const };
+  }
+
+  const { data, error } = await supabase
+    .from("forum_topics")
+    .update(update)
+    .eq("id", topicId)
+    .select("is_pinned, is_locked, status")
+    .single();
+
+  if (error || !data) return { ok: false as const, error: "update" as const };
+
+  revalidatePath("/forum");
+  revalidatePath(`/forum/${boardSlug}`);
+  revalidatePath(`/forum/${boardSlug}/sujet/${topicSlug}`);
+
+  return {
+    ok: true as const,
+    pinned: Boolean(data.is_pinned),
+    locked: Boolean(data.is_locked),
+    status: String(data.status),
+  };
 }
