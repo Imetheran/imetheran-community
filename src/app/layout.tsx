@@ -15,6 +15,7 @@ import "./forum-form-focus.css";
 import "./forum-daily-use.css";
 import "./forum-live.css";
 import "./auth.css";
+import "./admin.css";
 
 export const metadata: Metadata = {
   title: {

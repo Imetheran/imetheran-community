@@ -103,10 +103,11 @@ export default async function ComptePage({
               <div><dt>Inscription</dt><dd>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(new Date(profile.created_at))}</dd></div>
             </dl>
             <div className="account-next">
-              <strong>Prochaine connexion</strong>
-              <p>Les personnages, sujets suivis et notifications viendront se greffer ici au fur et à mesure du branchement du site.</p>
+              <strong>Votre espace membre</strong>
+              <p>Le forum est connecté. Les personnages, relations et notifications viendront enrichir ce tableau de bord à mesure de leur branchement.</p>
             </div>
             <div className="account-card__links">
+              {role === "admin" ? <Link className="text-link" href="/administration">Administration →</Link> : null}
               <Link className="text-link" href="/personnages">Voir les personnages →</Link>
               <Link className="text-link" href="/forum">Aller au forum →</Link>
             </div>
