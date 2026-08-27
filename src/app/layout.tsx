@@ -21,6 +21,7 @@ import "./auth.css";
 import "./admin.css";
 import "./admin-members.css";
 import "./admin-chronicles.css";
+import "./admin-gazettes.css";
 
 export const metadata: Metadata = {
   title: {

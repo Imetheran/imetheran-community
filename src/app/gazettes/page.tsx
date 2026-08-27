@@ -1,14 +1,21 @@
+import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { formatPublicationDate, gazettes } from "@/content/editorial-content";
+import { formatGazetteDate } from "@/lib/gazettes";
+import { createClient } from "@/lib/supabase/server";
 
-export default function GazettesPage() {
-  const gazette = gazettes[0];
-  const lead = gazette.articles.find((article) => article.kind === "lead");
-  const column = gazette.articles.find((article) => article.kind === "column");
-  const brief = gazette.articles.find((article) => article.kind === "brief");
-  const recipe = gazette.articles.find((article) => article.kind === "recipe");
-  const quote = gazette.articles.find((article) => article.kind === "quote");
+export const dynamic = "force-dynamic";
+
+export default async function GazettesPage() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("gazettes")
+    .select("id, slug, title, headline, edition, issue_number, excerpt, published_at, featured, cover_image, highlights")
+    .eq("publication_status", "published")
+    .order("featured", { ascending: false })
+    .order("published_at", { ascending: false });
+
+  const gazettes = data ?? [];
 
   return (
     <main className="site-shell gazettes-page">
@@ -31,109 +38,50 @@ export default function GazettesPage() {
       <section className="gazette-library content-frame" aria-labelledby="gazette-library-title">
         <header className="section-heading section-heading--row">
           <div>
-            <p className="eyebrow">Numéro d’essai</p>
+            <p className="eyebrow">Archives de la rédaction</p>
             <h2 id="gazette-library-title">Feuilleter la Gazette</h2>
+            <p>Chaque numéro publié depuis l’administration rejoint automatiquement cette bibliothèque.</p>
           </div>
-          <span className="status-pill status-pill--quiet">Maquette éditoriale</span>
+          <span className="status-pill status-pill--quiet">{gazettes.length} publiée{gazettes.length > 1 ? "s" : ""}</span>
         </header>
 
-        <p className="gazette-library__intro">
-          Ce numéro zéro sert de laboratoire visuel : plusieurs formats d’articles sont déjà
-          représentés afin de préparer ce qui pourra être composé plus tard depuis l’administration.
-        </p>
-
-        <article className="gazette-issue" id={gazette.slug}>
-          <header className="gazette-issue__header">
-            <div className="gazette-issue__strapline">
-              <span>Édition {String(gazette.issueNumber).padStart(2, "0")}</span>
-              <span>{formatPublicationDate(gazette.publishedAt)}</span>
-              <span>Imetheran · Éorzéa et au-delà</span>
-            </div>
-            <div className="gazette-issue__masthead">{gazette.title}</div>
-            <div className="gazette-issue__rule" aria-hidden="true"><span>✦</span></div>
-          </header>
-
-          <div
-            className="gazette-issue__hero"
-            style={{ backgroundImage: `linear-gradient(180deg, rgba(11,8,5,.05), rgba(11,8,5,.64)), url(${gazette.coverImage})` }}
-            aria-hidden="true"
-          >
-            <div>
-              <span>À la une</span>
-              <strong>{gazette.headline}</strong>
-            </div>
+        {error ? (
+          <div className="chronicle-directory-empty" role="alert">
+            <span aria-hidden="true">!</span>
+            <div><strong>La bibliothèque est momentanément indisponible.</strong><p>Les Gazettes n’ont pas pu être chargées depuis Supabase.</p></div>
           </div>
+        ) : gazettes.length ? (
+          <div className="gazette-library__grid">
+            {gazettes.map((gazette) => {
+              const highlights = (gazette.highlights ?? []) as string[];
+              const coverStyle = gazette.cover_image
+                ? { backgroundImage: `linear-gradient(180deg, rgba(7,7,7,.08), rgba(7,7,7,.62)), url(${gazette.cover_image})` }
+                : { backgroundImage: "linear-gradient(180deg, rgba(7,7,7,.18), rgba(7,7,7,.7)), var(--hero-image)" };
 
-          <div className="gazette-issue__deck">
-            <p>{gazette.excerpt}</p>
-            <ul>
-              {gazette.highlights.map((highlight) => <li key={highlight}>{highlight}</li>)}
-            </ul>
+              return (
+                <Link className="gazette-library-card" href={`/gazettes/${gazette.slug}`} key={gazette.id}>
+                  <div className="gazette-library-card__image" style={coverStyle} aria-hidden="true" />
+                  <div className="gazette-library-card__body">
+                    <div className="gazette-library-card__meta">
+                      <span>Édition {String(gazette.issue_number).padStart(2, "0")}</span>
+                      <span>{formatGazetteDate(gazette.published_at)}</span>
+                      {gazette.featured ? <span>À la une</span> : null}
+                    </div>
+                    <h2>{gazette.headline || gazette.title}</h2>
+                    <p>{gazette.excerpt || "Un nouveau numéro de la Gazette d’Imetheran."}</p>
+                    {highlights.length ? <ul>{highlights.slice(0, 4).map((highlight) => <li key={highlight}>{highlight}</li>)}</ul> : null}
+                    <span className="gazette-library-card__note">Ouvrir le numéro →</span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
-
-          <div className="gazette-paper">
-            {lead && (
-              <section className="gazette-article gazette-article--lead">
-                <p className="gazette-article__kicker">{lead.kicker}</p>
-                <h2>{lead.title}</h2>
-                {lead.byline && <p className="gazette-article__byline">Par {lead.byline}</p>}
-                <div className="gazette-article__columns">
-                  {lead.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                </div>
-              </section>
-            )}
-
-            <aside className="gazette-paper__sidebar">
-              {column && (
-                <section className="gazette-article gazette-article--column">
-                  <p className="gazette-article__kicker">{column.kicker}</p>
-                  <h3>{column.title}</h3>
-                  {column.byline && <p className="gazette-article__byline">Par {column.byline}</p>}
-                  {column.aside && <blockquote>{column.aside}</blockquote>}
-                  {column.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                </section>
-              )}
-
-              {brief && (
-                <section className="gazette-article gazette-article--brief">
-                  <p className="gazette-article__kicker">{brief.kicker}</p>
-                  <h3>{brief.title}</h3>
-                  {brief.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                  {brief.aside && <div className="gazette-article__notice">{brief.aside}</div>}
-                </section>
-              )}
-            </aside>
-
-            {recipe && (
-              <section className="gazette-article gazette-article--recipe">
-                <div>
-                  <p className="gazette-article__kicker">{recipe.kicker}</p>
-                  <h3>{recipe.title}</h3>
-                  {recipe.byline && <p className="gazette-article__byline">Par {recipe.byline}</p>}
-                </div>
-                <div>
-                  {recipe.aside && <div className="gazette-article__recipe-box">{recipe.aside}</div>}
-                  {recipe.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                </div>
-              </section>
-            )}
-
-            {quote && (
-              <section className="gazette-article gazette-article--quote">
-                <p className="gazette-article__kicker">{quote.kicker}</p>
-                {quote.aside && <blockquote>{quote.aside}</blockquote>}
-                <h3>{quote.title}</h3>
-                {quote.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-              </section>
-            )}
+        ) : (
+          <div className="chronicle-directory-empty">
+            <span aria-hidden="true">✦</span>
+            <div><strong>Aucune Gazette publiée pour le moment.</strong><p>Les brouillons restent privés jusqu’à leur publication explicite par l’administration.</p></div>
           </div>
-
-          <footer className="gazette-issue__footer">
-            <span>Numéro zéro · contenu de démonstration</span>
-            <span>La Gazette d’Imetheran</span>
-            <span>Page 1</span>
-          </footer>
-        </article>
+        )}
       </section>
     </main>
   );
