@@ -40,7 +40,7 @@ export async function CharacterRelations({ characterId }: { characterId: string 
         const intensity = Math.min(3, Math.max(1, Number(relationship.intensity) || 1));
         return (
           <Link className={`character-relation character-relation--${kind} character-relation-live`} href={`/personnages/${counterpart.slug}`} key={relationship.id}>
-            <div className="character-relation__avatar" aria-hidden="true">{counterpart.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("")}</div>
+            <div className="character-relation__avatar" aria-hidden="true">{String(counterpart.name).split(/\s+/).slice(0, 2).map((part: string) => part[0]?.toUpperCase()).join("")}</div>
             <div><small>{relationshipKinds[kind]?.label ?? kind} · {"●".repeat(intensity)}{"○".repeat(3 - intensity)}</small><h3>{counterpart.name}</h3><p>{relationship.label}</p>{relationship.description ? <span>{relationship.description}</span> : null}</div>
           </Link>
         );
