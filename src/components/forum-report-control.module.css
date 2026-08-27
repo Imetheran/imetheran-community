@@ -1,0 +1,85 @@
+.control {
+  position: relative;
+  display: inline-block;
+}
+
+.control > summary,
+.loginLink {
+  cursor: pointer;
+  list-style: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  text-decoration: none;
+}
+
+.control > summary::-webkit-details-marker { display: none; }
+.control > summary:hover,
+.control > summary:focus-visible,
+.loginLink:hover,
+.loginLink:focus-visible {
+  color: var(--accent-bright);
+  outline: none;
+}
+
+.form {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + .55rem);
+  right: 0;
+  width: min(360px, calc(100vw - 2rem));
+  padding: .9rem;
+  display: grid;
+  gap: .75rem;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, .22);
+}
+
+.form label { display: grid; gap: .3rem; }
+.form label > span {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.form select,
+.form textarea {
+  width: 100%;
+  padding: .6rem .7rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+.form select:focus,
+.form textarea:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  outline-offset: 1px;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .75rem;
+}
+.footer small {
+  max-width: 21ch;
+  color: var(--muted);
+  font-size: .56rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 620px) {
+  .form {
+    position: fixed;
+    inset: auto 1rem 1rem;
+    width: auto;
+  }
+  .footer { align-items: flex-end; }
+}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { ForumReadMarker } from "@/components/forum-read-marker";
 import { ForumThreadActions } from "@/components/forum-thread-actions";
+import { ForumReportControl } from "@/components/forum-report-control";
 import { createForumPost } from "@/app/forum/actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,7 +38,7 @@ export default async function ForumTopicPage({
   searchParams,
 }: {
   params: Promise<{ board: string; topic: string }>;
-  searchParams: Promise<{ erreur?: string }>;
+  searchParams: Promise<{ erreur?: string; message?: string }>;
 }) {
   const [{ board: boardSlug, topic: topicSlug }, query] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
@@ -104,7 +105,7 @@ export default async function ForumTopicPage({
 
   const { data: posts, error: postsError } = await supabase
     .from("forum_posts")
-    .select("id, author_id, character_id, content, created_at, edited_at")
+    .select("id, author_id, character_id, content, created_at, edited_at, is_hidden")
     .eq("topic_id", topic.id)
     .order("created_at", { ascending: true });
 
@@ -158,6 +159,7 @@ export default async function ForumTopicPage({
   }
 
   const loginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardRow.slug}/sujet/${topic.slug}#repondre`)}`;
+  const reportLoginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardRow.slug}/sujet/${topic.slug}`)}`;
   const firstPostId = postRows.at(0)?.id ?? null;
   const lastPostId = postRows.at(-1)?.id ?? topic.last_post_id;
   const repliesOpen = topic.status === "open" && !topic.is_locked;
@@ -166,6 +168,13 @@ export default async function ForumTopicPage({
     : query.erreur === "publication"
       ? "La réponse n’a pas pu être publiée. Vérifiez vos droits ou réessayez dans un instant."
       : null;
+  const reportFeedback = query.message === "signalement"
+    ? { kind: "success", text: "Signalement transmis à l’équipe de modération." }
+    : query.erreur === "signalement-deja"
+      ? { kind: "error", text: "Vous avez déjà un signalement en cours pour ce message." }
+      : query.erreur === "signalement"
+        ? { kind: "error", text: "Le signalement n’a pas pu être enregistré. Réessayez dans un instant." }
+        : null;
 
   return (
     <main className="site-shell forum-thread-page" id="forum-thread-top">
@@ -195,7 +204,7 @@ export default async function ForumTopicPage({
               <p>{topic.excerpt}</p>
             </div>
             <div className="forum-thread-head__stats">
-              <span><strong>{topic.post_count || postRows.length}</strong><small>Messages</small></span>
+              <span><strong>{topic.post_count || postRows.filter((post) => !post.is_hidden).length}</strong><small>Messages</small></span>
               <span><strong>{topic.view_count ?? 0}</strong><small>Vues</small></span>
             </div>
           </div>
@@ -206,7 +215,7 @@ export default async function ForumTopicPage({
         <div className="forum-thread__toolbar">
           <div className="forum-thread__toolbar-left">
             <Link className="text-link" href={`/forum/${boardRow.slug}`}>← Retour aux sujets</Link>
-            <span>{postRows.length} message{postRows.length > 1 ? "s" : ""}</span>
+            <span>{topic.post_count} message{topic.post_count > 1 ? "s" : ""} visible{topic.post_count > 1 ? "s" : ""}</span>
           </div>
           <ForumThreadActions
             topicId={topic.id}
@@ -222,9 +231,15 @@ export default async function ForumTopicPage({
           />
         </div>
 
+        {reportFeedback ? (
+          <div className={`forum-editor-notice${reportFeedback.kind === "error" ? " forum-editor-notice--error" : ""}`} role={reportFeedback.kind === "error" ? "alert" : "status"}>
+            {reportFeedback.text}
+          </div>
+        ) : null}
+
         {postRows.length > 1 ? (
           <nav className="forum-thread-jump" aria-label="Navigation dans le sujet">
-            <span>1–{postRows.length} sur {postRows.length} messages</span>
+            <span>1–{postRows.length} sur {postRows.length} messages chargés</span>
             <div>
               {firstPostId ? <a href={`#${firstPostId}`}>Premier message</a> : null}
               {lastPostId ? <a href={`#${lastPostId}`}>Dernier message ↓</a> : null}
@@ -262,10 +277,18 @@ export default async function ForumTopicPage({
                       <a className="forum-post__number" href={`#${post.id}`} aria-label={`Lien vers le message ${index + 1}`}>#{index + 1}</a>
                       <time dateTime={post.created_at}>{formatActivity(post.created_at)}</time>
                       {post.edited_at ? <small>Modifié {formatActivity(post.edited_at)}</small> : null}
+                      {post.is_hidden ? <small>Masqué aux membres · visible par l’équipe</small> : null}
                     </div>
                     <div className="forum-post__actions" aria-label="Actions du message">
                       <button type="button" disabled>Citer</button>
-                      <button type="button" disabled>Signaler</button>
+                      <ForumReportControl
+                        topicId={topic.id}
+                        postId={post.id}
+                        boardSlug={boardRow.slug}
+                        topicSlug={topic.slug}
+                        authenticated={Boolean(userId)}
+                        loginHref={reportLoginHref}
+                      />
                     </div>
                   </header>
 
@@ -280,7 +303,7 @@ export default async function ForumTopicPage({
 
         {postRows.length > 1 ? (
           <nav className="forum-thread-jump forum-thread-jump--bottom" aria-label="Fin du sujet">
-            <span>{postRows.length} messages</span>
+            <span>{postRows.length} messages chargés</span>
             <div><a href="#forum-thread-top">↑ Retour en haut</a></div>
           </nav>
         ) : null}

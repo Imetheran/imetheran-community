@@ -7,6 +7,7 @@ export default function AdministrationLayout({ children }: { children: React.Rea
       {children}
       <nav className={styles.nav} aria-label="Navigation administration">
         <Link href="/administration">Tableau de bord</Link>
+        <Link href="/administration/forum">Forum</Link>
         <Link href="/administration/membres">Membres</Link>
       </nav>
     </>
