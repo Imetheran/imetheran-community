@@ -30,6 +30,7 @@ export function SiteHeader() {
 
         <div className="topbar__member">
           <span className="topbar__status">Communauté RP</span>
+          <Link className="topbar__utility" href="/recherche" aria-label="Rechercher sur Imetheran">⌕ Recherche</Link>
           <AuthNav />
         </div>
       </div>

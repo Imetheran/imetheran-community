@@ -29,11 +29,18 @@ export default async function ComptePage({
     redirect("/connexion?message=connexion-requise");
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("display_name, username, bio, created_at")
-    .eq("id", userId)
-    .single();
+  const [{ data: profile, error: profileError }, { count: unreadCount }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, username, bio, created_at")
+      .eq("id", userId)
+      .single(),
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .is("read_at", null),
+  ]);
 
   if (profileError || !profile) {
     redirect("/connexion?erreur=profil");
@@ -57,7 +64,7 @@ export default async function ComptePage({
           <div>
             <p className="eyebrow">Espace membre</p>
             <h1>{profile.display_name}</h1>
-            <p>Gérez votre identité communautaire avant de relier vos personnages, relations et activités du forum.</p>
+            <p>Gérez votre identité communautaire, vos personnages, relations et activités du forum.</p>
           </div>
           <div className="account-hero__status">
             <span className="status-pill">{roleLabel}</span>
@@ -100,14 +107,16 @@ export default async function ComptePage({
             <dl className="account-summary">
               <div><dt>Rôle</dt><dd>{roleLabel}</dd></div>
               <div><dt>Identifiant</dt><dd>{profile.username ? `@${profile.username}` : "À définir"}</dd></div>
+              <div><dt>Notifications</dt><dd>{unreadCount ?? 0} non lue{(unreadCount ?? 0) > 1 ? "s" : ""}</dd></div>
               <div><dt>Inscription</dt><dd>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(new Date(profile.created_at))}</dd></div>
             </dl>
             <div className="account-next">
               <strong>Votre espace membre</strong>
-              <p>Le forum est connecté. Les personnages, relations et notifications viendront enrichir ce tableau de bord à mesure de leur branchement.</p>
+              <p>Forum, personnages, relations et notifications utilisent maintenant vos données réelles et les permissions de votre compte.</p>
             </div>
             <div className="account-card__links">
               {role === "admin" ? <Link className="text-link" href="/administration">Administration →</Link> : null}
+              <Link className="text-link" href="/notifications">Notifications →</Link>
               <Link className="text-link" href="/personnages">Voir les personnages →</Link>
               <Link className="text-link" href="/forum">Aller au forum →</Link>
             </div>
