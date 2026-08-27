@@ -155,9 +155,9 @@ export default async function AdministrationPage() {
             <span aria-hidden="true">＋</span>
             <div><strong>Nouvelle annonce</strong><small>Publier dans Annonces & Informations</small></div>
           </Link>
-          <Link href="/forum">
+          <Link href="/administration/forum">
             <span aria-hidden="true">◇</span>
-            <div><strong>Modérer le forum</strong><small>Ouvrir les espaces et sujets réels</small></div>
+            <div><strong>Modérer le forum</strong><small>Signalements, sujets, messages et journal</small></div>
           </Link>
           <Link href="/compte">
             <span aria-hidden="true">◎</span>
@@ -215,6 +215,7 @@ export default async function AdministrationPage() {
                 <p className="eyebrow">Communauté</p>
                 <h2 id="admin-members-title">Derniers membres</h2>
               </div>
+              <Link className="text-link" href="/administration/membres">Gérer →</Link>
             </header>
 
             <div className="admin-member-list">
@@ -231,8 +232,8 @@ export default async function AdministrationPage() {
             </div>
 
             <div className="admin-panel__note">
-              <strong>Gestion des rôles</strong>
-              <p>La consultation est active. La promotion, suspension et modération des comptes seront ajoutées dans le module Membres dédié.</p>
+              <strong>Gestion des membres active</strong>
+              <p>Rôles, suspension de participation, réactivation et historique sont disponibles dans le module Membres.</p>
             </div>
           </aside>
         </div>
