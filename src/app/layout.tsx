@@ -4,12 +4,12 @@ import "./content-hub.css";
 import "./image-quality.css";
 import "./gazette-issue.css";
 import "./chronicle-hub.css";
+import "./chronicle-public-live.css";
 import "./character-hub.css";
 import "./character-editor.css";
 import "./character-actions.css";
 import "./character-live.css";
 import "./sociogram.css";
-import "./sociogram-live.css";
 import "./forum-hub.css";
 import "./forum-access.css";
 import "./forum-thread.css";
@@ -19,6 +19,7 @@ import "./forum-live.css";
 import "./auth.css";
 import "./admin.css";
 import "./admin-members.css";
+import "./admin-chronicles.css";
 
 export const metadata: Metadata = {
   title: {
