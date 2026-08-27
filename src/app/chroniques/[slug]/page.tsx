@@ -85,7 +85,7 @@ export default async function ChronicleDetailPage({ params }: { params: Promise<
           <h1 id="chronicle-title">{chronicle.title}</h1>
           <p className="chronicle-hero__subtitle">{chronicle.subtitle}</p>
           <p className="chronicle-hero__synopsis">{chronicle.synopsis}</p>
-          <div className="chronicle-hero__tags">{(chronicle.tags ?? []).map((tag) => <span key={tag}>{tag}</span>)}</div>
+          <div className="chronicle-hero__tags">{((chronicle.tags ?? []) as string[]).map((tag: string) => <span key={tag}>{tag}</span>)}</div>
           <div className="chronicle-detail-actions">
             <ThemeToggle />
             <Link className="button button--ghost button--small" href="/chroniques">Toutes les chroniques</Link>
