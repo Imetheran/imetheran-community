@@ -10,6 +10,7 @@ export default function AdministrationLayout({ children }: { children: React.Rea
         <Link href="/administration/forum">Forum</Link>
         <Link href="/administration/membres">Membres</Link>
         <Link href="/administration/personnages">Personnages</Link>
+        <Link href="/administration/liens">Liens</Link>
       </nav>
     </>
   );

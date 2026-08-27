@@ -9,6 +9,7 @@ import "./character-editor.css";
 import "./character-actions.css";
 import "./character-live.css";
 import "./sociogram.css";
+import "./sociogram-live.css";
 import "./forum-hub.css";
 import "./forum-access.css";
 import "./forum-thread.css";

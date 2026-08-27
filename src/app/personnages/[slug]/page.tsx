@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CharacterRelations } from "@/components/character-relations";
 import { SiteHeader } from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
 
@@ -184,7 +185,7 @@ export default async function CharacterProfilePage({
 
           <section className="character-profile-section">
             <div className="character-profile-section__heading"><div><p className="panel__kicker">Sociogramme</p><h2>Relations</h2></div><Link className="text-link" href="/liens">Voir les liens <span aria-hidden="true">→</span></Link></div>
-            <p className="character-profile-section__empty">Les relations mutuelles seront connectées dans le prochain module. Aucune relation fictive n’est affichée.</p>
+            <CharacterRelations characterId={character.id} />
           </section>
 
           <section className="character-profile-section">
