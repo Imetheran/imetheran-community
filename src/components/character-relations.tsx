@@ -16,7 +16,11 @@ export async function CharacterRelations({ characterId }: { characterId: string 
     .order("updated_at", { ascending: false });
 
   const rows = relationships ?? [];
-  const counterpartIds = Array.from(new Set(rows.map((relationship) => relationship.source_character_id === characterId ? relationship.target_character_id : relationship.source_character_id));
+  const counterpartIds = Array.from(new Set(rows.map((relationship) =>
+    relationship.source_character_id === characterId
+      ? relationship.target_character_id
+      : relationship.source_character_id,
+  )));
   const { data: counterparts } = counterpartIds.length
     ? await supabase.from("characters").select("id, slug, name, epithet").in("id", counterpartIds)
     : { data: [] as { id: string; slug: string; name: string; epithet: string }[] };
@@ -36,7 +40,7 @@ export async function CharacterRelations({ characterId }: { characterId: string 
         const intensity = Math.min(3, Math.max(1, Number(relationship.intensity) || 1));
         return (
           <Link className={`character-relation character-relation--${kind} character-relation-live`} href={`/personnages/${counterpart.slug}`} key={relationship.id}>
-            <div className="character-relation__portrait" aria-hidden="true">{counterpart.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("")}</div>
+            <div className="character-relation__avatar" aria-hidden="true">{counterpart.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("")}</div>
             <div><small>{relationshipKinds[kind]?.label ?? kind} · {"●".repeat(intensity)}{"○".repeat(3 - intensity)}</small><h3>{counterpart.name}</h3><p>{relationship.label}</p>{relationship.description ? <span>{relationship.description}</span> : null}</div>
           </Link>
         );
