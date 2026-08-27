@@ -7,6 +7,7 @@ import "./chronicle-hub.css";
 import "./character-hub.css";
 import "./character-editor.css";
 import "./character-actions.css";
+import "./character-live.css";
 import "./sociogram.css";
 import "./forum-hub.css";
 import "./forum-access.css";

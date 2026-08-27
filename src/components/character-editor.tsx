@@ -2,15 +2,35 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { CharacterProfile, CharacterVisibility } from "@/content/character-content";
+import { useFormStatus } from "react-dom";
+import { saveCharacter } from "@/app/personnages/actions";
+
+export type EditableCharacter = {
+  id: string;
+  slug: string;
+  name: string;
+  epithet: string;
+  short_summary: string;
+  world: string;
+  people: string;
+  age: string;
+  origin: string;
+  residence: string;
+  occupation: string;
+  affiliation: string;
+  quote: string;
+  traits: string[];
+  biography: string;
+  hooks: { title: string; text: string }[];
+  visibility: "public" | "unlisted" | "private";
+  status: string;
+  portraitUrl?: string | null;
+  is_moderation_hidden?: boolean;
+  moderation_note?: string;
+};
 
 type EditorMode = "create" | "edit";
 type EditableHook = { title: string; text: string };
-
-type CharacterEditorProps = {
-  mode: EditorMode;
-  initialCharacter?: CharacterProfile;
-};
 
 const emptyHooks: EditableHook[] = [
   { title: "", text: "" },
@@ -19,18 +39,30 @@ const emptyHooks: EditableHook[] = [
 ];
 
 function getInitials(value: string) {
-  return value
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("") || "?";
+  return value.trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("") || "?";
 }
 
-export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps) {
-  const [displayName, setDisplayName] = useState(initialCharacter?.displayName ?? "");
+function SubmitButton({ intent, children, ghost = false }: { intent: "draft" | "publish" | "archive"; children: React.ReactNode; ghost?: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button className={`button ${ghost ? "button--ghost" : "button--primary"}`} type="submit" name="intent" value={intent} disabled={pending}>
+      {pending ? "Enregistrement…" : children}
+    </button>
+  );
+}
+
+export function CharacterEditor({
+  mode,
+  initialCharacter,
+  notice,
+}: {
+  mode: EditorMode;
+  initialCharacter?: EditableCharacter;
+  notice?: string | null;
+}) {
+  const [displayName, setDisplayName] = useState(initialCharacter?.name ?? "");
   const [epithet, setEpithet] = useState(initialCharacter?.epithet ?? "");
-  const [summary, setSummary] = useState(initialCharacter?.summary ?? "");
+  const [summary, setSummary] = useState(initialCharacter?.short_summary ?? "");
   const [world, setWorld] = useState(initialCharacter?.world ?? "Moogle");
   const [people, setPeople] = useState(initialCharacter?.people ?? "");
   const [age, setAge] = useState(initialCharacter?.age ?? "");
@@ -40,82 +72,85 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
   const [affiliation, setAffiliation] = useState(initialCharacter?.affiliation ?? "");
   const [quote, setQuote] = useState(initialCharacter?.quote ?? "");
   const [traits, setTraits] = useState(initialCharacter?.traits.join(", ") ?? "");
-  const [biography, setBiography] = useState(initialCharacter?.biography.join("\n\n") ?? "");
-  const [visibility, setVisibility] = useState<CharacterVisibility>(initialCharacter?.visibility ?? "public");
-  const [hookList, setHookList] = useState<EditableHook[]>(initialCharacter?.hooks.length ? initialCharacter.hooks : emptyHooks);
+  const [biography, setBiography] = useState(initialCharacter?.biography ?? "");
+  const [visibility, setVisibility] = useState<"public" | "unlisted" | "private">(initialCharacter?.visibility ?? "public");
+  const [hookList, setHookList] = useState<EditableHook[]>(() => {
+    const existing = initialCharacter?.hooks ?? [];
+    return [0, 1, 2].map((index) => existing[index] ?? emptyHooks[index]);
+  });
   const [portraitName, setPortraitName] = useState("");
-  const [savedMessage, setSavedMessage] = useState("");
 
-  const parsedTraits = useMemo(
-    () => traits.split(",").map((trait) => trait.trim()).filter(Boolean).slice(0, 6),
-    [traits],
-  );
+  const parsedTraits = useMemo(() => traits.split(",").map((trait) => trait.trim()).filter(Boolean).slice(0, 8), [traits]);
   const initials = getInitials(displayName);
-  const title = mode === "create" ? "Créer mon personnage" : `Modifier ${initialCharacter?.displayName ?? "mon personnage"}`;
+  const title = mode === "create" ? "Créer mon personnage" : `Modifier ${initialCharacter?.name ?? "mon personnage"}`;
 
   function updateHook(index: number, field: keyof EditableHook, value: string) {
     setHookList((current) => current.map((hook, hookIndex) => hookIndex === index ? { ...hook, [field]: value } : hook));
-  }
-
-  function simulateSave() {
-    setSavedMessage("Maquette enregistrée dans l’interface uniquement. Aucune donnée n’est encore envoyée au serveur.");
-    window.setTimeout(() => setSavedMessage(""), 4500);
   }
 
   return (
     <div className="character-editor-shell">
       <header className="character-editor-header">
         <div>
-          <p className="eyebrow">Espace personnage · prototype</p>
+          <p className="eyebrow">Espace personnage · connecté</p>
           <h1>{title}</h1>
-          <p>Préparez la fiche telle qu’elle apparaîtra dans le répertoire communautaire et dans les futurs liens RP.</p>
+          <p>La fiche est enregistrée dans votre compte et peut être utilisée comme identité dans les espaces RP.</p>
         </div>
         <div className="character-editor-header__actions">
           <Link className="button button--ghost" href={initialCharacter ? `/personnages/${initialCharacter.slug}` : "/personnages"}>Annuler</Link>
-          <button className="button button--primary" type="button" onClick={simulateSave}>Enregistrer le brouillon</button>
         </div>
       </header>
 
-      <div className="character-editor-notice">
-        <strong>Mode démonstration.</strong>
-        <span>Les champs sont interactifs, mais aucune donnée n’est persistée tant que l’authentification et Supabase ne sont pas connectés.</span>
-      </div>
-      {savedMessage ? <div className="character-editor-toast" role="status">{savedMessage}</div> : null}
+      {initialCharacter?.is_moderation_hidden ? (
+        <div className="character-editor-notice character-editor-notice--warning">
+          <strong>Fiche masquée par l’équipe.</strong>
+          <span>{initialCharacter.moderation_note || "Cette fiche reste visible pour vous mais n’est plus publiée auprès de la communauté."}</span>
+        </div>
+      ) : (
+        <div className="character-editor-notice">
+          <strong>Publication réelle.</strong>
+          <span>Vous pouvez conserver un brouillon, publier la fiche ou la rendre privée/non répertoriée à tout moment.</span>
+        </div>
+      )}
+      {notice ? <div className="character-editor-toast" role="alert">{notice}</div> : null}
 
-      <div className="character-editor-layout">
-        <form className="character-editor-form" onSubmit={(event) => event.preventDefault()}>
+      <form id="character-editor-form" className="character-editor-layout" action={saveCharacter} encType="multipart/form-data">
+        <input type="hidden" name="character_id" value={initialCharacter?.id ?? ""} />
+        <input type="hidden" name="current_slug" value={initialCharacter?.slug ?? ""} />
+
+        <div className="character-editor-form">
           <EditorSection number="01" kicker="Identité" title="Présenter le personnage">
             <div className="character-editor-grid character-editor-grid--two">
-              <Field label="Nom du personnage"><input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Ex. Aelys Vardane" /></Field>
-              <Field label="Surnom / épithète"><input value={epithet} onChange={(event) => setEpithet(event.target.value)} placeholder="Ex. Cartographe des chemins oubliés" /></Field>
-              <Field label="Peuple"><input value={people} onChange={(event) => setPeople(event.target.value)} placeholder="Hyur, Miqo'te…" /></Field>
-              <Field label="Âge RP"><input value={age} onChange={(event) => setAge(event.target.value)} placeholder="Ex. 28 ans" /></Field>
-              <Field label="Monde"><input value={world} onChange={(event) => setWorld(event.target.value)} placeholder="Moogle" /></Field>
-              <Field label="Origine"><input value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="Ul'dah" /></Field>
-              <Field label="Résidence"><input value={residence} onChange={(event) => setResidence(event.target.value)} placeholder="Tuliyollal" /></Field>
-              <Field label="Occupation"><input value={occupation} onChange={(event) => setOccupation(event.target.value)} placeholder="Cartographe, mercenaire…" /></Field>
-              <Field label="Affiliation" className="character-editor-grid__wide"><input value={affiliation} onChange={(event) => setAffiliation(event.target.value)} placeholder="Libre, compagnie, organisation…" /></Field>
+              <Field label="Nom du personnage"><input name="name" maxLength={80} required value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Ex. Aelys Vardane" /></Field>
+              <Field label="Surnom / épithète"><input name="epithet" maxLength={120} value={epithet} onChange={(event) => setEpithet(event.target.value)} placeholder="Ex. Cartographe des chemins oubliés" /></Field>
+              <Field label="Peuple"><input name="people" maxLength={80} value={people} onChange={(event) => setPeople(event.target.value)} placeholder="Hyur, Miqo'te…" /></Field>
+              <Field label="Âge RP"><input name="age" maxLength={40} value={age} onChange={(event) => setAge(event.target.value)} placeholder="Ex. 28 ans" /></Field>
+              <Field label="Monde"><input name="world" maxLength={80} value={world} onChange={(event) => setWorld(event.target.value)} placeholder="Moogle" /></Field>
+              <Field label="Origine"><input name="origin" maxLength={120} value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="Ul'dah" /></Field>
+              <Field label="Résidence"><input name="residence" maxLength={120} value={residence} onChange={(event) => setResidence(event.target.value)} placeholder="Tuliyollal" /></Field>
+              <Field label="Occupation"><input name="occupation" maxLength={120} value={occupation} onChange={(event) => setOccupation(event.target.value)} placeholder="Cartographe, mercenaire…" /></Field>
+              <Field label="Affiliation" className="character-editor-grid__wide"><input name="affiliation" maxLength={160} value={affiliation} onChange={(event) => setAffiliation(event.target.value)} placeholder="Libre, compagnie, organisation…" /></Field>
             </div>
           </EditorSection>
 
           <EditorSection number="02" kicker="Portrait & tonalité" title="Donner un visage à la fiche">
             <div className="character-editor-media-row">
               <label className="character-editor-upload">
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setPortraitName(event.target.files?.[0]?.name ?? "")} />
+                <input name="portrait" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setPortraitName(event.target.files?.[0]?.name ?? "")} />
                 <span className="character-editor-upload__mark">{initials}</span>
-                <strong>{portraitName || "Importer un portrait"}</strong>
-                <small>PNG, JPG ou WebP · stockage prévu dans Supabase Storage</small>
+                <strong>{portraitName || (initialCharacter?.portraitUrl ? "Remplacer le portrait" : "Importer un portrait")}</strong>
+                <small>PNG, JPG ou WebP · 4 Mo maximum · Supabase Storage</small>
               </label>
               <div className="character-editor-media-copy">
-                <Field label="Citation"><input value={quote} onChange={(event) => setQuote(event.target.value)} placeholder="Une phrase qui résume le personnage" /></Field>
-                <Field label="Traits" help="Séparez les traits par des virgules."><input value={traits} onChange={(event) => setTraits(event.target.value)} placeholder="Curieuse, pragmatique, observatrice" /></Field>
+                <Field label="Citation"><input name="quote" maxLength={300} value={quote} onChange={(event) => setQuote(event.target.value)} placeholder="Une phrase qui résume le personnage" /></Field>
+                <Field label="Traits" help="Séparez les traits par des virgules, 8 maximum."><input name="traits" value={traits} onChange={(event) => setTraits(event.target.value)} placeholder="Curieuse, pragmatique, observatrice" /></Field>
               </div>
             </div>
           </EditorSection>
 
           <EditorSection number="03" kicker="Présentation" title="Résumé et histoire">
-            <Field label="Résumé court"><textarea rows={3} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Quelques lignes visibles dans le répertoire…" /></Field>
-            <Field label="Biographie" help="Les sauts de ligne seront conservés dans la future fiche."><textarea rows={10} value={biography} onChange={(event) => setBiography(event.target.value)} placeholder="Racontez le parcours du personnage…" /></Field>
+            <Field label="Résumé court"><textarea name="short_summary" rows={3} maxLength={600} value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Quelques lignes visibles dans le répertoire…" /></Field>
+            <Field label="Biographie" help="30 000 caractères maximum."><textarea name="biography" rows={10} maxLength={30000} value={biography} onChange={(event) => setBiography(event.target.value)} placeholder="Racontez le parcours du personnage…" /></Field>
           </EditorSection>
 
           <EditorSection number="04" kicker="Rencontres possibles" title="Accroches RP">
@@ -123,8 +158,8 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
               {hookList.map((hook, index) => (
                 <div className="character-editor-hook" key={index}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
-                  <Field label="Titre"><input value={hook.title} onChange={(event) => updateHook(index, "title", event.target.value)} placeholder="Ex. Courrier en retard" /></Field>
-                  <Field label="Accroche"><textarea rows={3} value={hook.text} onChange={(event) => updateHook(index, "text", event.target.value)} placeholder="Comment un autre personnage peut-il entrer en jeu ?" /></Field>
+                  <Field label="Titre"><input name={`hook_title_${index}`} maxLength={100} value={hook.title} onChange={(event) => updateHook(index, "title", event.target.value)} placeholder="Ex. Courrier en retard" /></Field>
+                  <Field label="Accroche"><textarea name={`hook_text_${index}`} maxLength={800} rows={3} value={hook.text} onChange={(event) => updateHook(index, "text", event.target.value)} placeholder="Comment un autre personnage peut-il entrer en jeu ?" /></Field>
                 </div>
               ))}
             </div>
@@ -144,13 +179,21 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
                 </label>
               ))}
             </div>
+            <div className="character-live-actions">
+              <SubmitButton intent="draft" ghost>{initialCharacter?.status === "published" ? "Repasser en brouillon" : "Enregistrer le brouillon"}</SubmitButton>
+              <SubmitButton intent="publish">{initialCharacter?.status === "published" ? "Enregistrer et publier" : "Publier la fiche"}</SubmitButton>
+              {mode === "edit" && initialCharacter?.status !== "archived" ? <SubmitButton intent="archive" ghost>Archiver</SubmitButton> : null}
+            </div>
           </EditorSection>
-        </form>
+        </div>
 
         <aside className="character-editor-preview" aria-label="Aperçu de la fiche">
           <div className="character-editor-preview__sticky">
             <div className="character-editor-preview__label">Aperçu en direct</div>
-            <div className="character-editor-preview__portrait"><span>{initials}</span><small>{portraitName || "Portrait"}</small></div>
+            <div className="character-editor-preview__portrait">
+              {initialCharacter?.portraitUrl ? <img className="character-live-portrait" src={initialCharacter.portraitUrl} alt="" /> : <span>{initials}</span>}
+              <small>{portraitName || (initialCharacter?.portraitUrl ? "Portrait actuel" : "Portrait")}</small>
+            </div>
             <div className="character-editor-preview__identity">
               <small>{people || "Peuple"} · {world || "Monde"}</small>
               <h2>{displayName || "Nom du personnage"}</h2>
@@ -170,7 +213,7 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
             <div className="character-editor-preview__visibility">Visibilité : <strong>{visibility === "public" ? "Publique" : visibility === "unlisted" ? "Non répertoriée" : "Privée"}</strong></div>
           </div>
         </aside>
-      </div>
+      </form>
     </div>
   );
 }
@@ -178,21 +221,12 @@ export function CharacterEditor({ mode, initialCharacter }: CharacterEditorProps
 function EditorSection({ number, kicker, title, children }: { number: string; kicker: string; title: string; children: React.ReactNode }) {
   return (
     <section className="character-editor-section">
-      <div className="character-editor-section__heading">
-        <span>{number}</span>
-        <div><small>{kicker}</small><h2>{title}</h2></div>
-      </div>
+      <div className="character-editor-section__heading"><span>{number}</span><div><small>{kicker}</small><h2>{title}</h2></div></div>
       {children}
     </section>
   );
 }
 
 function Field({ label, help, className, children }: { label: string; help?: string; className?: string; children: React.ReactNode }) {
-  return (
-    <label className={className}>
-      <span>{label}</span>
-      {children}
-      {help ? <small>{help}</small> : null}
-    </label>
-  );
+  return <label className={className}><span>{label}</span>{children}{help ? <small>{help}</small> : null}</label>;
 }

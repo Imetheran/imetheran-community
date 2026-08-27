@@ -1,9 +1,89 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { characters, featuredCharacter } from "@/content/character-content";
+import { createClient } from "@/lib/supabase/server";
 
-export default function CharactersPage() {
+export const dynamic = "force-dynamic";
+
+type CharacterRow = {
+  id: string;
+  owner_id: string;
+  slug: string;
+  name: string;
+  epithet: string;
+  short_summary: string;
+  portrait_path: string | null;
+  visibility: string;
+  status: string;
+  world: string;
+  people: string;
+  occupation: string;
+  traits: string[];
+  is_featured: boolean;
+  is_moderation_hidden: boolean;
+  created_at: string;
+};
+
+function initials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr") ?? "").join("") || "IM";
+}
+
+function portraitUrl(supabase: Awaited<ReturnType<typeof createClient>>, path: string | null) {
+  return path ? supabase.storage.from("character-portraits").getPublicUrl(path).data.publicUrl : null;
+}
+
+function statusLabel(status: string, visibility: string, hidden: boolean) {
+  if (hidden) return "Masquée par l’équipe";
+  if (status === "draft") return "Brouillon";
+  if (status === "archived") return "Archivée";
+  if (visibility === "private") return "Privée";
+  if (visibility === "unlisted") return "Non répertoriée";
+  return "Publique";
+}
+
+function CharacterCard({ character, portrait }: { character: CharacterRow; portrait: string | null }) {
+  const tags = Array.isArray(character.traits) ? character.traits : [];
+  return (
+    <Link className="character-card" href={`/personnages/${character.slug}`}>
+      <div className="character-card__portrait" aria-hidden="true">
+        {portrait ? <img className="character-live-portrait" src={portrait} alt="" /> : <span>{initials(character.name)}</span>}
+      </div>
+      <div className="character-card__body">
+        <small>{character.people || "Peuple non renseigné"} · {character.world || "Monde non renseigné"}</small>
+        <h3>{character.name}</h3>
+        <p className="character-card__epithet">{character.epithet || "Personnage rôleplay"}</p>
+        <p>{character.short_summary || "Aucun résumé renseigné pour le moment."}</p>
+        <div className="character-card__tags">{tags.slice(0, 3).map((trait) => <span key={trait}>{trait}</span>)}</div>
+      </div>
+      <span className="character-card__arrow" aria-hidden="true">→</span>
+    </Link>
+  );
+}
+
+export default async function CharactersPage() {
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = typeof claimsData?.claims?.sub === "string" ? claimsData.claims.sub : null;
+
+  const publicResult = await supabase
+    .from("characters")
+    .select("id, owner_id, slug, name, epithet, short_summary, portrait_path, visibility, status, world, people, occupation, traits, is_featured, is_moderation_hidden, created_at")
+    .eq("status", "published")
+    .eq("visibility", "public")
+    .eq("is_moderation_hidden", false)
+    .order("is_featured", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  const publicCharacters = (publicResult.data ?? []) as CharacterRow[];
+  const ownCharacters = userId
+    ? ((await supabase
+        .from("characters")
+        .select("id, owner_id, slug, name, epithet, short_summary, portrait_path, visibility, status, world, people, occupation, traits, is_featured, is_moderation_hidden, created_at")
+        .eq("owner_id", userId)
+        .order("updated_at", { ascending: false })).data ?? []) as CharacterRow[]
+    : [];
+  const featured = publicCharacters.find((character) => character.is_featured) ?? null;
+
   return (
     <main className="site-shell characters-page">
       <SiteHeader />
@@ -14,10 +94,7 @@ export default function CharactersPage() {
         <div className="content-frame characters-hero__content">
           <p className="eyebrow">Carnet de rencontres</p>
           <h1 id="characters-title">Personnages</h1>
-          <p>
-            Les fiches rôleplay des membres d’Imetheran : identité, histoire, accroches de jeu,
-            relations et traces laissées dans les chroniques de la communauté.
-          </p>
+          <p>Les fiches rôleplay réellement publiées par les membres d’Imetheran, reliées à leur activité dans le forum.</p>
           <div className="characters-hero__actions">
             <Link className="button button--primary" href="/personnages/nouveau">Créer mon personnage</Link>
             <ThemeToggle />
@@ -27,62 +104,57 @@ export default function CharactersPage() {
 
       <section className="character-directory content-frame" aria-labelledby="directory-title">
         <header className="section-heading section-heading--row">
-          <div>
-            <p className="eyebrow">Répertoire communautaire</p>
-            <h2 id="directory-title">Les visages d’Imetheran</h2>
-          </div>
-          <span className="status-pill status-pill--quiet">Profils de démonstration</span>
+          <div><p className="eyebrow">Répertoire communautaire</p><h2 id="directory-title">Les visages d’Imetheran</h2></div>
+          <span className="status-pill status-pill--quiet">{publicCharacters.length} fiche{publicCharacters.length > 1 ? "s" : ""} publique{publicCharacters.length > 1 ? "s" : ""}</span>
         </header>
 
-        <article className="character-spotlight">
-          <div className="character-spotlight__portrait" aria-hidden="true">
-            <span>{featuredCharacter.initials}</span>
-            <small>Portrait membre</small>
-          </div>
-          <div className="character-spotlight__body">
-            <p className="panel__kicker">Personnage mis en avant</p>
-            <h2>{featuredCharacter.displayName}</h2>
-            <p className="character-spotlight__epithet">{featuredCharacter.epithet}</p>
-            <p>{featuredCharacter.summary}</p>
-            <div className="character-spotlight__meta">
-              <span>{featuredCharacter.people}</span>
-              <span>{featuredCharacter.occupation}</span>
-              <span>{featuredCharacter.world}</span>
+        {featured ? (
+          <article className="character-spotlight">
+            <div className="character-spotlight__portrait" aria-hidden="true">
+              {portraitUrl(supabase, featured.portrait_path) ? <img className="character-live-portrait" src={portraitUrl(supabase, featured.portrait_path) ?? ""} alt="" /> : <span>{initials(featured.name)}</span>}
+              <small>Personnage mis en avant</small>
             </div>
-            <Link className="button button--primary" href={`/personnages/${featuredCharacter.slug}`}>
-              Ouvrir la fiche
-            </Link>
-          </div>
-        </article>
+            <div className="character-spotlight__body">
+              <p className="panel__kicker">Personnage mis en avant</p>
+              <h2>{featured.name}</h2>
+              <p className="character-spotlight__epithet">{featured.epithet || "Personnage rôleplay"}</p>
+              <p>{featured.short_summary || "Aucun résumé renseigné."}</p>
+              <div className="character-spotlight__meta"><span>{featured.people || "Peuple"}</span><span>{featured.occupation || "Occupation"}</span><span>{featured.world || "Monde"}</span></div>
+              <Link className="button button--primary" href={`/personnages/${featured.slug}`}>Ouvrir la fiche</Link>
+            </div>
+          </article>
+        ) : null}
 
-        <div className="character-directory__toolbar" aria-label="Aperçu des futurs filtres">
-          <span><strong>{characters.length}</strong> profils d’exemple</span>
-          <div>
-            <span>Monde : tous</span>
-            <span>Statut : actifs</span>
-            <span>Tri : récents</span>
-          </div>
+        {userId && ownCharacters.length > 0 ? (
+          <section className="character-own-panel" aria-labelledby="own-characters-title">
+            <div><p className="eyebrow">Mon espace</p><h2 id="own-characters-title">Mes personnages</h2></div>
+            <div className="character-own-panel__list">
+              {ownCharacters.map((character) => (
+                <Link href={`/personnages/${character.slug}`} key={character.id}>
+                  <strong>{character.name}</strong>
+                  <span>{statusLabel(character.status, character.visibility, character.is_moderation_hidden)}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <div className="character-directory__toolbar" aria-label="Répertoire des personnages">
+          <span><strong>{publicCharacters.length}</strong> profils publiés</span>
+          <div><span>Visibilité : publique</span><span>Tri : récents</span></div>
         </div>
 
-        <div className="character-grid">
-          {characters.map((character) => (
-            <Link className="character-card" href={`/personnages/${character.slug}`} key={character.id}>
-              <div className="character-card__portrait" aria-hidden="true">
-                <span>{character.initials}</span>
-              </div>
-              <div className="character-card__body">
-                <small>{character.people} · {character.world}</small>
-                <h3>{character.displayName}</h3>
-                <p className="character-card__epithet">{character.epithet}</p>
-                <p>{character.summary}</p>
-                <div className="character-card__tags">
-                  {character.traits.slice(0, 3).map((trait) => <span key={trait}>{trait}</span>)}
-                </div>
-              </div>
-              <span className="character-card__arrow" aria-hidden="true">→</span>
-            </Link>
-          ))}
-        </div>
+        {publicCharacters.length > 0 ? (
+          <div className="character-grid">
+            {publicCharacters.map((character) => <CharacterCard character={character} portrait={portraitUrl(supabase, character.portrait_path)} key={character.id} />)}
+          </div>
+        ) : (
+          <div className="character-live-empty">
+            <strong>Aucun personnage public pour le moment.</strong>
+            <p>Les fiches publiées par les membres apparaîtront ici automatiquement.</p>
+            <Link className="button button--primary button--small" href="/personnages/nouveau">Créer la première fiche</Link>
+          </div>
+        )}
       </section>
     </main>
   );

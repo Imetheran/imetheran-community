@@ -1,21 +1,104 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { characters, getCharacterBySlug } from "@/content/character-content";
+import { createClient } from "@/lib/supabase/server";
 
-export function generateStaticParams() {
-  return characters.map((character) => ({ slug: character.slug }));
+export const dynamic = "force-dynamic";
+
+type Hook = { title: string; text: string };
+
+function initials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr") ?? "").join("") || "IM";
+}
+
+function getRole(appMetadata: unknown) {
+  if (!appMetadata || typeof appMetadata !== "object" || !("role" in appMetadata)) return "member";
+  return String((appMetadata as { role?: unknown }).role ?? "member");
+}
+
+function visibilityLabel(value: string) {
+  if (value === "private") return "Privée";
+  if (value === "unlisted") return "Non répertoriée";
+  return "Publique";
+}
+
+function statusLabel(value: string) {
+  if (value === "draft") return "Brouillon";
+  if (value === "archived") return "Archivée";
+  return "Publiée";
+}
+
+function messageLabel(value?: string) {
+  if (value === "publie") return "La fiche est publiée et enregistrée.";
+  if (value === "brouillon") return "Le brouillon est enregistré.";
+  if (value === "archive") return "La fiche est archivée et retirée du répertoire.";
+  return null;
 }
 
 export default async function CharacterProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ message?: string }>;
 }) {
-  const { slug } = await params;
-  const character = getCharacterBySlug(slug);
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = typeof claimsData?.claims?.sub === "string" ? claimsData.claims.sub : null;
+  const role = getRole(claimsData?.claims?.app_metadata);
+  const canModerate = role === "admin" || role === "moderator";
 
-  if (!character) notFound();
+  const { data: character, error } = await supabase
+    .from("characters")
+    .select("id, owner_id, slug, name, epithet, short_summary, portrait_path, visibility, status, created_at, updated_at, world, people, age, origin, residence, occupation, affiliation, quote, traits, biography, hooks, is_featured, is_moderation_hidden, moderation_note, published_at")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error || !character) notFound();
+
+  const isOwner = userId === character.owner_id;
+  const portraitUrl = character.portrait_path
+    ? supabase.storage.from("character-portraits").getPublicUrl(character.portrait_path).data.publicUrl
+    : null;
+  const traits = Array.isArray(character.traits) ? character.traits : [];
+  const rawHooks = Array.isArray(character.hooks) ? character.hooks : [];
+  const hooks: Hook[] = rawHooks
+    .filter((hook): hook is { title?: unknown; text?: unknown } => Boolean(hook) && typeof hook === "object")
+    .map((hook) => ({ title: String(hook.title ?? ""), text: String(hook.text ?? "") }))
+    .filter((hook) => hook.title || hook.text)
+    .slice(0, 3);
+  const biography = String(character.biography ?? "").split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
+
+  const { data: ownerProfile } = await supabase.from("profiles").select("display_name").eq("id", character.owner_id).maybeSingle();
+
+  const { data: characterPosts } = await supabase
+    .from("forum_posts")
+    .select("topic_id, created_at")
+    .eq("character_id", character.id)
+    .eq("is_hidden", false)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  const orderedTopicIds = Array.from(new Set((characterPosts ?? []).map((post) => post.topic_id))).slice(0, 8);
+  const topicsResult = orderedTopicIds.length
+    ? await supabase.from("forum_topics").select("id, board_id, title, slug, status, last_activity_at").in("id", orderedTopicIds)
+    : { data: [] as { id: string; board_id: string; title: string; slug: string; status: string; last_activity_at: string }[] };
+  const topicRows = topicsResult.data ?? [];
+  const boardIds = Array.from(new Set(topicRows.map((topic) => topic.board_id)));
+  const boardsResult = boardIds.length
+    ? await supabase.from("forum_boards").select("id, slug, title").in("id", boardIds)
+    : { data: [] as { id: string; slug: string; title: string }[] };
+  const topicMap = new Map(topicRows.map((topic) => [topic.id, topic]));
+  const boardMap = new Map((boardsResult.data ?? []).map((board) => [board.id, board]));
+  const activities = orderedTopicIds.flatMap((topicId) => {
+    const topic = topicMap.get(topicId);
+    if (!topic) return [];
+    const board = boardMap.get(topic.board_id);
+    if (!board) return [];
+    return [{ ...topic, board }];
+  });
+  const savedMessage = messageLabel(query.message);
 
   return (
     <main className="site-shell character-profile-page">
@@ -27,55 +110,59 @@ export default async function CharacterProfilePage({
         <div className="content-frame character-profile-hero__content">
           <div className="character-profile-hero__nav">
             <Link className="character-profile-hero__back" href="/personnages">← Tous les personnages</Link>
-            <Link className="button button--ghost button--small" href={`/personnages/${character.slug}/modifier`}>Modifier cette fiche</Link>
+            <div className="character-live-header-actions">
+              {isOwner ? <Link className="button button--ghost button--small" href={`/personnages/${character.slug}/modifier`}>Modifier cette fiche</Link> : null}
+              {canModerate ? <Link className="button button--ghost button--small" href="/administration/personnages">Administration</Link> : null}
+            </div>
           </div>
+          {savedMessage ? <div className="character-live-message" role="status">{savedMessage}</div> : null}
           <div className="character-profile-hero__layout">
             <div className="character-profile-portrait" aria-hidden="true">
-              <span>{character.initials}</span>
-              <small>Portrait à importer</small>
+              {portraitUrl ? <img className="character-live-portrait" src={portraitUrl} alt="" /> : <span>{initials(character.name)}</span>}
+              <small>{portraitUrl ? "Portrait membre" : "Portrait non renseigné"}</small>
             </div>
             <div className="character-profile-identity">
               <div className="character-profile-identity__meta">
-                <span className="status-pill">Actif · Démo</span>
-                <span>Fiche publique de démonstration</span>
+                <span className="status-pill">{statusLabel(character.status)}</span>
+                <span>{visibilityLabel(character.visibility)}</span>
+                {character.is_featured ? <span>Mis en avant</span> : null}
+                {character.is_moderation_hidden ? <span>Masqué par l’équipe</span> : null}
               </div>
               <p className="eyebrow">Personnage rôleplay</p>
-              <h1 id="character-name">{character.displayName}</h1>
-              <p className="character-profile-identity__epithet">{character.epithet}</p>
-              <blockquote>« {character.quote} »</blockquote>
-              <div className="character-profile-identity__tags">
-                {character.traits.map((trait) => <span key={trait}>{trait}</span>)}
-              </div>
+              <h1 id="character-name">{character.name}</h1>
+              <p className="character-profile-identity__epithet">{character.epithet || "Personnage d’Imetheran"}</p>
+              {character.quote ? <blockquote>« {character.quote} »</blockquote> : null}
+              <div className="character-profile-identity__tags">{traits.map((trait) => <span key={trait}>{trait}</span>)}</div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="character-profile content-frame" aria-label={`Fiche de ${character.displayName}`}>
+      <section className="character-profile content-frame" aria-label={`Fiche de ${character.name}`}>
         <aside className="character-profile__sidebar">
           <section className="character-info-card">
             <p className="character-info-card__label">Repères</p>
             <dl>
-              <div><dt>Peuple</dt><dd>{character.people}</dd></div>
-              <div><dt>Âge</dt><dd>{character.age}</dd></div>
-              <div><dt>Origine</dt><dd>{character.origin}</dd></div>
-              <div><dt>Résidence</dt><dd>{character.residence}</dd></div>
-              <div><dt>Occupation</dt><dd>{character.occupation}</dd></div>
-              <div><dt>Affiliation</dt><dd>{character.affiliation}</dd></div>
-              <div><dt>Monde</dt><dd>{character.world}</dd></div>
+              <div><dt>Peuple</dt><dd>{character.people || "—"}</dd></div>
+              <div><dt>Âge</dt><dd>{character.age || "—"}</dd></div>
+              <div><dt>Origine</dt><dd>{character.origin || "—"}</dd></div>
+              <div><dt>Résidence</dt><dd>{character.residence || "—"}</dd></div>
+              <div><dt>Occupation</dt><dd>{character.occupation || "—"}</dd></div>
+              <div><dt>Affiliation</dt><dd>{character.affiliation || "—"}</dd></div>
+              <div><dt>Monde</dt><dd>{character.world || "—"}</dd></div>
             </dl>
           </section>
 
           <section className="character-info-card character-info-card--summary">
             <p className="character-info-card__label">En quelques mots</p>
-            <p>{character.summary}</p>
+            <p>{character.short_summary || "Aucun résumé renseigné."}</p>
           </section>
 
           <section className="character-info-card">
-            <p className="character-info-card__label">Visibilité</p>
-            <p className="character-info-card__small">
-              Profil public de démonstration. À terme, le membre pourra gérer la visibilité de sa fiche et l’administration pourra la modérer ou la mettre en avant.
-            </p>
+            <p className="character-info-card__label">Propriétaire</p>
+            <p className="character-info-card__small">{ownerProfile?.display_name ?? "Membre Imetheran"}</p>
+            <p className="character-info-card__small">Visibilité : {visibilityLabel(character.visibility)}.</p>
+            {character.is_moderation_hidden && (isOwner || canModerate) ? <p className="character-live-warning">{character.moderation_note || "Cette fiche a été masquée par l’équipe."}</p> : null}
           </section>
         </aside>
 
@@ -83,75 +170,36 @@ export default async function CharacterProfilePage({
           <section className="character-profile-section character-profile-section--biography">
             <p className="panel__kicker">Histoire</p>
             <h2>Parcours</h2>
-            <div className="character-profile-section__prose">
-              {character.biography.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-            </div>
+            {biography.length > 0 ? (
+              <div className="character-profile-section__prose">{biography.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div>
+            ) : <p className="character-profile-section__empty">Aucune biographie renseignée pour le moment.</p>}
           </section>
 
           <section className="character-profile-section">
-            <div className="character-profile-section__heading">
-              <div>
-                <p className="panel__kicker">Rencontres possibles</p>
-                <h2>Accroches RP</h2>
-              </div>
-              <span className="status-pill status-pill--quiet">Ouvert au jeu</span>
-            </div>
-            <div className="character-hooks">
-              {character.hooks.map((hook, index) => (
-                <article className="character-hook" key={hook.title}>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <h3>{hook.title}</h3>
-                  <p>{hook.text}</p>
-                </article>
-              ))}
-            </div>
+            <div className="character-profile-section__heading"><div><p className="panel__kicker">Rencontres possibles</p><h2>Accroches RP</h2></div>{hooks.length > 0 ? <span className="status-pill status-pill--quiet">Ouvert au jeu</span> : null}</div>
+            {hooks.length > 0 ? (
+              <div className="character-hooks">{hooks.map((hook, index) => <article className="character-hook" key={`${hook.title}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><h3>{hook.title || "Accroche"}</h3><p>{hook.text}</p></article>)}</div>
+            ) : <p className="character-profile-section__empty">Aucune accroche RP renseignée.</p>}
           </section>
 
           <section className="character-profile-section">
-            <div className="character-profile-section__heading">
-              <div>
-                <p className="panel__kicker">Sociogramme</p>
-                <h2>Relations</h2>
-              </div>
-              <Link className="text-link" href="/liens">Voir les liens <span aria-hidden="true">→</span></Link>
-            </div>
-            {character.relations.length > 0 ? (
-              <div className="character-relations">
-                {character.relations.map((relation) => (
-                  <article className="character-relation" key={`${relation.name}-${relation.relation}`}>
-                    <div className="character-relation__avatar" aria-hidden="true">?</div>
-                    <div>
-                      <small>{relation.relation}</small>
-                      <h3>{relation.name}</h3>
-                      <p>{relation.note}</p>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="character-profile-section__empty">Aucune relation renseignée pour cette fiche de démonstration.</p>
-            )}
+            <div className="character-profile-section__heading"><div><p className="panel__kicker">Sociogramme</p><h2>Relations</h2></div><Link className="text-link" href="/liens">Voir les liens <span aria-hidden="true">→</span></Link></div>
+            <p className="character-profile-section__empty">Les relations mutuelles seront connectées dans le prochain module. Aucune relation fictive n’est affichée.</p>
           </section>
 
           <section className="character-profile-section">
             <p className="panel__kicker">Traces communautaires</p>
             <h2>Activité RP</h2>
-            {character.activity.length > 0 ? (
+            {activities.length > 0 ? (
               <div className="character-activity">
-                {character.activity.map((item, index) => (
-                  <article key={`${item.type}-${item.title}`}>
+                {activities.map((activity, index) => (
+                  <Link className="character-live-activity-link" href={`/forum/${activity.board.slug}/sujet/${activity.slug}`} key={activity.id}>
                     <span>{String(index + 1).padStart(2, "0")}</span>
-                    <div>
-                      <small>{item.type === "chronicle" ? "Chronique" : item.type === "forum" ? "Forum" : "Événement"}</small>
-                      <h3>{item.title}</h3>
-                      <p>{item.meta}</p>
-                    </div>
-                  </article>
+                    <div><small>Forum · {activity.board.title}</small><h3>{activity.title}</h3><p>{activity.status === "open" ? "Sujet en cours" : activity.status === "finished" ? "Sujet terminé" : "Sujet archivé"}</p></div>
+                  </Link>
                 ))}
               </div>
-            ) : (
-              <p className="character-profile-section__empty">Aucune activité liée pour le moment.</p>
-            )}
+            ) : <p className="character-profile-section__empty">Aucune activité RP visible liée à ce personnage pour le moment.</p>}
           </section>
         </article>
       </section>
