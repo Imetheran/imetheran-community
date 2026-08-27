@@ -19,6 +19,7 @@ import "./forum-daily-use.css";
 import "./forum-live.css";
 import "./guides.css";
 import "./community-tools.css";
+import "./maintenance.css";
 import "./auth.css";
 import "./admin.css";
 import "./admin-members.css";
