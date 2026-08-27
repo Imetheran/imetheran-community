@@ -32,7 +32,7 @@ jobs:
 
       - name: Commit lockfile
         run: |
-          if git diff --quiet -- package-lock.json; then
+          if git diff --quiet -- package-lock.json && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
             echo "package-lock.json is already current."
             exit 0
           fi
