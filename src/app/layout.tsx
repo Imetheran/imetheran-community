@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./content-hub.css";
+import "./home-live.css";
 import "./image-quality.css";
 import "./gazette-issue.css";
 import "./chronicle-hub.css";
