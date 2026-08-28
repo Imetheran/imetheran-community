@@ -12,7 +12,7 @@ function readField(formData: FormData, key: string) {
 }
 
 function readCaptchaToken(formData: FormData) {
-  return readField(formData, "cf-turnstile-response");
+  return readField(formData, "captcha_token") || readField(formData, "cf-turnstile-response");
 }
 
 function safeReturnTo(value: string) {
