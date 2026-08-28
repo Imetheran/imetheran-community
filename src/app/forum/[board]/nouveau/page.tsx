@@ -77,13 +77,24 @@ export default async function NewForumTopicPage({
     redirect(`/forum/${boardRow.slug}`);
   }
 
-  const characters = section.mode === "rp"
-    ? (await supabase
-        .from("characters")
-        .select("id, name")
-        .eq("owner_id", userId)
-        .order("name"))
-    : { data: [] as { id: string; name: string }[] };
+  const [characters, profileResult] = await Promise.all([
+    section.mode === "rp"
+      ? supabase
+          .from("characters")
+          .select("id, name")
+          .eq("owner_id", userId)
+          .order("name")
+      : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+    supabase
+      .from("profiles")
+      .select("display_name, username")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+
+  const memberName = profileResult.data?.display_name?.trim()
+    || profileResult.data?.username?.trim()
+    || "Membre";
 
   const errorMessage = query.erreur
     ? errorMessages[query.erreur] ?? "Une erreur est survenue pendant la préparation du sujet."
@@ -114,6 +125,7 @@ export default async function NewForumTopicPage({
         <ForumTopicEditor
           boardSlug={boardRow.slug}
           boardTitle={boardRow.title}
+          memberName={memberName}
           isRoleplay={section.mode === "rp"}
           characters={characters.data ?? []}
           errorMessage={errorMessage}
