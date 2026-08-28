@@ -17,6 +17,8 @@ export function ForumThreadActions({
   authenticated,
   initialFollowing,
   canModerate = false,
+  canParticipateInReplies,
+  replyRequiresLogin,
   loginHref,
 }: {
   topicId: string;
@@ -28,6 +30,8 @@ export function ForumThreadActions({
   authenticated: boolean;
   initialFollowing: boolean;
   canModerate?: boolean;
+  canParticipateInReplies: boolean;
+  replyRequiresLogin: boolean;
   loginHref: string;
 }) {
   const router = useRouter();
@@ -70,6 +74,8 @@ export function ForumThreadActions({
   }
 
   const repliesOpen = currentStatus === "open" && !currentLocked;
+  const showReplyButton = repliesOpen && canParticipateInReplies;
+  const showReplyLogin = repliesOpen && replyRequiresLogin;
 
   return (
     <div className="forum-thread-actions">
@@ -87,10 +93,10 @@ export function ForumThreadActions({
         ) : (
           <a className="button button--ghost button--small" href={loginHref}>Se connecter pour suivre</a>
         )}
-        {repliesOpen ? (
-          authenticated
-            ? <a className="button button--primary button--small" href="#repondre">Répondre</a>
-            : <a className="button button--primary button--small" href={loginHref}>Se connecter pour répondre</a>
+        {showReplyButton ? (
+          <a className="button button--primary button--small" href="#repondre">Répondre</a>
+        ) : showReplyLogin ? (
+          <a className="button button--primary button--small" href={loginHref}>Se connecter pour répondre</a>
         ) : null}
       </div>
 
@@ -116,7 +122,7 @@ export function ForumThreadActions({
         </div>
       ) : null}
 
-      <small>{notice || (authenticated ? "Le suivi est enregistré sur votre compte." : "Connexion requise pour les actions membre.")}</small>
+      <small>{notice || (authenticated ? "Suivez ce sujet pour retrouver plus facilement ses nouvelles réponses." : "Connectez-vous pour suivre ce sujet.")}</small>
     </div>
   );
 }
