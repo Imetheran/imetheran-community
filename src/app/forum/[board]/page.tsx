@@ -201,7 +201,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
         <div className="forum-board-toolbar">
           <div>
             <Link className="text-link" href="/forum">← Retour à l’index</Link>
-            <span className="forum-board-toolbar__demo">{topicItems.length} sujet{topicItems.length > 1 ? "s" : ""} visible{topicItems.length > 1 ? "s" : ""}</span>
+            <span className="forum-board-toolbar__demo">{topicItems.length} sujet{topicItems.length > 1 ? "s" : ""}</span>
           </div>
           {mayCreate ? (
             <Link className="button button--primary button--small" href={`/forum/${boardRow.slug}/nouveau`}>Nouveau sujet</Link>
@@ -229,7 +229,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
         {topicError ? (
           <div className="forum-access-note">
             <span aria-hidden="true">!</span>
-            <p><strong>Les sujets ne peuvent pas être chargés pour le moment.</strong> Réessayez dans quelques instants.</p>
+            <p><strong>Les sujets ne peuvent pas être affichés pour le moment.</strong> Réessayez dans quelques instants.</p>
           </div>
         ) : null}
 
@@ -240,8 +240,8 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
             <span aria-hidden="true">◇</span>
             <div>
               <p className="eyebrow">Accès membre</p>
-              <h2>Les sujets vous attendent après connexion</h2>
-              <p>L’index du forum reste public, mais le contenu de cette catégorie est protégé directement par les règles RLS Supabase.</p>
+              <h2>Connectez-vous pour découvrir les sujets</h2>
+              <p>Les discussions de cet espace sont réservées aux membres de la communauté.</p>
               <Link className="button button--ghost button--small" href={loginHref}>Connexion / inscription</Link>
             </div>
           </div>
