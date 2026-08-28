@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createForumTopic } from "@/app/forum/actions";
 import { BbcodeContent } from "@/components/bbcode-content";
@@ -34,6 +34,7 @@ export function ForumTopicEditor({
   characters: CharacterOption[];
   errorMessage?: string | null;
 }) {
+  const previewRef = useRef<HTMLElement>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [characterId, setCharacterId] = useState("");
@@ -45,6 +46,11 @@ export function ForumTopicEditor({
   const tagList = useMemo(() => tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 5), [tags]);
   const selectedCharacter = characters.find((character) => character.id === characterId);
   const identity = selectedCharacter?.name ?? "Compte membre";
+
+  const showTopicPreview = () => {
+    previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    requestAnimationFrame(() => previewRef.current?.focus({ preventScroll: true }));
+  };
 
   return (
     <div className="forum-topic-editor">
@@ -135,12 +141,19 @@ export function ForumTopicEditor({
         {errorMessage ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{errorMessage}</div> : null}
 
         <div className="forum-topic-editor__actions">
+          <button className="button button--ghost" type="button" onClick={showTopicPreview}>Prévisualiser le sujet</button>
           <button className="button button--ghost" type="button" disabled title="Les brouillons seront ajoutés ultérieurement.">Brouillons bientôt</button>
           <PublishButton />
         </div>
       </form>
 
-      <aside className="forum-topic-preview" aria-label="Aperçu du sujet">
+      <aside
+        ref={previewRef}
+        id="forum-topic-preview"
+        className="forum-topic-preview"
+        aria-label="Aperçu du sujet"
+        tabIndex={-1}
+      >
         <div className="forum-topic-preview__sticky">
           <p className="eyebrow">Aperçu en direct</p>
           <div className="forum-topic-preview__card">
