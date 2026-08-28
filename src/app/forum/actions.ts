@@ -76,6 +76,24 @@ function policyError(policy: string) {
   return policy === "closed" ? "fermee" : "reservee";
 }
 
+function safeThreadTarget(formData: FormData) {
+  const boardSlug = safeSlug(readField(formData, "board_slug"));
+  const topicSlug = safeSlug(readField(formData, "topic_slug"));
+  const topicId = readField(formData, "topic_id");
+  const postId = readField(formData, "post_id");
+  if (!boardSlug || !topicSlug || !uuidPattern.test(topicId) || (postId && !uuidPattern.test(postId))) {
+    redirect("/forum");
+  }
+  return { boardSlug, topicSlug, topicId, postId };
+}
+
+function refreshForumThread(boardSlug: string, topicSlug: string) {
+  revalidatePath("/");
+  revalidatePath("/forum");
+  revalidatePath(`/forum/${boardSlug}`);
+  revalidatePath(`/forum/${boardSlug}/sujet/${topicSlug}`);
+}
+
 export async function createForumTopic(formData: FormData) {
   const boardSlug = safeSlug(readField(formData, "board_slug"));
   const title = readField(formData, "title");
@@ -189,10 +207,128 @@ export async function createForumPost(formData: FormData) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=publication#repondre`);
   }
 
+  refreshForumThread(boardSlug, topicSlug);
+  redirect(`/forum/${boardSlug}/sujet/${topicSlug}#${postId}`);
+}
+
+export async function editForumPost(formData: FormData) {
+  const { boardSlug, topicSlug, topicId, postId } = safeThreadTarget(formData);
+  const content = readField(formData, "content");
+  if (!postId || content.length < 2 || content.length > 50000) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition-champs#${postId || "forum-thread-top"}`);
+  }
+
+  const { supabase, userId } = await getAuthenticatedUser();
+  if (!userId) {
+    redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}#${postId}`)}`);
+  }
+
+  const participation = await getMemberParticipation(supabase, userId);
+  if (!participation.canParticipate) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition-suspendue#${postId}`);
+  }
+
+  const [{ data: topic }, { data: post }] = await Promise.all([
+    supabase
+      .from("forum_topics")
+      .select("id, status, is_locked")
+      .eq("id", topicId)
+      .eq("slug", topicSlug)
+      .maybeSingle(),
+    supabase
+      .from("forum_posts")
+      .select("id, author_id, is_hidden")
+      .eq("id", postId)
+      .eq("topic_id", topicId)
+      .maybeSingle(),
+  ]);
+
+  if (!topic || !post || post.author_id !== userId) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition-droits#${postId}`);
+  }
+  if (post.is_hidden || topic.status !== "open" || topic.is_locked) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition-fermee#${postId}`);
+  }
+
+  const { data: firstPost } = await supabase
+    .from("forum_posts")
+    .select("id")
+    .eq("topic_id", topicId)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const { error: postError } = await supabase
+    .from("forum_posts")
+    .update({ content })
+    .eq("id", postId)
+    .eq("author_id", userId);
+
+  if (postError) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition#${postId}`);
+  }
+
+  if (firstPost?.id === postId) {
+    const excerpt = content.replace(/\s+/g, " ").trim().slice(0, 240);
+    const { error: topicError } = await supabase
+      .from("forum_topics")
+      .update({ excerpt })
+      .eq("id", topicId)
+      .eq("author_id", userId);
+    if (topicError) {
+      redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition#${postId}`);
+    }
+  }
+
+  refreshForumThread(boardSlug, topicSlug);
+  redirect(`/forum/${boardSlug}/sujet/${topicSlug}?message=message-modifie#${postId}`);
+}
+
+function deleteErrorCode(message: string, target: "post" | "topic") {
+  if (message.includes("under_review")) return "suppression-signalement";
+  if (message.includes("topic_closed")) return "suppression-fermee";
+  if (message.includes("topic_has_replies")) return "sujet-reponses";
+  if (message.includes("first_post_requires_topic_delete")) return "suppression-sujet";
+  if (message.includes("owner_required")) return "suppression-droits";
+  return target === "topic" ? "suppression-sujet" : "suppression-message";
+}
+
+export async function deleteForumPost(formData: FormData) {
+  const { boardSlug, topicSlug, postId } = safeThreadTarget(formData);
+  if (!postId) redirect("/forum");
+
+  const { supabase, userId } = await getAuthenticatedUser();
+  if (!userId) {
+    redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}`)}`);
+  }
+
+  const { error } = await supabase.rpc("delete_own_forum_post", { p_post_id: postId });
+  if (error) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=${deleteErrorCode(error.message, "post")}#${postId}`);
+  }
+
+  refreshForumThread(boardSlug, topicSlug);
+  redirect(`/forum/${boardSlug}/sujet/${topicSlug}?message=message-supprime`);
+}
+
+export async function deleteForumTopic(formData: FormData) {
+  const { boardSlug, topicSlug, topicId } = safeThreadTarget(formData);
+
+  const { supabase, userId } = await getAuthenticatedUser();
+  if (!userId) {
+    redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}`)}`);
+  }
+
+  const { error } = await supabase.rpc("delete_own_forum_topic", { p_topic_id: topicId });
+  if (error) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=${deleteErrorCode(error.message, "topic")}#forum-thread-top`);
+  }
+
+  revalidatePath("/");
   revalidatePath("/forum");
   revalidatePath(`/forum/${boardSlug}`);
-  revalidatePath(`/forum/${boardSlug}/sujet/${topicSlug}`);
-  redirect(`/forum/${boardSlug}/sujet/${topicSlug}#${postId}`);
+  redirect(`/forum/${boardSlug}`);
 }
 
 export async function markTopicRead(topicId: string, lastPostId: string | null) {
