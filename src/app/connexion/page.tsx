@@ -48,7 +48,7 @@ export default async function ConnexionPage({
       {turnstileSiteKey ? (
         <Script
           id="cloudflare-turnstile"
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
           strategy="afterInteractive"
         />
       ) : null}
