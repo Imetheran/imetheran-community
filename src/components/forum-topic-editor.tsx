@@ -6,6 +6,7 @@ import { createForumTopic } from "@/app/forum/actions";
 import { BbcodeContent } from "@/components/bbcode-content";
 import { BbcodeEditor } from "@/components/bbcode-editor";
 import type { ForumMediaRenderMap } from "@/lib/forum-media";
+import { forumTopicTypeLabel } from "@/lib/forum-presentation";
 
 type CharacterOption = {
   id: string;
@@ -28,24 +29,6 @@ function initials(value: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toLocaleUpperCase("fr") ?? "")
     .join("") || "M";
-}
-
-function topicTypeLabel(value: string, isRoleplay: boolean) {
-  if (isRoleplay) {
-    return value === "targeted"
-      ? "Scène ciblée"
-      : value === "storyline"
-        ? "Scénario"
-        : value === "event"
-          ? "Événement"
-          : "Scène ouverte";
-  }
-
-  return value === "question"
-    ? "Question"
-    : value === "share"
-      ? "Partage"
-      : "Discussion";
 }
 
 export function ForumTopicEditor({
@@ -181,7 +164,6 @@ export function ForumTopicEditor({
 
           <div className="forum-topic-editor__actions">
             <button className="button button--ghost" type="button" onClick={openPreview}>Prévisualiser le sujet</button>
-            <button className="button button--ghost" type="button" disabled title="Les brouillons seront ajoutés ultérieurement.">Brouillons bientôt</button>
             <PublishButton />
           </div>
         </div>
@@ -206,7 +188,7 @@ export function ForumTopicEditor({
 
             <div className="forum-topic-publish-preview__thread-head">
               <div className="forum-thread-head__badges">
-                <span>{topicTypeLabel(sceneType, isRoleplay)}</span>
+                <span>{forumTopicTypeLabel(sceneType)}</span>
                 {location ? <span>{location}</span> : null}
                 {tagList.map((tag) => <span key={tag}>{tag}</span>)}
               </div>
