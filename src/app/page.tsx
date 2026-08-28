@@ -42,7 +42,16 @@ function initials(name: string) {
 
 export default async function Home() {
   const supabase = await createClient();
-  const [topicsResult, boardsResult, gazetteResult, chronicleResult, openChroniclesResult, charactersResult] = await Promise.all([
+  const [
+    topicsResult,
+    boardsResult,
+    gazetteResult,
+    chronicleResult,
+    openChroniclesResult,
+    gazetteCountResult,
+    characterCountResult,
+    charactersResult,
+  ] = await Promise.all([
     supabase.from("forum_topics").select("id, board_id, title, slug, last_activity_at, post_count").order("last_activity_at", { ascending: false }).limit(4),
     supabase.from("forum_boards").select("id, slug, title"),
     supabase
@@ -62,6 +71,13 @@ export default async function Home() {
       .limit(1)
       .maybeSingle(),
     supabase.from("chronicles").select("id", { count: "exact", head: true }).eq("publication_status", "published").eq("narrative_status", "open"),
+    supabase.from("gazettes").select("id", { count: "exact", head: true }).eq("publication_status", "published"),
+    supabase
+      .from("characters")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published")
+      .eq("visibility", "public")
+      .eq("is_moderation_hidden", false),
     supabase
       .from("characters")
       .select("id, slug, name, epithet, short_summary, people, world, traits, is_featured, updated_at")
@@ -78,6 +94,8 @@ export default async function Home() {
   const featuredGazette = gazetteResult.data;
   const featuredChronicle = chronicleResult.data;
   const openChronicleCount = openChroniclesResult.count ?? 0;
+  const publishedGazetteCount = gazetteCountResult.count ?? 0;
+  const publicCharacterCount = characterCountResult.count ?? 0;
   const liveCharacters = charactersResult.data ?? [];
   const gazetteHighlights = featuredGazette ? ((featuredGazette.highlights ?? []) as string[]) : [];
 
@@ -112,15 +130,15 @@ export default async function Home() {
           <header className="section-heading section-heading--row"><div><p className="eyebrow">Le cœur de la communauté</p><h2 id="activity-title">En ce moment sur Imetheran</h2></div><Link className="text-link" href="/forum">Voir le forum <span aria-hidden="true">→</span></Link></header>
           <div className="activity-layout">
             <article className="panel panel--topics">
-              <div className="panel__heading"><div><p className="panel__kicker">Discussions</p><h3>Derniers sujets visibles</h3></div><span className="status-pill status-pill--quiet">Forum connecté</span></div>
+              <div className="panel__heading"><div><p className="panel__kicker">Discussions</p><h3>Derniers sujets visibles</h3></div><span className="status-pill status-pill--quiet">Activité récente</span></div>
               {topics.length ? <div className="home-live-topic-list">{topics.map((topic) => {
                 const board = boardMap.get(topic.board_id);
                 return <Link className="home-live-topic" href={board ? `/forum/${board.slug}/sujet/${topic.slug}` : "/forum"} key={topic.id}><span className="home-live-topic__mark" aria-hidden="true">◆</span><span className="home-live-topic__copy"><strong>{topic.title}</strong><small>{board?.title ?? "Forum"} · {topic.post_count} message{topic.post_count > 1 ? "s" : ""}</small></span><time dateTime={topic.last_activity_at}>{formatHomeActivity(topic.last_activity_at)}</time><span aria-hidden="true">→</span></Link>;
               })}</div> : <div className="empty-feed"><span className="empty-feed__mark" aria-hidden="true">✦</span><div><strong>Aucun sujet visible pour le moment.</strong><p>Les premières discussions accessibles à votre session apparaîtront ici automatiquement.</p></div></div>}
             </article>
             <aside className="activity-sidebar" aria-label="Informations à retenir">
-              <article className="panel notice-card"><p className="panel__kicker">À retenir</p><h3>Bienvenue sur Imetheran</h3><p>Le forum, les fiches de personnages, les liens, les Chroniques et les Gazettes partagent le même socle communautaire.</p><Link className="text-link" href="/forum">Découvrir le forum <span aria-hidden="true">→</span></Link></article>
-              <article className="panel compact-status"><div><span className="status-dot" aria-hidden="true" /><span>Chroniques ouvertes</span><strong>{openChronicleCount}</strong></div><div><span className="status-dot status-dot--muted" aria-hidden="true" /><span>Événements annoncés</span><strong>0</strong></div><div><span className="status-dot status-dot--muted" aria-hidden="true" /><span>Membres en ligne</span><strong>—</strong></div></article>
+              <article className="panel notice-card"><p className="panel__kicker">À retenir</p><h3>Imetheran ouvre ses portes</h3><p>Le numéro zéro de la Gazette et la première Chronique sont en ligne. Découvrez aussi l’esprit du projet et ce que nous attendons de la bêta.</p><Link className="text-link" href="/forum/annonces-informations/sujet/bienvenue-sur-imetheran">Lire l’annonce <span aria-hidden="true">→</span></Link></article>
+              <article className="panel compact-status"><div><span className="status-dot" aria-hidden="true" /><span>Chroniques ouvertes</span><strong>{openChronicleCount}</strong></div><div><span className="status-dot status-dot--muted" aria-hidden="true" /><span>Gazettes publiées</span><strong>{publishedGazetteCount}</strong></div><div><span className="status-dot status-dot--muted" aria-hidden="true" /><span>Personnages publics</span><strong>{publicCharacterCount}</strong></div></article>
             </aside>
           </div>
         </div>
@@ -139,17 +157,17 @@ export default async function Home() {
                 <div className="gazette-feature__meta"><span className="status-pill">Publié</span><span>{featuredGazette.edition || `Édition ${String(featuredGazette.issue_number).padStart(2, "0")}`}</span></div>
                 <p className="panel__kicker">Numéro mis en avant</p><h3>{featuredGazette.headline}</h3><p className="gazette-feature__excerpt">{featuredGazette.excerpt}</p>
                 {gazetteHighlights.length ? <div className="gazette-feature__contents"><span>Dans ce numéro</span><ul>{gazetteHighlights.slice(0, 5).map((highlight) => <li key={highlight}>{highlight}</li>)}</ul></div> : null}
-                <div className="gazette-feature__actions"><Link className="button button--primary" href={`/gazettes/${featuredGazette.slug}`}>Lire la Gazette</Link><span className="gazette-feature__cms-note">Publication issue du CMS</span></div>
+                <div className="gazette-feature__actions"><Link className="button button--primary" href={`/gazettes/${featuredGazette.slug}`}>Lire la Gazette</Link><span className="gazette-feature__cms-note">Édition communautaire</span></div>
               </div>
             </article>
-          ) : <div className="empty-feed"><span className="empty-feed__mark" aria-hidden="true">✦</span><div><strong>Aucune Gazette publiée.</strong><p>Le premier numéro publié depuis le CMS apparaîtra automatiquement ici.</p></div></div>}
+          ) : <div className="empty-feed"><span className="empty-feed__mark" aria-hidden="true">✦</span><div><strong>Aucune Gazette publiée.</strong><p>Le premier numéro publié par la rédaction apparaîtra automatiquement ici.</p></div></div>}
         </div>
       </section>
 
       <section className="home-section home-section--chronicles" aria-labelledby="chronicles-title">
         <div className="content-frame">
           <header className="section-heading section-heading--row"><div><p className="eyebrow">Les fils rouges</p><h2 id="chronicles-title">Chronique mise en avant</h2></div><Link className="text-link" href="/chroniques">Toutes les chroniques <span aria-hidden="true">→</span></Link></header>
-          {featuredChronicle ? <article className="chronicle-feature"><div className="chronicle-feature__art" style={{ backgroundImage: featuredChronicle.cover_image ? `linear-gradient(90deg, transparent 58%, var(--surface)), linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.56)), url(${featuredChronicle.cover_image})` : "linear-gradient(90deg, transparent 58%, var(--surface)), var(--hero-image)" }} aria-hidden="true" /><div className="chronicle-feature__body"><span className="status-pill">{chronicleNarrativeLabels[featuredChronicle.narrative_status as ChronicleNarrativeStatus]}</span><p className="chronicle-feature__meta">{featuredChronicle.subtitle || "Chronique communautaire"}</p><h3>{featuredChronicle.title}</h3><p>{featuredChronicle.synopsis}</p><div className="chronicle-feature__details"><span>{featuredChronicle.location || "Lieu à découvrir"}</span><span>{featuredChapterCount} acte{featuredChapterCount > 1 ? "s" : ""}</span><span>{featuredParticipantCount} participant{featuredParticipantCount > 1 ? "s" : ""}</span></div><Link className="button button--small" href={`/chroniques/${featuredChronicle.slug}`}>Ouvrir le dossier</Link></div></article> : <div className="empty-feed"><span className="empty-feed__mark" aria-hidden="true">✦</span><div><strong>Aucune chronique publiée.</strong><p>La première chronique mise en ligne depuis le CMS apparaîtra automatiquement ici.</p></div></div>}
+          {featuredChronicle ? <article className="chronicle-feature"><div className="chronicle-feature__art" style={{ backgroundImage: featuredChronicle.cover_image ? `linear-gradient(90deg, transparent 58%, var(--surface)), linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.56)), url(${featuredChronicle.cover_image})` : "linear-gradient(90deg, transparent 58%, var(--surface)), var(--hero-image)" }} aria-hidden="true" /><div className="chronicle-feature__body"><span className="status-pill">{chronicleNarrativeLabels[featuredChronicle.narrative_status as ChronicleNarrativeStatus]}</span><p className="chronicle-feature__meta">{featuredChronicle.subtitle || "Chronique communautaire"}</p><h3>{featuredChronicle.title}</h3><p>{featuredChronicle.synopsis}</p><div className="chronicle-feature__details"><span>{featuredChronicle.location || "Lieu à découvrir"}</span><span>{featuredChapterCount} acte{featuredChapterCount > 1 ? "s" : ""}</span><span>{featuredParticipantCount} participant{featuredParticipantCount > 1 ? "s" : ""}</span></div><Link className="button button--small" href={`/chroniques/${featuredChronicle.slug}`}>Ouvrir le dossier</Link></div></article> : <div className="empty-feed"><span className="empty-feed__mark" aria-hidden="true">✦</span><div><strong>Aucune chronique publiée.</strong><p>La première chronique publiée apparaîtra automatiquement ici.</p></div></div>}
         </div>
       </section>
 
