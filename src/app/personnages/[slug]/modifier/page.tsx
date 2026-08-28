@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { CharacterEditor, type EditableCharacter } from "@/components/character-editor";
 import { SiteHeader } from "@/components/site-header";
+import { signedCharacterPortraitUrl } from "@/lib/character-portraits";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -37,9 +38,7 @@ export default async function EditCharacterPage({
 
   if (!character) notFound();
 
-  const portraitUrl = character.portrait_path
-    ? supabase.storage.from("character-portraits").getPublicUrl(character.portrait_path).data.publicUrl
-    : null;
+  const portraitUrl = await signedCharacterPortraitUrl(supabase, character.portrait_path);
   const rawHooks = Array.isArray(character.hooks) ? character.hooks : [];
   const hooks = rawHooks
     .filter((hook): hook is { title?: unknown; text?: unknown } => Boolean(hook) && typeof hook === "object")
