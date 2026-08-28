@@ -1,0 +1,198 @@
+/* Accessibility and responsive finishing layer.
+   Loaded last so focus, touch and narrow-screen safeguards win over decorative component styles. */
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.skip-link {
+  position: fixed;
+  top: .75rem;
+  left: .75rem;
+  z-index: 1000;
+  padding: .7rem 1rem;
+  border: 2px solid var(--accent-bright);
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: .82rem;
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 1rem));
+  transition: transform .12s ease;
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
+.skip-target {
+  display: block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  scroll-margin-top: 1rem;
+}
+.skip-target:focus { outline: none; }
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent-bright) !important;
+  outline-offset: 3px !important;
+}
+
+:where(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
+p,
+li,
+dd,
+td,
+th,
+blockquote {
+  overflow-wrap: anywhere;
+}
+
+pre,
+code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.main-nav__link[aria-current="page"] {
+  color: var(--accent-bright);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.main-nav__link[aria-current="page"]::after {
+  left: .45rem;
+  right: .45rem;
+}
+
+.auth-message[role="alert"] {
+  border-color: color-mix(in srgb, #ff8d7a 70%, var(--border));
+}
+
+@media (max-width: 900px) {
+  .topbar__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .45rem;
+    padding-block: .55rem .7rem;
+  }
+
+  .topbar__member {
+    order: -1;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .45rem;
+    flex-wrap: wrap;
+  }
+
+  .topbar__utility,
+  .topbar__account,
+  .topbar__notifications {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .main-nav {
+    width: 100%;
+    max-width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: .3rem;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-dark) transparent;
+  }
+
+  .main-nav::-webkit-scrollbar {
+    display: block;
+    height: 4px;
+  }
+
+  .main-nav::-webkit-scrollbar-thumb {
+    background: var(--accent-dark);
+  }
+
+  .main-nav__link {
+    min-height: 44px;
+    padding: .7rem .68rem;
+    display: inline-flex;
+    align-items: center;
+    scroll-snap-align: start;
+  }
+
+  .main-nav__link::after { bottom: 4px; }
+
+  .section-heading--row,
+  .forum-thread__toolbar,
+  .forum-board-toolbar,
+  .forum-reply-box__footer {
+    gap: .8rem;
+  }
+}
+
+@media (max-width: 680px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .hero__actions > .button,
+  .auth-form > .button,
+  .forum-thread__toolbar .button,
+  .forum-board-toolbar .button {
+    width: 100%;
+  }
+
+  .forum-post__body > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .forum-post__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (pointer: coarse) {
+  button,
+  select,
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+  .button {
+    min-height: 44px;
+  }
+
+  input[type="color"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (forced-colors: active) {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid Highlight !important;
+  }
+}

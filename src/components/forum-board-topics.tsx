@@ -70,8 +70,8 @@ export function ForumBoardTopics({ boardSlug, topics }: { boardSlug: string; top
 
   return (
     <div className="forum-topic-browser">
-      <div className="forum-topic-browser__controls" aria-label="Filtrer les sujets">
-        <div className="forum-topic-browser__filters">
+      <div className="forum-topic-browser__controls" role="group" aria-label="Filtrer et trier les sujets">
+        <div className="forum-topic-browser__filters" role="group" aria-label="État des sujets">
           {([
             ["all", "Tous"],
             ["unread", "Non lus"],
@@ -83,6 +83,7 @@ export function ForumBoardTopics({ boardSlug, topics }: { boardSlug: string; top
               key={value}
               onClick={() => setFilter(value)}
               type="button"
+              aria-pressed={filter === value}
             >
               {label}
             </button>
@@ -154,6 +155,7 @@ export function ForumBoardTopics({ boardSlug, topics }: { boardSlug: string; top
               type="button"
               onClick={() => setPage(pageNumber)}
               aria-current={pageNumber === currentPage ? "page" : undefined}
+              aria-label={`Page ${pageNumber}`}
             >
               {pageNumber}
             </button>
