@@ -26,6 +26,7 @@ type BbcodeEditorProps = {
   ariaLabel?: string;
   previewMode?: "toggle" | "none";
   initialMediaMap?: ForumMediaRenderMap;
+  onMediaMapChange?: (mediaMap: ForumMediaRenderMap) => void;
 };
 
 function imageDimensions(file: File) {
@@ -69,6 +70,7 @@ export function BbcodeEditor({
   ariaLabel,
   previewMode = "toggle",
   initialMediaMap = {},
+  onMediaMapChange,
 }: BbcodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -194,14 +196,16 @@ export function BbcodeEditor({
       const requestedAlt = window.prompt("Texte alternatif de l’image", suggestedAlt);
       const alt = cleanAltText(requestedAlt ?? suggestedAlt) || "Image du message";
 
-      setMediaMap((current) => ({
-        ...current,
+      const nextMediaMap: ForumMediaRenderMap = {
+        ...mediaMap,
         [mediaId.toLowerCase()]: {
           url: signedData.signedUrl,
           width: dimensions.width,
           height: dimensions.height,
         },
-      }));
+      };
+      setMediaMap(nextMediaMap);
+      onMediaMapChange?.(nextMediaMap);
       insertToken(`\n[img=${mediaId}]${alt}[/img]\n`);
       setPreviewOpen(true);
     } catch (error) {
