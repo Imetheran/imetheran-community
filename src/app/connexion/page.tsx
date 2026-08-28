@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Script from "next/script";
 import { SiteHeader } from "@/components/site-header";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { login, requestPasswordReset, signup } from "./actions";
 
 const errorMessages: Record<string, string> = {
@@ -11,6 +13,8 @@ const errorMessages: Record<string, string> = {
   confirmation: "Le lien de confirmation est invalide ou a expiré. Vous pouvez recommencer la connexion ou l’inscription.",
   profil: "Votre session est valide, mais votre profil membre n’a pas pu être chargé.",
   recuperation: "L’e-mail de récupération n’a pas pu être envoyé. Réessayez dans quelques instants.",
+  captcha: "La vérification anti-robot n’a pas pu être validée. Recommencez le contrôle puis réessayez.",
+  limite: "Trop de tentatives ont été effectuées en peu de temps. Patientez quelques instants avant de réessayer.",
 };
 
 const statusMessages: Record<string, string> = {
@@ -19,6 +23,8 @@ const statusMessages: Record<string, string> = {
   deconnexion: "Vous êtes maintenant déconnecté d’Imetheran.",
   recuperation: "Si un compte correspond à cette adresse, un e-mail de récupération vient d’être envoyé.",
 };
+
+const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim();
 
 function safeReturnTo(value?: string) {
   if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\0")) return "/compte";
@@ -39,6 +45,14 @@ export default async function ConnexionPage({
 
   return (
     <main className="site-shell auth-page">
+      {turnstileSiteKey ? (
+        <Script
+          id="cloudflare-turnstile"
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="afterInteractive"
+        />
+      ) : null}
+
       <SiteHeader />
 
       <section className="auth-hero">
@@ -70,6 +84,7 @@ export default async function ConnexionPage({
                   <span>Adresse e-mail</span>
                   <input name="email" type="email" autoComplete="email" required />
                 </label>
+                <TurnstileWidget siteKey={turnstileSiteKey} action="recovery" />
                 <button className="button button--primary" type="submit">Envoyer le lien de récupération</button>
               </form>
               <Link className="text-link auth-card__recovery" href="/connexion">← Retour à la connexion</Link>
@@ -91,6 +106,7 @@ export default async function ConnexionPage({
                   <span>Mot de passe</span>
                   <input name="password" type="password" autoComplete="current-password" required />
                 </label>
+                <TurnstileWidget siteKey={turnstileSiteKey} action="login" />
                 <button className="button button--primary" type="submit">Se connecter</button>
               </form>
               <Link className="text-link auth-card__recovery" href="/connexion?mode=recuperation">Mot de passe oublié ?</Link>
@@ -115,6 +131,7 @@ export default async function ConnexionPage({
                   <input name="password" type="password" minLength={10} autoComplete="new-password" required />
                   <small>10 caractères minimum.</small>
                 </label>
+                <TurnstileWidget siteKey={turnstileSiteKey} action="signup" />
                 <button className="button button--primary" type="submit">Créer mon compte</button>
               </form>
               <p className="auth-charter-note">
