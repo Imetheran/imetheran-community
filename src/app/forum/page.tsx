@@ -120,7 +120,7 @@ export default async function ForumPage() {
             <p className="eyebrow">Index communautaire</p>
             <h2 id="forum-index-title">Les espaces du forum</h2>
             <p>
-              Les catégories, droits d’accès et compteurs affichés ici proviennent maintenant directement de la base communautaire.
+              Parcourez les discussions publiques, les espaces réservés aux membres et les différentes zones dédiées au rôleplay.
             </p>
           </div>
           <div className="forum-index__summary" aria-label="Résumé du forum">
@@ -135,24 +135,13 @@ export default async function ForumPage() {
             <div>
               <span className="forum-index__notice-mark" aria-hidden="true">!</span>
               <div>
-                <strong>Connexion au forum momentanément indisponible</strong>
-                <p>La structure n’a pas pu être chargée depuis Supabase. Aucun contenu de démonstration n’est substitué aux vraies données.</p>
+                <strong>Le forum est momentanément indisponible</strong>
+                <p>Une partie des espaces n’a pas pu être chargée. Réessayez dans quelques instants.</p>
               </div>
             </div>
-            <span className="status-pill status-pill--quiet">Backend indisponible</span>
+            <span className="status-pill status-pill--quiet">Indisponible</span>
           </div>
-        ) : (
-          <div className="forum-index__notice">
-            <div>
-              <span className="forum-index__notice-mark" aria-hidden="true">✦</span>
-              <div>
-                <strong>Forum connecté</strong>
-                <p>Les zones membres restent visibles dans l’index, mais leurs sujets et messages sont protégés par les règles d’accès Supabase.</p>
-              </div>
-            </div>
-            <span className="status-pill">Supabase actif</span>
-          </div>
-        )}
+        ) : null}
 
         <div className="forum-sections">
           {sections.map((section, sectionIndex) => {
@@ -209,8 +198,8 @@ export default async function ForumPage() {
 
         <footer className="forum-index__footer">
           <div>
-            <p className="eyebrow">Architecture évolutive</p>
-            <strong>Les campagnes comme Evercold pourront être créées, remplacées ou archivées depuis l’administration.</strong>
+            <p className="eyebrow">Faire vivre la communauté</p>
+            <strong>Les espaces du forum évolueront avec les histoires, campagnes et besoins des membres d’Imetheran.</strong>
           </div>
           <Link className="text-link" href="/">← Retour à l’accueil</Link>
         </footer>
