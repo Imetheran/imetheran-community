@@ -12,10 +12,10 @@ type CharacterOption = {
   name: string;
 };
 
-function PublishButton() {
+function PublishButton({ disabled = false }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <button className="button button--primary" type="submit" disabled={pending}>
+    <button className="button button--primary" type="submit" disabled={pending || disabled}>
       {pending ? "Publication…" : "Publier le sujet"}
     </button>
   );
@@ -75,6 +75,7 @@ export function ForumTopicEditor({
 
   const tagList = useMemo(() => tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 5), [tags]);
   const selectedCharacter = characters.find((character) => character.id === characterId);
+  const canPublish = title.trim().length > 0 && content.trim().length >= 2;
 
   const openPreview = () => {
     setPreviewOpen(true);
@@ -246,9 +247,15 @@ export function ForumTopicEditor({
               </article>
             </div>
 
+            {!canPublish ? (
+              <div className="forum-editor-notice forum-editor-notice--error" role="status">
+                Ajoutez un titre et au moins deux caractères dans le premier message avant de publier.
+              </div>
+            ) : null}
+
             <div className="forum-topic-publish-preview__actions">
               <button className="button button--ghost" type="button" onClick={closePreview}>← Revenir à l’édition</button>
-              <PublishButton />
+              <PublishButton disabled={!canPublish} />
             </div>
           </section>
         ) : null}
