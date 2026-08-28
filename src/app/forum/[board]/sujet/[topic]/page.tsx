@@ -5,6 +5,8 @@ import { ForumReadMarker } from "@/components/forum-read-marker";
 import { ForumThreadActions } from "@/components/forum-thread-actions";
 import { ForumReportControl } from "@/components/forum-report-control";
 import { createForumPost } from "@/app/forum/actions";
+import { canUseForumWritePolicy } from "@/lib/forum-access";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +49,7 @@ export default async function ForumTopicPage({
   const userId = typeof claims?.sub === "string" ? claims.sub : null;
   const role = readRole(claims);
   const canModerate = role === "admin" || role === "moderator";
+  const participation = await getMemberParticipation(supabase, userId);
 
   const { data: boardRow, error: boardError } = await supabase
     .from("forum_boards")
@@ -163,11 +166,18 @@ export default async function ForumTopicPage({
   const firstPostId = postRows.at(0)?.id ?? null;
   const lastPostId = postRows.at(-1)?.id ?? topic.last_post_id;
   const repliesOpen = topic.status === "open" && !topic.is_locked;
+  const canReply = repliesOpen && canUseForumWritePolicy(boardRow.reply_policy, userId, role, participation.canParticipate);
   const replyError = query.erreur === "reponse"
     ? "Votre réponse doit contenir au moins quelques caractères."
-    : query.erreur === "publication"
-      ? "La réponse n’a pas pu être publiée. Vérifiez vos droits ou réessayez dans un instant."
-      : null;
+    : query.erreur === "suspendu"
+      ? "Votre participation est suspendue. La lecture reste disponible, mais vous ne pouvez pas publier."
+      : query.erreur === "fermee"
+        ? "Les réponses sont actuellement fermées dans ce forum ou ce sujet."
+        : query.erreur === "reservee"
+          ? "Les réponses sont réservées à l’équipe dans ce forum."
+          : query.erreur === "publication"
+            ? "La réponse n’a pas pu être publiée. Vérifiez vos droits ou réessayez dans un instant."
+            : null;
   const reportFeedback = query.message === "signalement"
     ? { kind: "success", text: "Signalement transmis à l’équipe de modération." }
     : query.erreur === "signalement-deja"
@@ -236,6 +246,8 @@ export default async function ForumTopicPage({
             {reportFeedback.text}
           </div>
         ) : null}
+
+        {replyError ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{replyError}</div> : null}
 
         {postRows.length > 1 ? (
           <nav className="forum-thread-jump" aria-label="Navigation dans le sujet">
@@ -308,50 +320,55 @@ export default async function ForumTopicPage({
           </nav>
         ) : null}
 
-        {repliesOpen ? (
-          userId ? (
-            <section className="forum-reply-box" id="repondre" aria-labelledby="reply-title">
-              <div className="forum-reply-box__heading">
-                <div><p className="eyebrow">Participation</p><h2 id="reply-title">Répondre au sujet</h2></div>
-                <span className="status-pill">Publication réelle</span>
-              </div>
-
-              {replyError ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{replyError}</div> : null}
-
-              <form action={createForumPost}>
-                <input type="hidden" name="board_slug" value={boardRow.slug} />
-                <input type="hidden" name="topic_slug" value={topic.slug} />
-                <input type="hidden" name="topic_id" value={topic.id} />
-                <div className="forum-reply-box__identity">
-                  <span>Publier en tant que</span>
-                  {section.mode === "rp" ? (
-                    <select name="character_id" defaultValue="">
-                      <option value="">Compte membre</option>
-                      {ownedCharacters.map((character) => <option value={character.id} key={character.id}>{character.name}</option>)}
-                    </select>
-                  ) : <input type="hidden" name="character_id" value="" />}
-                  <small>Le compte reste toujours l’auteur technique ; un personnage peut être attaché au message RP.</small>
-                </div>
-                <textarea name="content" aria-label="Contenu de la réponse" placeholder="Écrivez votre réponse…" rows={9} maxLength={50000} required />
-                <div className="forum-reply-box__footer">
-                  <span>Texte simple pour la première version connectée.</span>
-                  <button className="button button--primary button--small" type="submit">Publier la réponse</button>
-                </div>
-              </form>
-            </section>
-          ) : (
-            <div className="forum-access-note" id="repondre">
-              <span aria-hidden="true">◇</span>
-              <p><strong>Connectez-vous pour répondre.</strong> La lecture de ce sujet est disponible, mais la publication nécessite un compte membre. <Link href={loginHref}>Connexion / inscription →</Link></p>
-            </div>
-          )
-        ) : (
-          <div className="forum-thread-locked">
+        {!repliesOpen ? (
+          <div className="forum-thread-locked" id="repondre">
             {topic.status === "archived"
               ? "Ce sujet est archivé. Aucune nouvelle réponse ne peut être publiée."
               : topic.status === "finished"
                 ? "Ce sujet est terminé. Il peut être rouvert par l’équipe si nécessaire."
                 : "Ce sujet est verrouillé. Aucune nouvelle réponse ne peut être publiée."}
+          </div>
+        ) : canReply ? (
+          <section className="forum-reply-box" id="repondre" aria-labelledby="reply-title">
+            <div className="forum-reply-box__heading">
+              <div><p className="eyebrow">Participation</p><h2 id="reply-title">Répondre au sujet</h2></div>
+              <span className="status-pill">Publication réelle</span>
+            </div>
+
+            <form action={createForumPost}>
+              <input type="hidden" name="board_slug" value={boardRow.slug} />
+              <input type="hidden" name="topic_slug" value={topic.slug} />
+              <input type="hidden" name="topic_id" value={topic.id} />
+              <div className="forum-reply-box__identity">
+                <span>Publier en tant que</span>
+                {section.mode === "rp" ? (
+                  <select name="character_id" defaultValue="">
+                    <option value="">Compte membre</option>
+                    {ownedCharacters.map((character) => <option value={character.id} key={character.id}>{character.name}</option>)}
+                  </select>
+                ) : <input type="hidden" name="character_id" value="" />}
+                <small>Le compte reste toujours l’auteur technique ; un personnage peut être attaché au message RP.</small>
+              </div>
+              <textarea name="content" aria-label="Contenu de la réponse" placeholder="Écrivez votre réponse…" rows={9} maxLength={50000} required />
+              <div className="forum-reply-box__footer">
+                <span>Texte simple pour la première version connectée.</span>
+                <button className="button button--primary button--small" type="submit">Publier la réponse</button>
+              </div>
+            </form>
+          </section>
+        ) : userId && !participation.canParticipate ? (
+          <div className="forum-access-note" id="repondre">
+            <span aria-hidden="true">!</span>
+            <p><strong>Votre participation est suspendue.</strong> Vous pouvez continuer à lire et signaler un contenu, mais pas répondre. <Link href="/compte">Consulter mon compte →</Link></p>
+          </div>
+        ) : boardRow.reply_policy === "closed" ? (
+          <div className="forum-thread-locked" id="repondre">Les réponses sont fermées dans ce forum.</div>
+        ) : boardRow.reply_policy === "staff" ? (
+          <div className="forum-thread-locked" id="repondre">Les réponses sont réservées à l’équipe de modération.</div>
+        ) : (
+          <div className="forum-access-note" id="repondre">
+            <span aria-hidden="true">◇</span>
+            <p><strong>Connectez-vous pour répondre.</strong> La lecture de ce sujet est disponible, mais la publication nécessite un compte membre. <Link href={loginHref}>Connexion / inscription →</Link></p>
           </div>
         )}
       </section>
