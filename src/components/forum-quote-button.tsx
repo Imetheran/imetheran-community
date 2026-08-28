@@ -14,6 +14,7 @@ export function ForumQuoteButton({
   return (
     <button
       type="button"
+      aria-label={`Citer le message de ${authorName}`}
       onClick={() => {
         window.dispatchEvent(new CustomEvent(FORUM_QUOTE_EVENT, { detail: { quote } }));
         requestAnimationFrame(() => {
