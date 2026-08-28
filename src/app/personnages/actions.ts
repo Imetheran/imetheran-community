@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -72,6 +73,11 @@ export async function saveCharacter(formData: FormData) {
   const editing = UUID_PATTERN.test(characterId);
   const returnTo = editing ? `/personnages/${readField(formData, "current_slug", 90)}/modifier` : "/personnages/nouveau";
   const { supabase, userId } = await requireMember(returnTo);
+  const participation = await getMemberParticipation(supabase, userId);
+
+  if (!participation.canParticipate) {
+    redirect("/compte?message=participation-suspendue");
+  }
 
   const name = readField(formData, "name", 80);
   const epithet = readField(formData, "epithet", 120);
