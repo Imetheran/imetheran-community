@@ -13,6 +13,7 @@ import {
   FORUM_MEDIA_BUCKET,
   type ForumMediaRenderMap,
 } from "@/lib/forum-media";
+import { forumTopicTypeLabel } from "@/lib/forum-presentation";
 import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -122,6 +123,7 @@ export default async function ForumTopicPage({
   if (postsError) notFound();
 
   const postRows = posts ?? [];
+  const postCount = postRows.length;
   const authorIds = Array.from(new Set(postRows.map((post) => post.author_id)));
   const characterIds = Array.from(
     new Set(
@@ -279,7 +281,7 @@ export default async function ForumTopicPage({
                 {topic.is_locked ? <span className="forum-board__badge">Verrouillé</span> : null}
                 {topic.status === "finished" ? <span className="forum-board__badge">Terminé</span> : null}
                 {topic.status === "archived" ? <span className="forum-board__badge">Archivé</span> : null}
-                {topic.topic_type ? <span>{topic.topic_type}</span> : null}
+                {topic.topic_type ? <span>{forumTopicTypeLabel(topic.topic_type)}</span> : null}
                 {topic.rp_location ? <span>{topic.rp_location}</span> : null}
                 {(Array.isArray(topic.tags) ? topic.tags : []).map((tag) => <span key={tag}>{tag}</span>)}
               </div>
@@ -287,7 +289,7 @@ export default async function ForumTopicPage({
               <p>{topic.excerpt}</p>
             </div>
             <div className="forum-thread-head__stats">
-              <span><strong>{topic.post_count || postRows.filter((post) => !post.is_hidden).length}</strong><small>Messages</small></span>
+              <span><strong>{postCount}</strong><small>Messages</small></span>
               <span><strong>{topic.view_count ?? 0}</strong><small>Vues</small></span>
             </div>
           </div>
@@ -298,7 +300,7 @@ export default async function ForumTopicPage({
         <div className="forum-thread__toolbar">
           <div className="forum-thread__toolbar-left">
             <Link className="text-link" href={`/forum/${boardRow.slug}`}>← Retour aux sujets</Link>
-            <span>{topic.post_count} message{topic.post_count > 1 ? "s" : ""} visible{topic.post_count > 1 ? "s" : ""}</span>
+            <span>{postCount} message{postCount > 1 ? "s" : ""}</span>
           </div>
           <ForumThreadActions
             topicId={topic.id}
@@ -328,9 +330,9 @@ export default async function ForumTopicPage({
 
         {replyError ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{replyError}</div> : null}
 
-        {postRows.length > 1 ? (
+        {postCount > 1 ? (
           <nav className="forum-thread-jump" aria-label="Navigation dans le sujet">
-            <span>1–{postRows.length} sur {postRows.length} messages chargés</span>
+            <span>{postCount} messages</span>
             <div>
               {firstPostId ? <a href={`#${firstPostId}`}>Premier message</a> : null}
               {lastPostId ? <a href={`#${lastPostId}`}>Dernier message ↓</a> : null}
@@ -407,9 +409,9 @@ export default async function ForumTopicPage({
           })}
         </div>
 
-        {postRows.length > 1 ? (
+        {postCount > 1 ? (
           <nav className="forum-thread-jump forum-thread-jump--bottom" aria-label="Fin du sujet">
-            <span>{postRows.length} messages chargés</span>
+            <span>{postCount} messages</span>
             <div><a href="#forum-thread-top">↑ Retour en haut</a></div>
           </nav>
         ) : null}
