@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canUseForumWritePolicy } from "@/lib/forum-access";
+import { bbcodeExcerpt } from "@/lib/bbcode";
 import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -147,6 +148,14 @@ export async function createForumTopic(formData: FormData) {
     redirect(`/forum/${boardSlug}/nouveau?erreur=publication`);
   }
 
+  if (created.topic_id) {
+    await supabase
+      .from("forum_topics")
+      .update({ excerpt: bbcodeExcerpt(content) })
+      .eq("id", created.topic_id)
+      .eq("author_id", userId);
+  }
+
   revalidatePath("/forum");
   revalidatePath(`/forum/${boardSlug}`);
   redirect(`/forum/${boardSlug}/sujet/${created.topic_slug}`);
@@ -270,10 +279,9 @@ export async function editForumPost(formData: FormData) {
   }
 
   if (firstPost?.id === postId) {
-    const excerpt = content.replace(/\s+/g, " ").trim().slice(0, 240);
     const { error: topicError } = await supabase
       .from("forum_topics")
-      .update({ excerpt })
+      .update({ excerpt: bbcodeExcerpt(content) })
       .eq("id", topicId)
       .eq("author_id", userId);
     if (topicError) {

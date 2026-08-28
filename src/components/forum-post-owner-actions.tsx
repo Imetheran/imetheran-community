@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { deleteForumPost, deleteForumTopic, editForumPost } from "@/app/forum/actions";
+import { BbcodeEditor } from "@/components/bbcode-editor";
 
 type ForumPostOwnerActionsProps = {
   postId: string;
@@ -63,9 +64,17 @@ export function ForumPostOwnerActions({
           <input type="hidden" name="topic_id" value={topicId} />
           <input type="hidden" name="post_id" value={postId} />
           <label htmlFor={`edit-post-${postId}`}>Modifier votre message</label>
-          <textarea id={`edit-post-${postId}`} name="content" defaultValue={content} rows={8} minLength={2} maxLength={50000} required />
+          <BbcodeEditor
+            id={`edit-post-${postId}`}
+            name="content"
+            defaultValue={content}
+            rows={9}
+            minLength={2}
+            maxLength={50000}
+            required
+          />
           <div className="forum-post-owner__editor-footer">
-            <small>{isFirstPost ? "Le résumé affiché dans la liste des sujets sera actualisé." : "La date de modification sera indiquée sur le message."}</small>
+            <small>{isFirstPost ? "Le résumé de la liste des sujets sera actualisé sans afficher les balises BBCode." : "La date de modification sera indiquée sur le message."}</small>
             <button className="button button--primary button--small" type="submit">Enregistrer</button>
           </div>
         </form>

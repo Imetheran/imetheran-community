@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createForumTopic } from "@/app/forum/actions";
+import { BbcodeContent } from "@/components/bbcode-content";
+import { BbcodeEditor } from "@/components/bbcode-editor";
 
 type CharacterOption = {
   id: string;
@@ -50,9 +52,9 @@ export function ForumTopicEditor({
         <section className="forum-editor-panel">
           <div className="forum-editor-panel__heading">
             <div><span>01</span><div><small>Destination</small><h2>{boardTitle}</h2></div></div>
-            <span className="status-pill">Connecté</span>
+            <span className="status-pill">Forum</span>
           </div>
-          <p>Le sujet sera enregistré directement dans ce forum. Les règles Supabase vérifieront votre droit de publication au moment de l’envoi.</p>
+          <p>Choisissez votre identité, préparez la discussion puis utilisez l’aperçu pour vérifier votre mise en page avant publication.</p>
         </section>
 
         <section className="forum-editor-panel">
@@ -69,8 +71,8 @@ export function ForumTopicEditor({
               <small>
                 {isRoleplay
                   ? characters.length > 0
-                    ? "Le compte reste l’auteur technique ; le personnage choisi devient l’identité RP affichée."
-                    : "Aucun personnage Supabase ne vous est encore rattaché : vous pouvez publier avec votre compte membre."
+                    ? "Le compte reste l’auteur ; le personnage choisi devient l’identité RP affichée."
+                    : "Aucun personnage ne vous est encore rattaché : vous pouvez publier avec votre compte membre."
                   : "Les zones hors-RP utilisent normalement l’identité du membre."}
               </small>
             </label>
@@ -113,15 +115,24 @@ export function ForumTopicEditor({
         </section>
 
         <section className="forum-editor-panel">
-          <div className="forum-editor-panel__heading"><div><span>04</span><div><small>Premier message</small><h2>Écrire</h2></div></div></div>
-          <textarea name="content" value={content} onChange={(event) => setContent(event.target.value)} rows={14} maxLength={50000} required placeholder={isRoleplay ? "Décrivez l’ouverture de la scène…" : "Écrivez votre message…"} />
-          <small className="forum-editor-help">Texte simple pour cette première version connectée. La mise en forme riche viendra après validation du cycle de publication.</small>
+          <div className="forum-editor-panel__heading"><div><span>04</span><div><small>Premier message</small><h2>Écrire et mettre en forme</h2></div></div></div>
+          <BbcodeEditor
+            name="content"
+            value={content}
+            onChange={setContent}
+            rows={14}
+            maxLength={50000}
+            required
+            previewMode="none"
+            placeholder={isRoleplay ? "Décrivez l’ouverture de la scène…" : "Écrivez votre message…"}
+          />
+          <small className="forum-editor-help">Le BBCode vous permet de structurer le message sans autoriser l’exécution de HTML brut.</small>
         </section>
 
         {errorMessage ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{errorMessage}</div> : null}
 
         <div className="forum-topic-editor__actions">
-          <button className="button button--ghost" type="button" disabled title="Les brouillons seront ajoutés avec le CMS membre.">Brouillons bientôt</button>
+          <button className="button button--ghost" type="button" disabled title="Les brouillons seront ajoutés ultérieurement.">Brouillons bientôt</button>
           <PublishButton />
         </div>
       </form>
@@ -137,9 +148,9 @@ export function ForumTopicEditor({
             <h2>{title || "Titre de votre sujet"}</h2>
             <div className="forum-topic-preview__identity"><span>{identity.slice(0, 2).toLocaleUpperCase("fr")}</span><div><small>Publié par</small><strong>{identity}</strong></div></div>
             <div className="forum-topic-preview__tags">{tagList.length ? tagList.map((tag) => <span key={tag}>{tag}</span>) : <span>Aucun tag</span>}</div>
-            <p>{content || "Le début de votre message apparaîtra ici pendant la rédaction."}</p>
+            <BbcodeContent content={content || "Le début de votre message apparaîtra ici pendant la rédaction."} />
           </div>
-          <p className="forum-topic-preview__note">La publication crée le sujet et son premier message dans une seule transaction Supabase.</p>
+          <p className="forum-topic-preview__note">L’aperçu applique les mêmes règles BBCode que le message publié.</p>
         </div>
       </aside>
     </div>

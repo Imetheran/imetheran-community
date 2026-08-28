@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { BbcodeContent } from "@/components/bbcode-content";
 import { ForumReadMarker } from "@/components/forum-read-marker";
 import { ForumThreadActions } from "@/components/forum-thread-actions";
 import { ForumReportControl } from "@/components/forum-report-control";
 import { ForumPostOwnerActions } from "@/components/forum-post-owner-actions";
-import { createForumPost } from "@/app/forum/actions";
+import { ForumReplyEditor } from "@/components/forum-reply-editor";
 import { canUseForumWritePolicy } from "@/lib/forum-access";
 import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
@@ -297,10 +298,6 @@ export default async function ForumTopicPage({
           {postRows.map((post, index) => {
             const authorName = profileMap.get(post.author_id) ?? "Membre";
             const character = post.character_id ? characterMap.get(post.character_id) : null;
-            const paragraphs: string[] = String(post.content)
-              .split(/\n{2,}/)
-              .map((paragraph: string) => paragraph.trim())
-              .filter(Boolean);
             const isOwnPost = Boolean(userId && post.author_id === userId);
             const canEditOwnPost = isOwnPost && repliesOpen && participation.canParticipate;
             const deleteKind = isOwnPost && repliesOpen
@@ -345,7 +342,6 @@ export default async function ForumTopicPage({
                           isFirstPost={index === 0}
                         />
                       ) : null}
-                      <button type="button" disabled>Citer</button>
                       <ForumReportControl
                         topicId={topic.id}
                         postId={post.id}
@@ -358,7 +354,7 @@ export default async function ForumTopicPage({
                   </header>
 
                   <div className="forum-post__content">
-                    {(paragraphs.length ? paragraphs : [String(post.content)]).map((paragraph: string, paragraphIndex: number) => <p key={paragraphIndex}>{paragraph}</p>)}
+                    <BbcodeContent content={String(post.content)} />
                   </div>
                 </div>
               </article>
@@ -385,29 +381,16 @@ export default async function ForumTopicPage({
           <section className="forum-reply-box" id="repondre" aria-labelledby="reply-title">
             <div className="forum-reply-box__heading">
               <div><p className="eyebrow">Participation</p><h2 id="reply-title">Répondre au sujet</h2></div>
-              <span className="status-pill">Publication réelle</span>
+              <span className="status-pill">BBCode</span>
             </div>
 
-            <form action={createForumPost}>
-              <input type="hidden" name="board_slug" value={boardRow.slug} />
-              <input type="hidden" name="topic_slug" value={topic.slug} />
-              <input type="hidden" name="topic_id" value={topic.id} />
-              <div className="forum-reply-box__identity">
-                <span>Publier en tant que</span>
-                {section.mode === "rp" ? (
-                  <select name="character_id" defaultValue="">
-                    <option value="">Compte membre</option>
-                    {ownedCharacters.map((character) => <option value={character.id} key={character.id}>{character.name}</option>)}
-                  </select>
-                ) : <input type="hidden" name="character_id" value="" />}
-                <small>Le compte reste toujours l’auteur technique ; un personnage peut être attaché au message RP.</small>
-              </div>
-              <textarea name="content" aria-label="Contenu de la réponse" placeholder="Écrivez votre réponse…" rows={9} maxLength={50000} required />
-              <div className="forum-reply-box__footer">
-                <span>Texte simple pour la première version connectée.</span>
-                <button className="button button--primary button--small" type="submit">Publier la réponse</button>
-              </div>
-            </form>
+            <ForumReplyEditor
+              boardSlug={boardRow.slug}
+              topicSlug={topic.slug}
+              topicId={topic.id}
+              isRoleplay={section.mode === "rp"}
+              characters={ownedCharacters}
+            />
           </section>
         ) : userId && !participation.canParticipate ? (
           <div className="forum-access-note" id="repondre">
