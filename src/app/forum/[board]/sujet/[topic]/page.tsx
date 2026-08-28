@@ -206,7 +206,9 @@ export default async function ForumTopicPage({
   const firstPostId = postRows.at(0)?.id ?? null;
   const lastPostId = postRows.at(-1)?.id ?? topic.last_post_id;
   const repliesOpen = topic.status === "open" && !topic.is_locked;
-  const canReply = repliesOpen && canUseForumWritePolicy(boardRow.reply_policy, userId, role, participation.canParticipate);
+  const replyAllowed = canUseForumWritePolicy(boardRow.reply_policy, userId, role, participation.canParticipate);
+  const canReply = repliesOpen && replyAllowed;
+  const replyRequiresLogin = !userId && boardRow.reply_policy === "members";
   const replyError = query.erreur === "reponse"
     ? "Votre réponse doit contenir au moins quelques caractères."
     : query.erreur === "suspendu"
@@ -312,6 +314,8 @@ export default async function ForumTopicPage({
             authenticated={Boolean(userId)}
             initialFollowing={initialFollowing}
             canModerate={canModerate}
+            canParticipateInReplies={replyAllowed}
+            replyRequiresLogin={replyRequiresLogin}
             loginHref={loginHref}
           />
         </div>
