@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { CharacterEditor } from "@/components/character-editor";
 import { SiteHeader } from "@/components/site-header";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +17,15 @@ export default async function NewCharacterPage({ searchParams }: { searchParams:
   const query = await searchParams;
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
 
-  if (error || typeof data?.claims?.sub !== "string") {
+  if (error || typeof userId !== "string") {
     redirect("/connexion?message=connexion-requise&retour=%2Fpersonnages%2Fnouveau");
+  }
+
+  const participation = await getMemberParticipation(supabase, userId);
+  if (!participation.canParticipate) {
+    redirect("/compte?message=participation-suspendue");
   }
 
   return (

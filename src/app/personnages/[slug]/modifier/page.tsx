@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { CharacterEditor, type EditableCharacter } from "@/components/character-editor";
 import { SiteHeader } from "@/components/site-header";
 import { signedCharacterPortraitUrl } from "@/lib/character-portraits";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,11 @@ export default async function EditCharacterPage({
 
   if (claimsError || typeof userId !== "string") {
     redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/personnages/${slug}/modifier`)}`);
+  }
+
+  const participation = await getMemberParticipation(supabase, userId);
+  if (!participation.canParticipate) {
+    redirect("/compte?message=participation-suspendue");
   }
 
   const { data: character } = await supabase

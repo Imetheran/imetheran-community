@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { ForumBoardTopics, type ForumTopicListItem } from "@/components/forum-board-topics";
+import { canUseForumWritePolicy, forumWriteRestrictionLabel } from "@/lib/forum-access";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -30,15 +32,6 @@ function readRole(claims: Record<string, unknown> | undefined) {
   return String((appMetadata as { role?: unknown }).role ?? "member");
 }
 
-function canCreateTopic(policy: string, userId: string | null, role: string) {
-  if (!userId) return false;
-  const normalized = policy.toLocaleLowerCase("fr");
-  if (normalized.includes("admin") || normalized.includes("staff") || normalized.includes("moderator")) {
-    return role === "admin" || role === "moderator";
-  }
-  return true;
-}
-
 export default async function ForumBoardPage({ params }: { params: Promise<{ board: string }> }) {
   const { board: boardSlug } = await params;
   const supabase = await createClient();
@@ -46,6 +39,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
   const claims = claimsData?.claims as Record<string, unknown> | undefined;
   const userId = typeof claims?.sub === "string" ? claims.sub : null;
   const role = readRole(claims);
+  const participation = await getMemberParticipation(supabase, userId);
 
   const { data: boardRow, error: boardError } = await supabase
     .from("forum_boards")
@@ -167,7 +161,14 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
   });
 
   const restricted = section.access_scope === "members" && !userId;
-  const mayCreate = canCreateTopic(boardRow.topic_creation, userId, role);
+  const mayCreate = canUseForumWritePolicy(boardRow.topic_creation, userId, role, participation.canParticipate);
+  const creationRestriction = userId
+    ? forumWriteRestrictionLabel(boardRow.topic_creation, role, participation.canParticipate)
+    : boardRow.topic_creation === "staff"
+      ? "Publication réservée à l’équipe"
+      : boardRow.topic_creation === "closed"
+        ? "Publication fermée"
+        : null;
   const loginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardRow.slug}/nouveau`)}`;
 
   return (
@@ -204,12 +205,19 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
           </div>
           {mayCreate ? (
             <Link className="button button--primary button--small" href={`/forum/${boardRow.slug}/nouveau`}>Nouveau sujet</Link>
-          ) : userId ? (
-            <span className="status-pill status-pill--quiet">Publication réservée à l’équipe</span>
-          ) : (
+          ) : !userId && boardRow.topic_creation === "members" ? (
             <Link className="button button--primary button--small" href={loginHref}>Se connecter pour participer</Link>
+          ) : (
+            <span className="status-pill status-pill--quiet">{creationRestriction ?? "Publication indisponible"}</span>
           )}
         </div>
+
+        {userId && !participation.canParticipate ? (
+          <div className="forum-access-note">
+            <span aria-hidden="true">!</span>
+            <p><strong>Votre participation est actuellement suspendue.</strong> Vous pouvez continuer à lire le forum, mais pas créer ni modifier de contenu. <Link href="/compte">Consulter mon compte →</Link></p>
+          </div>
+        ) : null}
 
         {restricted ? (
           <div className="forum-access-note">

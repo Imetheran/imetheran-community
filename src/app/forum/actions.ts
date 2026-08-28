@@ -3,6 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { canUseForumWritePolicy } from "@/lib/forum-access";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -46,7 +48,7 @@ function readTags(value: string) {
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean)
-        .map((tag) => tag.slice(0, 36)),
+        .map((tag) => tag.slice(0, 32)),
     ),
   ).slice(0, 5);
 }
@@ -70,6 +72,10 @@ async function getAuthenticatedUser() {
   return { supabase, userId, role: readRole(claims) };
 }
 
+function policyError(policy: string) {
+  return policy === "closed" ? "fermee" : "reservee";
+}
+
 export async function createForumTopic(formData: FormData) {
   const boardSlug = safeSlug(readField(formData, "board_slug"));
   const title = readField(formData, "title");
@@ -84,9 +90,26 @@ export async function createForumTopic(formData: FormData) {
     redirect(`/forum/${boardSlug}/nouveau?erreur=champs`);
   }
 
-  const { supabase, userId } = await getAuthenticatedUser();
+  const { supabase, userId, role } = await getAuthenticatedUser();
   if (!userId) {
     redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/nouveau`)}`);
+  }
+
+  const participation = await getMemberParticipation(supabase, userId);
+  if (!participation.canParticipate) {
+    redirect(`/forum/${boardSlug}/nouveau?erreur=suspendu`);
+  }
+
+  const { data: board } = await supabase
+    .from("forum_boards")
+    .select("id, topic_creation")
+    .eq("slug", boardSlug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!board) redirect(`/forum/${boardSlug}/nouveau?erreur=publication`);
+  if (!canUseForumWritePolicy(board.topic_creation, userId, role, participation.canParticipate)) {
+    redirect(`/forum/${boardSlug}/nouveau?erreur=${policyError(board.topic_creation)}`);
   }
 
   const topicSlug = `${slugify(title)}-${randomUUID().slice(0, 8)}`;
@@ -123,9 +146,37 @@ export async function createForumPost(formData: FormData) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=reponse#repondre`);
   }
 
-  const { supabase, userId } = await getAuthenticatedUser();
+  const { supabase, userId, role } = await getAuthenticatedUser();
   if (!userId) {
     redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}#repondre`)}`);
+  }
+
+  const participation = await getMemberParticipation(supabase, userId);
+  if (!participation.canParticipate) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=suspendu#repondre`);
+  }
+
+  const { data: board } = await supabase
+    .from("forum_boards")
+    .select("id, reply_policy")
+    .eq("slug", boardSlug)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!board) redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=publication#repondre`);
+
+  if (!canUseForumWritePolicy(board.reply_policy, userId, role, participation.canParticipate)) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=${policyError(board.reply_policy)}#repondre`);
+  }
+
+  const { data: topic } = await supabase
+    .from("forum_topics")
+    .select("id, status, is_locked")
+    .eq("id", topicId)
+    .eq("board_id", board.id)
+    .eq("slug", topicSlug)
+    .maybeSingle();
+  if (!topic || topic.status !== "open" || topic.is_locked) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=fermee#repondre`);
   }
 
   const { data: postId, error } = await supabase.rpc("create_forum_post", {

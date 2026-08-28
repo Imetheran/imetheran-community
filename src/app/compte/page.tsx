@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfile } from "./actions";
 
@@ -13,6 +14,15 @@ const errorMessages: Record<string, string> = {
   bio: "La présentation est limitée à 1 200 caractères.",
   enregistrement: "Le profil n’a pas pu être enregistré. Réessayez dans un instant.",
 };
+
+function formatSuspensionEnd(value: string | null) {
+  if (!value) return "jusqu’à réactivation par l’équipe";
+  return `jusqu’au ${new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Europe/Paris",
+  }).format(new Date(value))}`;
+}
 
 export default async function ComptePage({
   searchParams,
@@ -29,7 +39,7 @@ export default async function ComptePage({
     redirect("/connexion?message=connexion-requise");
   }
 
-  const [{ data: profile, error: profileError }, { count: unreadCount }] = await Promise.all([
+  const [{ data: profile, error: profileError }, { count: unreadCount }, participation] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, username, bio, created_at")
@@ -40,6 +50,7 @@ export default async function ComptePage({
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .is("read_at", null),
+    getMemberParticipation(supabase, userId),
   ]);
 
   if (profileError || !profile) {
@@ -68,7 +79,7 @@ export default async function ComptePage({
           </div>
           <div className="account-hero__status">
             <span className="status-pill">{roleLabel}</span>
-            <small>Compte Supabase actif</small>
+            <small>{participation.canParticipate ? "Participation active" : "Participation suspendue"}</small>
           </div>
         </div>
       </section>
@@ -80,6 +91,13 @@ export default async function ComptePage({
         ) : null}
         {query.message === "mot-de-passe" ? (
           <div className="auth-message auth-message--success">Votre mot de passe a bien été modifié.</div>
+        ) : null}
+        {!participation.canParticipate ? (
+          <div className="auth-message auth-message--error" role="status">
+            <strong>Votre participation communautaire est suspendue {formatSuspensionEnd(participation.suspendedUntil)}.</strong>
+            {participation.suspensionReason ? <> Motif : {participation.suspensionReason}</> : null}
+            <> Vous pouvez toujours vous connecter, lire le site, consulter vos contenus et effectuer un signalement, mais les créations et modifications communautaires sont temporairement bloquées.</>
+          </div>
         ) : null}
 
         <div className="account-grid">
@@ -106,19 +124,23 @@ export default async function ComptePage({
 
           <aside className="account-card account-card--summary">
             <p className="eyebrow">Votre espace</p>
-            <h2>Le socle est connecté</h2>
+            <h2>Votre compte Imetheran</h2>
             <dl className="account-summary">
               <div><dt>Rôle</dt><dd>{roleLabel}</dd></div>
+              <div><dt>Participation</dt><dd>{participation.canParticipate ? "Active" : "Suspendue"}</dd></div>
               <div><dt>Identifiant</dt><dd>{profile.username ? `@${profile.username}` : "À définir"}</dd></div>
               <div><dt>Notifications</dt><dd>{unreadCount ?? 0} non lue{(unreadCount ?? 0) > 1 ? "s" : ""}</dd></div>
               <div><dt>Inscription</dt><dd>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(new Date(profile.created_at))}</dd></div>
             </dl>
             <div className="account-next">
-              <strong>Votre espace membre</strong>
-              <p>Forum, personnages, relations et notifications utilisent maintenant vos données réelles et les permissions de votre compte.</p>
+              <strong>{participation.canParticipate ? "Votre espace membre" : "Accès en lecture maintenu"}</strong>
+              <p>{participation.canParticipate
+                ? "Forum, personnages, relations et notifications utilisent vos données réelles et les permissions de votre compte."
+                : "Votre compte reste accessible pendant la suspension. La publication redeviendra disponible automatiquement à la fin de la mesure ou après réactivation par l’équipe."}</p>
             </div>
             <div className="account-card__links">
               {role === "admin" ? <Link className="text-link" href="/administration">Administration →</Link> : null}
+              {role === "moderator" ? <Link className="text-link" href="/administration/forum">Modération du forum →</Link> : null}
               <Link className="text-link" href="/notifications">Notifications →</Link>
               <Link className="text-link" href="/personnages">Voir les personnages →</Link>
               <Link className="text-link" href="/forum">Aller au forum →</Link>
