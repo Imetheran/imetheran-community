@@ -1,4 +1,6 @@
+import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
+import { isForumMediaId, type ForumMediaRenderMap } from "@/lib/forum-media";
 
 type BbcodeTextNode = {
   type: "text";
@@ -29,6 +31,7 @@ const supportedTags = new Set([
   "color",
   "size",
   "url",
+  "img",
   "hr",
 ]);
 
@@ -144,12 +147,12 @@ function safeSize(value: string | null) {
   return size >= 70 && size <= 200 ? size : null;
 }
 
-function renderNodes(nodes: BbcodeNode[], path = "bb"): ReactNode[] {
+function renderNodes(nodes: BbcodeNode[], mediaMap: ForumMediaRenderMap, path = "bb"): ReactNode[] {
   return nodes.map((node, index) => {
     const key = `${path}-${index}`;
     if (node.type === "text") return <span key={key}>{node.value}</span>;
 
-    const children = renderNodes(node.children, key);
+    const children = renderNodes(node.children, mediaMap, key);
     switch (node.name) {
       case "b":
         return <strong key={key}>{children}</strong>;
@@ -202,6 +205,25 @@ function renderNodes(nodes: BbcodeNode[], path = "bb"): ReactNode[] {
           </a>
         );
       }
+      case "img": {
+        const mediaId = node.attr?.trim().toLowerCase() ?? "";
+        const media = isForumMediaId(mediaId) ? mediaMap[mediaId] : undefined;
+        const alt = textContent(node.children).replace(/\s+/g, " ").trim().slice(0, 180) || "Image du message";
+        if (!media) {
+          return <span className="bbcode-image-unavailable" key={key}>[Image indisponible]</span>;
+        }
+        return (
+          <span className="bbcode-image" key={key}>
+            <Image
+              src={media.url}
+              alt={alt}
+              width={media.width}
+              height={media.height}
+              sizes="(max-width: 760px) 100vw, 900px"
+            />
+          </span>
+        );
+      }
       case "hr":
         return <hr key={key} />;
       default:
@@ -210,7 +232,15 @@ function renderNodes(nodes: BbcodeNode[], path = "bb"): ReactNode[] {
   });
 }
 
-export function BbcodeContent({ content, className = "" }: { content: string; className?: string }) {
+export function BbcodeContent({
+  content,
+  className = "",
+  mediaMap = {},
+}: {
+  content: string;
+  className?: string;
+  mediaMap?: ForumMediaRenderMap;
+}) {
   const classes = ["bbcode-content", className].filter(Boolean).join(" ");
-  return <div className={classes}>{renderNodes(parseBbcode(content))}</div>;
+  return <div className={classes}>{renderNodes(parseBbcode(content), mediaMap)}</div>;
 }
