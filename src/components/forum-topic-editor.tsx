@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { createForumTopic } from "@/app/forum/actions";
 import { BbcodeContent } from "@/components/bbcode-content";
 import { BbcodeEditor } from "@/components/bbcode-editor";
+import type { ForumMediaRenderMap } from "@/lib/forum-media";
 
 type CharacterOption = {
   id: string;
@@ -39,6 +40,7 @@ export function ForumTopicEditor({
   const [sceneType, setSceneType] = useState(isRoleplay ? "open" : "discussion");
   const [location, setLocation] = useState("");
   const [tags, setTags] = useState("");
+  const [mediaMap, setMediaMap] = useState<ForumMediaRenderMap>({});
 
   const tagList = useMemo(() => tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 5), [tags]);
   const selectedCharacter = characters.find((character) => character.id === characterId);
@@ -124,9 +126,10 @@ export function ForumTopicEditor({
             maxLength={50000}
             required
             previewMode="none"
+            onMediaMapChange={setMediaMap}
             placeholder={isRoleplay ? "Décrivez l’ouverture de la scène…" : "Écrivez votre message…"}
           />
-          <small className="forum-editor-help">Le BBCode vous permet de structurer le message sans autoriser l’exécution de HTML brut.</small>
+          <small className="forum-editor-help">Le BBCode permet aussi d’envoyer des images privées qui seront rattachées au message lors de la publication.</small>
         </section>
 
         {errorMessage ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{errorMessage}</div> : null}
@@ -148,9 +151,9 @@ export function ForumTopicEditor({
             <h2>{title || "Titre de votre sujet"}</h2>
             <div className="forum-topic-preview__identity"><span>{identity.slice(0, 2).toLocaleUpperCase("fr")}</span><div><small>Publié par</small><strong>{identity}</strong></div></div>
             <div className="forum-topic-preview__tags">{tagList.length ? tagList.map((tag) => <span key={tag}>{tag}</span>) : <span>Aucun tag</span>}</div>
-            <BbcodeContent content={content || "Le début de votre message apparaîtra ici pendant la rédaction."} />
+            <BbcodeContent content={content || "Le début de votre message apparaîtra ici pendant la rédaction."} mediaMap={mediaMap} />
           </div>
-          <p className="forum-topic-preview__note">L’aperçu applique les mêmes règles BBCode que le message publié.</p>
+          <p className="forum-topic-preview__note">L’aperçu applique les mêmes règles BBCode et images que le message publié.</p>
         </div>
       </aside>
     </div>
