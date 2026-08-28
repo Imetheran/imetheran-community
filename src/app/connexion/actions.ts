@@ -63,3 +63,18 @@ export async function signup(formData: FormData) {
   if (data.session) redirect(returnTo);
   redirect(withReturn("/connexion?message=confirmation&mode=inscription", returnTo));
 }
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = readField(formData, "email").toLowerCase();
+
+  if (!email) redirect("/connexion?erreur=champs&mode=recuperation");
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/confirm?next=${encodeURIComponent("/compte/mot-de-passe")}`,
+  });
+
+  if (error) redirect("/connexion?erreur=recuperation&mode=recuperation");
+
+  redirect("/connexion?message=recuperation&mode=recuperation");
+}

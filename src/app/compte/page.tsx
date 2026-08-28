@@ -78,6 +78,9 @@ export default async function ComptePage({
         {query.message === "enregistre" ? (
           <div className="auth-message auth-message--success">Votre profil a bien été mis à jour.</div>
         ) : null}
+        {query.message === "mot-de-passe" ? (
+          <div className="auth-message auth-message--success">Votre mot de passe a bien été modifié.</div>
+        ) : null}
 
         <div className="account-grid">
           <section className="account-card">
@@ -119,6 +122,7 @@ export default async function ComptePage({
               <Link className="text-link" href="/notifications">Notifications →</Link>
               <Link className="text-link" href="/personnages">Voir les personnages →</Link>
               <Link className="text-link" href="/forum">Aller au forum →</Link>
+              <Link className="text-link" href="/compte/mot-de-passe">Changer mon mot de passe →</Link>
             </div>
             <form action="/auth/signout" method="post">
               <button className="button button--ghost button--small" type="submit">Se déconnecter</button>

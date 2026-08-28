@@ -7,6 +7,7 @@ function isMaintenanceAllowed(pathname: string) {
   return (
     pathname === "/maintenance" ||
     pathname === "/connexion" ||
+    pathname === "/compte/mot-de-passe" ||
     maintenanceAllowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
   );
 }
@@ -29,7 +30,3 @@ export async function proxy(request: NextRequest) {
 
   return updateSession(request);
 }
-
-export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
-};
