@@ -6,6 +6,7 @@ import { ForumReadMarker } from "@/components/forum-read-marker";
 import { ForumThreadActions } from "@/components/forum-thread-actions";
 import { ForumReportControl } from "@/components/forum-report-control";
 import { ForumPostOwnerActions } from "@/components/forum-post-owner-actions";
+import { ForumQuoteButton } from "@/components/forum-quote-button";
 import { ForumReplyEditor } from "@/components/forum-reply-editor";
 import { canUseForumWritePolicy } from "@/lib/forum-access";
 import {
@@ -380,6 +381,7 @@ export default async function ForumTopicPage({
                       {post.is_hidden ? <small>Masqué aux membres · visible par l’équipe</small> : null}
                     </div>
                     <div className="forum-post__actions" aria-label="Actions du message">
+                      {canReply ? <ForumQuoteButton authorName={authorName} content={String(post.content)} /> : null}
                       {isOwnPost && (canEditOwnPost || deleteKind) ? (
                         <ForumPostOwnerActions
                           postId={post.id}
