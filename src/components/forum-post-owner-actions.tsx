@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { deleteForumPost, deleteForumTopic, editForumPost } from "@/app/forum/actions";
 import { BbcodeEditor } from "@/components/bbcode-editor";
+import type { ForumMediaRenderMap } from "@/lib/forum-media";
 
 type ForumPostOwnerActionsProps = {
   postId: string;
@@ -13,6 +14,7 @@ type ForumPostOwnerActionsProps = {
   canEdit: boolean;
   deleteKind: "post" | "topic" | null;
   isFirstPost: boolean;
+  initialMediaMap?: ForumMediaRenderMap;
 };
 
 export function ForumPostOwnerActions({
@@ -24,6 +26,7 @@ export function ForumPostOwnerActions({
   canEdit,
   deleteKind,
   isFirstPost,
+  initialMediaMap = {},
 }: ForumPostOwnerActionsProps) {
   const [editing, setEditing] = useState(false);
   const deleteAction = deleteKind === "topic" ? deleteForumTopic : deleteForumPost;
@@ -43,8 +46,8 @@ export function ForumPostOwnerActions({
             action={deleteAction}
             onSubmit={(event) => {
               const message = deleteKind === "topic"
-                ? "Supprimer définitivement ce sujet et son premier message ?"
-                : "Supprimer définitivement ce message ?";
+                ? "Supprimer définitivement ce sujet, son premier message et ses images ?"
+                : "Supprimer définitivement ce message et ses images ?";
               if (!window.confirm(message)) event.preventDefault();
             }}
           >
@@ -72,6 +75,7 @@ export function ForumPostOwnerActions({
             minLength={2}
             maxLength={50000}
             required
+            initialMediaMap={initialMediaMap}
           />
           <div className="forum-post-owner__editor-footer">
             <small>{isFirstPost ? "Le résumé de la liste des sujets sera actualisé sans afficher les balises BBCode." : "La date de modification sera indiquée sur le message."}</small>

@@ -8,6 +8,11 @@ import { ForumReportControl } from "@/components/forum-report-control";
 import { ForumPostOwnerActions } from "@/components/forum-post-owner-actions";
 import { ForumReplyEditor } from "@/components/forum-reply-editor";
 import { canUseForumWritePolicy } from "@/lib/forum-access";
+import {
+  extractForumMediaIds,
+  FORUM_MEDIA_BUCKET,
+  type ForumMediaRenderMap,
+} from "@/lib/forum-media";
 import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -124,6 +129,7 @@ export default async function ForumTopicPage({
         .filter((id): id is string => typeof id === "string" && id.length > 0),
     ),
   );
+  const mediaIds = Array.from(new Set(postRows.flatMap((post) => extractForumMediaIds(String(post.content)))));
 
   const profileMap = new Map<string, string>();
   if (authorIds.length > 0) {
@@ -142,6 +148,36 @@ export default async function ForumTopicPage({
       .in("id", characterIds);
     for (const character of characters ?? []) {
       characterMap.set(character.id, { name: character.name, slug: character.slug });
+    }
+  }
+
+  const mediaMap: ForumMediaRenderMap = {};
+  if (mediaIds.length > 0) {
+    const { data: mediaRows } = await supabase
+      .from("forum_media")
+      .select("id, storage_path, width, height")
+      .in("id", mediaIds);
+
+    const visibleMedia = mediaRows ?? [];
+    if (visibleMedia.length > 0) {
+      const { data: signedRows } = await supabase.storage
+        .from(FORUM_MEDIA_BUCKET)
+        .createSignedUrls(visibleMedia.map((media) => media.storage_path), 3600);
+      const signedByPath = new Map(
+        (signedRows ?? [])
+          .filter((item) => Boolean(item.signedUrl))
+          .map((item) => [item.path, item.signedUrl as string]),
+      );
+
+      for (const media of visibleMedia) {
+        const signedUrl = signedByPath.get(media.storage_path);
+        if (!signedUrl) continue;
+        mediaMap[String(media.id).toLowerCase()] = {
+          url: signedUrl,
+          width: Number(media.width),
+          height: Number(media.height),
+        };
+      }
     }
   }
 
@@ -177,9 +213,13 @@ export default async function ForumTopicPage({
         ? "Les réponses sont actuellement fermées dans ce forum ou ce sujet."
         : query.erreur === "reservee"
           ? "Les réponses sont réservées à l’équipe dans ce forum."
-          : query.erreur === "publication"
-            ? "La réponse n’a pas pu être publiée. Vérifiez vos droits ou réessayez dans un instant."
-            : null;
+          : query.erreur === "media-limite"
+            ? "Un message peut contenir au maximum 8 images."
+            : query.erreur === "media"
+              ? "Une image de ce message n’est pas rattachée à votre compte. Retirez-la puis renvoyez votre propre fichier."
+              : query.erreur === "publication"
+                ? "La réponse n’a pas pu être publiée. Vérifiez vos droits ou réessayez dans un instant."
+                : null;
   const reportFeedback = query.message === "signalement"
     ? { kind: "success", text: "Signalement transmis à l’équipe de modération." }
     : query.erreur === "signalement-deja"
@@ -191,29 +231,33 @@ export default async function ForumTopicPage({
     ? { kind: "success", text: "Votre message a bien été modifié." }
     : query.message === "message-supprime"
       ? { kind: "success", text: "Votre message a bien été supprimé." }
-      : query.erreur === "edition-champs"
-        ? { kind: "error", text: "Le message doit contenir au moins deux caractères et ne pas dépasser 50 000 caractères." }
-        : query.erreur === "edition-suspendue"
-          ? { kind: "error", text: "Votre participation est suspendue : vous pouvez supprimer un message autorisé, mais pas le modifier." }
-          : query.erreur === "edition-droits"
-            ? { kind: "error", text: "Vous ne pouvez modifier que vos propres messages." }
-            : query.erreur === "edition-fermee"
-              ? { kind: "error", text: "Ce message ne peut plus être modifié car le sujet est verrouillé, terminé, archivé ou masqué par la modération." }
-              : query.erreur === "edition"
-                ? { kind: "error", text: "La modification n’a pas pu être enregistrée." }
-                : query.erreur === "suppression-signalement"
-                  ? { kind: "error", text: "Ce contenu fait l’objet d’un signalement en cours et doit rester disponible pour la modération." }
-                  : query.erreur === "suppression-fermee"
-                    ? { kind: "error", text: "La suppression n’est plus disponible sur un sujet verrouillé, terminé ou archivé." }
-                    : query.erreur === "sujet-reponses"
-                      ? { kind: "error", text: "Ce sujet a reçu une réponse : il ne peut plus être supprimé par son auteur." }
-                      : query.erreur === "suppression-droits"
-                        ? { kind: "error", text: "Vous ne pouvez supprimer que vos propres messages." }
-                        : query.erreur === "suppression-sujet"
-                          ? { kind: "error", text: "Le premier message doit être supprimé avec le sujet entier, uniquement avant toute réponse." }
-                          : query.erreur === "suppression-message"
-                            ? { kind: "error", text: "Le message n’a pas pu être supprimé." }
-                            : null;
+      : query.erreur === "media-attache"
+        ? { kind: "error", text: "Le message a été enregistré, mais au moins une image n’a pas pu être rattachée. Modifiez le message et renvoyez l’image concernée." }
+        : query.erreur === "edition-media"
+          ? { kind: "error", text: "Vous ne pouvez insérer que vos propres images dans ce message." }
+          : query.erreur === "edition-champs"
+            ? { kind: "error", text: "Le message doit contenir au moins deux caractères et ne pas dépasser 50 000 caractères." }
+            : query.erreur === "edition-suspendue"
+              ? { kind: "error", text: "Votre participation est suspendue : vous pouvez supprimer un message autorisé, mais pas le modifier." }
+              : query.erreur === "edition-droits"
+                ? { kind: "error", text: "Vous ne pouvez modifier que vos propres messages." }
+                : query.erreur === "edition-fermee"
+                  ? { kind: "error", text: "Ce message ne peut plus être modifié car le sujet est verrouillé, terminé, archivé ou masqué par la modération." }
+                  : query.erreur === "edition"
+                    ? { kind: "error", text: "La modification n’a pas pu être enregistrée." }
+                    : query.erreur === "suppression-signalement"
+                      ? { kind: "error", text: "Ce contenu fait l’objet d’un signalement en cours et doit rester disponible pour la modération." }
+                      : query.erreur === "suppression-fermee"
+                        ? { kind: "error", text: "La suppression n’est plus disponible sur un sujet verrouillé, terminé ou archivé." }
+                        : query.erreur === "sujet-reponses"
+                          ? { kind: "error", text: "Ce sujet a reçu une réponse : il ne peut plus être supprimé par son auteur." }
+                          : query.erreur === "suppression-droits"
+                            ? { kind: "error", text: "Vous ne pouvez supprimer que vos propres messages." }
+                            : query.erreur === "suppression-sujet"
+                              ? { kind: "error", text: "Le premier message doit être supprimé avec le sujet entier, uniquement avant toute réponse." }
+                              : query.erreur === "suppression-message"
+                                ? { kind: "error", text: "Le message n’a pas pu être supprimé." }
+                                : null;
 
   return (
     <main className="site-shell forum-thread-page" id="forum-thread-top">
@@ -340,6 +384,7 @@ export default async function ForumTopicPage({
                           canEdit={canEditOwnPost}
                           deleteKind={deleteKind}
                           isFirstPost={index === 0}
+                          initialMediaMap={mediaMap}
                         />
                       ) : null}
                       <ForumReportControl
@@ -354,7 +399,7 @@ export default async function ForumTopicPage({
                   </header>
 
                   <div className="forum-post__content">
-                    <BbcodeContent content={String(post.content)} />
+                    <BbcodeContent content={String(post.content)} mediaMap={mediaMap} />
                   </div>
                 </div>
               </article>

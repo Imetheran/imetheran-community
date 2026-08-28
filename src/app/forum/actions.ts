@@ -5,6 +5,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canUseForumWritePolicy } from "@/lib/forum-access";
 import { bbcodeExcerpt } from "@/lib/bbcode";
+import {
+  extractForumMediaIds,
+  FORUM_MEDIA_BUCKET,
+  FORUM_MEDIA_MAX_PER_POST,
+} from "@/lib/forum-media";
 import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,6 +24,13 @@ type ForumModerationAction =
   | "finish"
   | "archive"
   | "reopen";
+
+type ServerSupabase = Awaited<ReturnType<typeof createClient>>;
+
+type ForumMediaRow = {
+  id: string;
+  storage_path: string;
+};
 
 function readField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -95,6 +107,69 @@ function refreshForumThread(boardSlug: string, topicSlug: string) {
   revalidatePath(`/forum/${boardSlug}/sujet/${topicSlug}`);
 }
 
+async function validateOwnedForumMedia(
+  supabase: ServerSupabase,
+  userId: string,
+  content: string,
+  allowedPostId: string | null = null,
+) {
+  const mediaIds = extractForumMediaIds(content);
+  if (mediaIds.length > FORUM_MEDIA_MAX_PER_POST) {
+    return { ok: false as const, reason: "limit" as const, mediaIds };
+  }
+  if (mediaIds.length === 0) {
+    return { ok: true as const, mediaIds };
+  }
+
+  const { data, error } = await supabase
+    .from("forum_media")
+    .select("id, post_id")
+    .in("id", mediaIds)
+    .eq("owner_id", userId);
+
+  if (error || !data || data.length !== mediaIds.length) {
+    return { ok: false as const, reason: "ownership" as const, mediaIds };
+  }
+
+  const valid = data.every((row) => row.post_id === null || (allowedPostId && row.post_id === allowedPostId));
+  return valid
+    ? { ok: true as const, mediaIds }
+    : { ok: false as const, reason: "ownership" as const, mediaIds };
+}
+
+async function attachForumMedia(
+  supabase: ServerSupabase,
+  userId: string,
+  mediaIds: string[],
+  postId: string,
+) {
+  if (mediaIds.length === 0) return true;
+  const { error } = await supabase
+    .from("forum_media")
+    .update({ post_id: postId, attached_at: new Date().toISOString() })
+    .in("id", mediaIds)
+    .eq("owner_id", userId);
+  return !error;
+}
+
+async function cleanupDetachedForumMedia(
+  supabase: ServerSupabase,
+  userId: string,
+  mediaRows: ForumMediaRow[],
+) {
+  if (mediaRows.length === 0) return;
+  const paths = mediaRows.map((media) => media.storage_path);
+  const { error: storageError } = await supabase.storage.from(FORUM_MEDIA_BUCKET).remove(paths);
+  if (storageError) return;
+
+  await supabase
+    .from("forum_media")
+    .delete()
+    .in("id", mediaRows.map((media) => media.id))
+    .eq("owner_id", userId)
+    .is("post_id", null);
+}
+
 export async function createForumTopic(formData: FormData) {
   const boardSlug = safeSlug(readField(formData, "board_slug"));
   const title = readField(formData, "title");
@@ -117,6 +192,11 @@ export async function createForumTopic(formData: FormData) {
   const participation = await getMemberParticipation(supabase, userId);
   if (!participation.canParticipate) {
     redirect(`/forum/${boardSlug}/nouveau?erreur=suspendu`);
+  }
+
+  const mediaCheck = await validateOwnedForumMedia(supabase, userId, content);
+  if (!mediaCheck.ok) {
+    redirect(`/forum/${boardSlug}/nouveau?erreur=${mediaCheck.reason === "limit" ? "media-limite" : "media"}`);
   }
 
   const { data: board } = await supabase
@@ -148,17 +228,31 @@ export async function createForumTopic(formData: FormData) {
     redirect(`/forum/${boardSlug}/nouveau?erreur=publication`);
   }
 
+  let mediaAttached = true;
   if (created.topic_id) {
     await supabase
       .from("forum_topics")
       .update({ excerpt: bbcodeExcerpt(content) })
       .eq("id", created.topic_id)
       .eq("author_id", userId);
+
+    if (mediaCheck.mediaIds.length > 0) {
+      const { data: firstPost } = await supabase
+        .from("forum_posts")
+        .select("id")
+        .eq("topic_id", created.topic_id)
+        .eq("author_id", userId)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      mediaAttached = Boolean(firstPost?.id) && await attachForumMedia(supabase, userId, mediaCheck.mediaIds, firstPost!.id);
+    }
   }
 
   revalidatePath("/forum");
   revalidatePath(`/forum/${boardSlug}`);
-  redirect(`/forum/${boardSlug}/sujet/${created.topic_slug}`);
+  redirect(`/forum/${boardSlug}/sujet/${created.topic_slug}${mediaAttached ? "" : "?erreur=media-attache"}`);
 }
 
 export async function createForumPost(formData: FormData) {
@@ -181,6 +275,11 @@ export async function createForumPost(formData: FormData) {
   const participation = await getMemberParticipation(supabase, userId);
   if (!participation.canParticipate) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=suspendu#repondre`);
+  }
+
+  const mediaCheck = await validateOwnedForumMedia(supabase, userId, content);
+  if (!mediaCheck.ok) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=${mediaCheck.reason === "limit" ? "media-limite" : "media"}#repondre`);
   }
 
   const { data: board } = await supabase
@@ -216,8 +315,9 @@ export async function createForumPost(formData: FormData) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=publication#repondre`);
   }
 
+  const mediaAttached = await attachForumMedia(supabase, userId, mediaCheck.mediaIds, postId);
   refreshForumThread(boardSlug, topicSlug);
-  redirect(`/forum/${boardSlug}/sujet/${topicSlug}#${postId}`);
+  redirect(`/forum/${boardSlug}/sujet/${topicSlug}${mediaAttached ? "" : "?erreur=media-attache"}#${postId}`);
 }
 
 export async function editForumPost(formData: FormData) {
@@ -259,6 +359,11 @@ export async function editForumPost(formData: FormData) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition-fermee#${postId}`);
   }
 
+  const mediaCheck = await validateOwnedForumMedia(supabase, userId, content, postId);
+  if (!mediaCheck.ok) {
+    redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=${mediaCheck.reason === "limit" ? "media-limite" : "edition-media"}#${postId}`);
+  }
+
   const { data: firstPost } = await supabase
     .from("forum_posts")
     .select("id")
@@ -278,6 +383,8 @@ export async function editForumPost(formData: FormData) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=edition#${postId}`);
   }
 
+  const mediaAttached = await attachForumMedia(supabase, userId, mediaCheck.mediaIds, postId);
+
   if (firstPost?.id === postId) {
     const { error: topicError } = await supabase
       .from("forum_topics")
@@ -290,7 +397,7 @@ export async function editForumPost(formData: FormData) {
   }
 
   refreshForumThread(boardSlug, topicSlug);
-  redirect(`/forum/${boardSlug}/sujet/${topicSlug}?message=message-modifie#${postId}`);
+  redirect(`/forum/${boardSlug}/sujet/${topicSlug}?${mediaAttached ? "message=message-modifie" : "erreur=media-attache"}#${postId}`);
 }
 
 function deleteErrorCode(message: string, target: "post" | "topic") {
@@ -311,11 +418,18 @@ export async function deleteForumPost(formData: FormData) {
     redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}`)}`);
   }
 
+  const { data: mediaRows } = await supabase
+    .from("forum_media")
+    .select("id, storage_path")
+    .eq("post_id", postId)
+    .eq("owner_id", userId);
+
   const { error } = await supabase.rpc("delete_own_forum_post", { p_post_id: postId });
   if (error) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=${deleteErrorCode(error.message, "post")}#${postId}`);
   }
 
+  await cleanupDetachedForumMedia(supabase, userId, mediaRows ?? []);
   refreshForumThread(boardSlug, topicSlug);
   redirect(`/forum/${boardSlug}/sujet/${topicSlug}?message=message-supprime`);
 }
@@ -328,11 +442,25 @@ export async function deleteForumTopic(formData: FormData) {
     redirect(`/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}`)}`);
   }
 
+  const { data: posts } = await supabase
+    .from("forum_posts")
+    .select("id")
+    .eq("topic_id", topicId);
+  const postIds = (posts ?? []).map((post) => post.id);
+  const mediaResult = postIds.length > 0
+    ? await supabase
+        .from("forum_media")
+        .select("id, storage_path")
+        .in("post_id", postIds)
+        .eq("owner_id", userId)
+    : { data: [] as ForumMediaRow[] };
+
   const { error } = await supabase.rpc("delete_own_forum_topic", { p_topic_id: topicId });
   if (error) {
     redirect(`/forum/${boardSlug}/sujet/${topicSlug}?erreur=${deleteErrorCode(error.message, "topic")}#forum-thread-top`);
   }
 
+  await cleanupDetachedForumMedia(supabase, userId, mediaResult.data ?? []);
   revalidatePath("/");
   revalidatePath("/forum");
   revalidatePath(`/forum/${boardSlug}`);

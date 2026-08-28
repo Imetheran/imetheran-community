@@ -1,0 +1,74 @@
+.bbcode-editor__image-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.bbcode-editor__toolbar button:disabled {
+  cursor: progress;
+  opacity: .55;
+}
+
+.bbcode-editor__media-error {
+  padding: .6rem .75rem;
+  border: 1px solid color-mix(in srgb, #c95d5d 65%, var(--border));
+  background: color-mix(in srgb, #c95d5d 9%, var(--surface-soft));
+  color: color-mix(in srgb, #f0a4a4 82%, var(--text));
+  font-family: var(--font-ui);
+  font-size: .66rem;
+  line-height: 1.45;
+}
+
+.bbcode-image {
+  display: block;
+  max-width: 100%;
+  margin: 1rem 0;
+  white-space: normal;
+}
+
+.bbcode-image img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 82%, transparent);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 18%);
+}
+
+.bbcode-align--center .bbcode-image img {
+  margin-inline: auto;
+}
+
+.bbcode-align--right .bbcode-image img {
+  margin-left: auto;
+}
+
+.bbcode-image-unavailable {
+  display: inline-flex;
+  margin: .35rem 0;
+  padding: .3rem .5rem;
+  border: 1px dashed var(--border-strong);
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .62rem;
+  white-space: normal !important;
+}
+
+.bbcode-editor__preview .bbcode-image img {
+  max-height: 560px;
+  object-fit: contain;
+}
+
+@media (max-width: 760px) {
+  .bbcode-image {
+    margin-block: .8rem;
+  }
+
+  .bbcode-image img {
+    width: 100%;
+  }
+}
