@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { signedCharacterPortraitMap } from "@/lib/character-portraits";
 import { createClient } from "@/lib/supabase/server";
 import { moderateCharacter } from "./actions";
 
@@ -56,6 +57,7 @@ export default async function AdminCharactersPage({
     ? await supabase.from("profiles").select("id, display_name").in("id", ownerIds)
     : { data: [] as { id: string; display_name: string }[] };
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));
+  const portraitMap = await signedCharacterPortraitMap(supabase, rows);
   const pageNotice = notice(query.message, query.erreur);
 
   const publishedCount = rows.filter((character) => character.status === "published").length;
@@ -93,7 +95,7 @@ export default async function AdminCharactersPage({
           {rows.length > 0 ? (
             <div className="admin-character-list">
               {rows.map((character) => {
-                const portrait = character.portrait_path ? supabase.storage.from("character-portraits").getPublicUrl(character.portrait_path).data.publicUrl : null;
+                const portrait = portraitMap.get(character.id) ?? null;
                 return (
                   <article className={`admin-character-row${character.is_moderation_hidden ? " is-hidden" : ""}`} key={character.id}>
                     <div className="admin-character-row__identity">
