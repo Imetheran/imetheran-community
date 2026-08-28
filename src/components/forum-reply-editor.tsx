@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createForumPost } from "@/app/forum/actions";
 import { BbcodeEditor } from "@/components/bbcode-editor";
 import { ForumMessagePreview } from "@/components/forum-message-preview";
 import type { ForumMediaRenderMap } from "@/lib/forum-media";
+import { createClient } from "@/lib/supabase/client";
 
 type CharacterOption = {
   id: string;
@@ -25,16 +26,12 @@ export function ForumReplyEditor({
   boardSlug,
   topicSlug,
   topicId,
-  memberName,
-  nextMessageNumber,
   isRoleplay,
   characters,
 }: {
   boardSlug: string;
   topicSlug: string;
   topicId: string;
-  memberName: string;
-  nextMessageNumber: number;
   isRoleplay: boolean;
   characters: CharacterOption[];
 }) {
@@ -42,8 +39,42 @@ export function ForumReplyEditor({
   const [characterId, setCharacterId] = useState("");
   const [mediaMap, setMediaMap] = useState<ForumMediaRenderMap>({});
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [memberName, setMemberName] = useState("Membre");
+  const [nextMessageNumber, setNextMessageNumber] = useState(1);
   const selectedCharacter = characters.find((character) => character.id === characterId);
   const canPublish = content.trim().length >= 2;
+
+  useEffect(() => {
+    const supabase = createClient();
+    let active = true;
+
+    async function loadPreviewContext() {
+      const [{ data: claimsData }, { count }] = await Promise.all([
+        supabase.auth.getClaims(),
+        supabase
+          .from("forum_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("topic_id", topicId),
+      ]);
+
+      if (!active) return;
+      setNextMessageNumber((count ?? 0) + 1);
+
+      const userId = claimsData?.claims?.sub;
+      if (typeof userId !== "string") return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (active && profile?.display_name) setMemberName(profile.display_name);
+    }
+
+    void loadPreviewContext();
+    return () => { active = false; };
+  }, [topicId]);
 
   return (
     <form action={createForumPost}>
