@@ -16,6 +16,7 @@ import "./forum-access.css";
 import "./forum-thread.css";
 import "./forum-post-management.css";
 import "./bbcode.css";
+import "./forum-media.css";
 import "./forum-form-focus.css";
 import "./forum-daily-use.css";
 import "./forum-live.css";
