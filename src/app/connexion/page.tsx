@@ -117,13 +117,16 @@ export default async function ConnexionPage({
                 </label>
                 <button className="button button--primary" type="submit">Créer mon compte</button>
               </form>
+              <p className="auth-charter-note">
+                Avant de rejoindre la communauté, prenez connaissance de la <Link href="/guides/charte">charte d’Imetheran</Link> et du <Link href="/guides/roleplay">cadre rôleplay</Link>.
+              </p>
             </section>
           </div>
         )}
 
         <footer className="auth-workspace__footer">
           <Link className="text-link" href={forumReturn}>← Retour au forum</Link>
-          <span>Authentification sécurisée par Supabase.</span>
+          <Link className="text-link" href="/guides/premiers-pas">Découvrir les premiers pas →</Link>
         </footer>
       </section>
     </main>

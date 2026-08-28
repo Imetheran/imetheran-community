@@ -1,0 +1,126 @@
+.account-onboarding {
+  margin-bottom: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--surface) 90%, var(--accent));
+}
+
+.account-onboarding > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.account-onboarding h2 {
+  margin: .15rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 500;
+}
+
+.account-onboarding__steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.account-onboarding__steps article {
+  min-height: 190px;
+  padding: 1rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: .8rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.account-onboarding__steps article.is-done {
+  background: color-mix(in srgb, var(--surface) 93%, var(--accent));
+}
+
+.account-onboarding__marker {
+  color: var(--accent);
+  font-family: var(--font-ui);
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.account-onboarding__steps strong {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.account-onboarding__steps p {
+  margin: .35rem 0 0;
+  color: var(--muted);
+  font-size: .7rem;
+  line-height: 1.55;
+}
+
+.account-onboarding__steps a {
+  color: var(--accent-bright);
+  font-family: var(--font-ui);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.account-onboarding__steps a:hover,
+.account-onboarding__steps a:focus-visible {
+  color: var(--text);
+}
+
+.account-onboarding > small {
+  display: block;
+  margin-top: .85rem;
+  color: var(--muted);
+  font-size: .62rem;
+}
+
+.auth-charter-note {
+  margin: 1rem 0 0 !important;
+  padding-top: .85rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .68rem !important;
+  line-height: 1.6;
+}
+
+.auth-charter-note a {
+  color: var(--accent-bright);
+  font-weight: 700;
+}
+
+.auth-charter-note a:hover,
+.auth-charter-note a:focus-visible {
+  color: var(--text);
+}
+
+@media (max-width: 1000px) {
+  .account-onboarding__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .account-onboarding > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .account-onboarding__steps {
+    grid-template-columns: 1fr;
+  }
+
+  .account-onboarding__steps article {
+    min-height: 0;
+  }
+}
