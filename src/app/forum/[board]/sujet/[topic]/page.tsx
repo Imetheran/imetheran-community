@@ -251,7 +251,7 @@ export default async function ForumTopicPage({
 
         {postRows.length > 1 ? (
           <nav className="forum-thread-jump" aria-label="Navigation dans le sujet">
-            <span>1–{postRows.length} sur {postRows.length} messages chargés</span>
+            <span>1–{postRows.length} sur {postRows.length} messages</span>
             <div>
               {firstPostId ? <a href={`#${firstPostId}`}>Premier message</a> : null}
               {lastPostId ? <a href={`#${lastPostId}`}>Dernier message ↓</a> : null}
@@ -292,7 +292,6 @@ export default async function ForumTopicPage({
                       {post.is_hidden ? <small>Masqué aux membres · visible par l’équipe</small> : null}
                     </div>
                     <div className="forum-post__actions" aria-label="Actions du message">
-                      <button type="button" disabled>Citer</button>
                       <ForumReportControl
                         topicId={topic.id}
                         postId={post.id}
@@ -315,7 +314,7 @@ export default async function ForumTopicPage({
 
         {postRows.length > 1 ? (
           <nav className="forum-thread-jump forum-thread-jump--bottom" aria-label="Fin du sujet">
-            <span>{postRows.length} messages chargés</span>
+            <span>{postRows.length} messages</span>
             <div><a href="#forum-thread-top">↑ Retour en haut</a></div>
           </nav>
         ) : null}
@@ -332,7 +331,7 @@ export default async function ForumTopicPage({
           <section className="forum-reply-box" id="repondre" aria-labelledby="reply-title">
             <div className="forum-reply-box__heading">
               <div><p className="eyebrow">Participation</p><h2 id="reply-title">Répondre au sujet</h2></div>
-              <span className="status-pill">Publication réelle</span>
+              <span className="status-pill">Réponses ouvertes</span>
             </div>
 
             <form action={createForumPost}>
@@ -347,11 +346,11 @@ export default async function ForumTopicPage({
                     {ownedCharacters.map((character) => <option value={character.id} key={character.id}>{character.name}</option>)}
                   </select>
                 ) : <input type="hidden" name="character_id" value="" />}
-                <small>Le compte reste toujours l’auteur technique ; un personnage peut être attaché au message RP.</small>
+                <small>Votre compte reste associé au message ; dans un espace RP, vous pouvez publier sous l’identité de l’un de vos personnages.</small>
               </div>
               <textarea name="content" aria-label="Contenu de la réponse" placeholder="Écrivez votre réponse…" rows={9} maxLength={50000} required />
               <div className="forum-reply-box__footer">
-                <span>Texte simple pour la première version connectée.</span>
+                <span>Relisez votre message avant de le publier.</span>
                 <button className="button button--primary button--small" type="submit">Publier la réponse</button>
               </div>
             </form>
