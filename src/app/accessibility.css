@@ -180,7 +180,7 @@ code {
 @media (pointer: coarse) {
   button,
   select,
-  input:not([type="hidden"]),
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
   .button {
     min-height: 44px;
   }
