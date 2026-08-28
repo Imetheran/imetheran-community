@@ -13,6 +13,8 @@ const errorMessages: Record<string, string> = {
   suspendu: "Votre participation est actuellement suspendue. Vous pouvez lire le forum, mais pas publier.",
   fermee: "La création de sujets est actuellement fermée dans ce forum.",
   reservee: "La création de sujets est réservée à l’équipe dans ce forum.",
+  media: "Une image de ce message n’est pas rattachée à votre compte. Retirez-la puis renvoyez votre propre fichier.",
+  "media-limite": "Un message peut contenir au maximum 8 images.",
   publication: "Le sujet n’a pas pu être publié. Vérifiez vos droits dans ce forum ou réessayez dans un instant.",
 };
 
@@ -100,14 +102,14 @@ export default async function NewForumTopicPage({
           </nav>
           <p className="eyebrow">Espace membre</p>
           <h1>Nouveau sujet</h1>
-          <p>Le sujet et son premier message seront enregistrés ensemble dans Supabase au moment de la publication.</p>
+          <p>Préparez votre sujet, sa mise en page et ses éventuelles images avant de le publier.</p>
         </div>
       </section>
 
       <section className="content-frame forum-compose-workspace">
         <div className="forum-access-note">
           <span aria-hidden="true">✦</span>
-          <p><strong>Publication réelle.</strong> Votre compte est l’auteur technique. Dans un espace RP, vous pouvez aussi associer l’un de vos personnages au sujet.</p>
+          <p><strong>Avant publication.</strong> Votre compte reste l’auteur du sujet. Dans un espace RP, vous pouvez également publier sous l’identité de l’un de vos personnages.</p>
         </div>
         <ForumTopicEditor
           boardSlug={boardRow.slug}
