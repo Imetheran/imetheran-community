@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type TurnstileWidgetProps = {
   siteKey?: string;
@@ -24,6 +24,8 @@ type TurnstileApi = {
   remove: (widgetId: string) => void;
 };
 
+type VerificationState = "checking" | "ready" | "error";
+
 function getTurnstile() {
   return (window as Window & { turnstile?: TurnstileApi }).turnstile;
 }
@@ -31,6 +33,7 @@ function getTurnstile() {
 export function TurnstileWidget({ siteKey, action }: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const tokenRef = useRef<HTMLInputElement>(null);
+  const [verificationState, setVerificationState] = useState<VerificationState>("checking");
 
   useEffect(() => {
     if (!siteKey) return;
@@ -45,12 +48,13 @@ export function TurnstileWidget({ siteKey, action }: TurnstileWidgetProps) {
     let widgetId: string | null = null;
     let retryTimer: number | null = null;
 
-    const setReady = (token: string) => {
+    const setToken = (token: string, state: VerificationState) => {
       tokenInput.value = token;
+      setVerificationState(state);
       if (submitButton) submitButton.disabled = !token;
     };
 
-    setReady("");
+    setToken("", "checking");
 
     const renderWidget = () => {
       if (cancelled) return;
@@ -66,9 +70,9 @@ export function TurnstileWidget({ siteKey, action }: TurnstileWidgetProps) {
         language: "fr",
         size: "flexible",
         theme: "auto",
-        callback: (token) => setReady(token),
-        "expired-callback": () => setReady(""),
-        "error-callback": () => setReady(""),
+        callback: (token) => setToken(token, "ready"),
+        "expired-callback": () => setToken("", "checking"),
+        "error-callback": () => setToken("", "error"),
       });
     };
 
@@ -85,11 +89,21 @@ export function TurnstileWidget({ siteKey, action }: TurnstileWidgetProps) {
 
   if (!siteKey) return null;
 
+  const statusText = verificationState === "ready"
+    ? "Vérification anti-robot terminée. Le formulaire peut être envoyé."
+    : verificationState === "error"
+      ? "La vérification anti-robot a rencontré un problème. Réessayez le contrôle."
+      : "Vérification anti-robot en cours. Le formulaire sera disponible une fois le contrôle terminé.";
+
   return (
-    <div className="auth-captcha" aria-label="Vérification anti-robot">
+    <div
+      className="auth-captcha"
+      aria-label="Vérification anti-robot"
+      aria-busy={verificationState === "checking"}
+    >
       <input ref={tokenRef} type="hidden" name="captcha_token" />
       <div ref={containerRef} />
-      <small>La connexion devient disponible une fois la vérification anti-robot terminée.</small>
+      <small role="status" aria-live="polite">{statusText}</small>
     </div>
   );
 }
