@@ -34,35 +34,39 @@ export function ForumBoardTopics({ boardSlug, topics }: { boardSlug: string; top
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
-  const pinned = topics.filter((topic) => topic.pinned);
-  const regular = useMemo(() => {
+  const filteredTopics = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("fr");
 
-    return topics
-      .filter((topic) => !topic.pinned)
-      .filter((topic) => {
-        if (filter === "unread" && !topic.unread) return false;
-        if (filter === "open" && topic.status !== "open") return false;
-        if (filter === "finished" && topic.status !== "finished") return false;
-        if (!normalizedQuery) return true;
+    return topics.filter((topic) => {
+      if (filter === "unread" && !topic.unread) return false;
+      if (filter === "open" && topic.status !== "open") return false;
+      if (filter === "finished" && topic.status !== "finished") return false;
+      if (!normalizedQuery) return true;
 
-        return [topic.title, topic.excerpt, ...topic.tags]
-          .join(" ")
-          .toLocaleLowerCase("fr")
-          .includes(normalizedQuery);
-      })
+      return [topic.title, topic.excerpt, ...topic.tags]
+        .join(" ")
+        .toLocaleLowerCase("fr")
+        .includes(normalizedQuery);
+    });
+  }, [filter, query, topics]);
+
+  const pinned = filteredTopics.filter((topic) => topic.pinned);
+  const regular = useMemo(() => {
+    return filteredTopics
+      .filter((topic) => !topic.pinned)
       .sort((a, b) => {
         if (sort === "replies") return b.replies - a.replies;
         if (sort === "views") return b.views - a.views;
         return new Date(b.lastActivityIso).getTime() - new Date(a.lastActivityIso).getTime();
       });
-  }, [filter, query, sort, topics]);
+  }, [filteredTopics, sort]);
 
   useEffect(() => setPage(1), [filter, query, sort]);
 
   const pageCount = Math.max(1, Math.ceil(regular.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleRegular = regular.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const hasActiveFilter = filter !== "all" || query.trim().length > 0;
 
   return (
     <div className="forum-topic-browser">
@@ -126,8 +130,14 @@ export function ForumBoardTopics({ boardSlug, topics }: { boardSlug: string; top
           </div>
         ) : (
           <div className="forum-topic-browser__empty">
-            <strong>{topics.length === 0 ? "Aucun sujet dans ce forum pour le moment." : "Aucun sujet ne correspond à ce filtre."}</strong>
-            {topics.length > 0 ? (
+            <strong>
+              {topics.length === 0
+                ? "Aucun sujet dans ce forum pour le moment."
+                : filteredTopics.length === 0
+                  ? "Aucun sujet ne correspond à cette recherche."
+                  : "Aucun autre sujet dans cette sélection."}
+            </strong>
+            {hasActiveFilter && filteredTopics.length === 0 ? (
               <button type="button" onClick={() => { setFilter("all"); setQuery(""); }}>Réinitialiser</button>
             ) : null}
           </div>
@@ -168,6 +178,7 @@ function TopicRow({ boardSlug, topic }: { boardSlug: string; topic: ForumTopicLi
           {topic.pinned ? <span>Épinglé</span> : null}
           {topic.locked ? <span>Verrouillé</span> : null}
           {topic.status === "finished" ? <span>Terminé</span> : null}
+          {topic.status === "archived" ? <span>Archivé</span> : null}
         </div>
         <p>{topic.excerpt}</p>
         <div className="forum-topic-row__tags">{topic.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
