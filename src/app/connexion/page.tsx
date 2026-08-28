@@ -68,8 +68,8 @@ export default async function ConnexionPage({
       </section>
 
       <section className="content-frame auth-workspace">
-        {error ? <div className="auth-message auth-message--error">{error}</div> : null}
-        {status ? <div className="auth-message auth-message--success">{status}</div> : null}
+        {error ? <div className="auth-message auth-message--error" role="alert">{error}</div> : null}
+        {status ? <div className="auth-message auth-message--success" role="status" aria-live="polite">{status}</div> : null}
 
         {recoveryMode ? (
           <div className="auth-grid auth-grid--single">
