@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "./admin-nav.module.css";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AdministrationLayout({ children }: { children: React.ReactNode }) {
   return (
