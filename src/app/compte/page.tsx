@@ -39,7 +39,13 @@ export default async function ComptePage({
     redirect("/connexion?message=connexion-requise");
   }
 
-  const [{ data: profile, error: profileError }, { count: unreadCount }, participation] = await Promise.all([
+  const [
+    { data: profile, error: profileError },
+    { count: unreadCount },
+    participation,
+    { count: characterCount },
+    { data: presentationBoard },
+  ] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, username, bio, created_at")
@@ -51,10 +57,30 @@ export default async function ComptePage({
       .eq("user_id", userId)
       .is("read_at", null),
     getMemberParticipation(supabase, userId),
+    supabase
+      .from("characters")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", userId),
+    supabase
+      .from("forum_boards")
+      .select("id")
+      .eq("slug", "presentations")
+      .eq("is_active", true)
+      .maybeSingle(),
   ]);
 
   if (profileError || !profile) {
     redirect("/connexion?erreur=profil");
+  }
+
+  let hasPresentation = false;
+  if (presentationBoard?.id) {
+    const { count } = await supabase
+      .from("forum_topics")
+      .select("id", { count: "exact", head: true })
+      .eq("board_id", presentationBoard.id)
+      .eq("author_id", userId);
+    hasPresentation = (count ?? 0) > 0;
   }
 
   const appMetadata = claims.app_metadata;
@@ -65,6 +91,37 @@ export default async function ComptePage({
 
   const roleLabel = role === "admin" ? "Administrateur" : role === "moderator" ? "Modérateur" : "Membre";
   const error = query.erreur ? errorMessages[query.erreur] ?? "Une erreur est survenue." : null;
+  const profileReady = Boolean(profile.username && profile.bio.trim().length > 0);
+  const onboardingSteps = [
+    {
+      label: "Profil communautaire",
+      detail: profileReady ? "Votre identifiant et votre présentation sont renseignés." : "Ajoutez un identifiant et quelques mots de présentation.",
+      done: profileReady,
+      href: "#profil",
+      action: "Compléter",
+    },
+    {
+      label: "Charte et cadre RP",
+      detail: "Les repères communs sont accessibles à tout moment dans les Guides.",
+      done: false,
+      href: "/guides/charte",
+      action: "Lire",
+    },
+    {
+      label: "Présentation forum",
+      detail: hasPresentation ? "Vous avez déjà ouvert un sujet de présentation." : "Présentez-vous quand vous vous sentez prêt à rejoindre les échanges.",
+      done: hasPresentation,
+      href: "/forum/presentations",
+      action: hasPresentation ? "Voir" : "Se présenter",
+    },
+    {
+      label: "Premier personnage",
+      detail: (characterCount ?? 0) > 0 ? `${characterCount} personnage${(characterCount ?? 0) > 1 ? "s" : ""} rattaché${(characterCount ?? 0) > 1 ? "s" : ""} à votre compte.` : "Créez une fiche lorsque vous souhaitez commencer à tisser vos accroches RP.",
+      done: (characterCount ?? 0) > 0,
+      href: (characterCount ?? 0) > 0 ? "/personnages" : "/personnages/nouveau",
+      action: (characterCount ?? 0) > 0 ? "Voir" : "Créer",
+    },
+  ] as const;
 
   return (
     <main className="site-shell account-page">
@@ -100,8 +157,33 @@ export default async function ComptePage({
           </div>
         ) : null}
 
+        {participation.canParticipate ? (
+          <section className="account-onboarding" aria-labelledby="account-onboarding-title">
+            <header>
+              <div>
+                <p className="eyebrow">Parcours de bienvenue</p>
+                <h2 id="account-onboarding-title">Prenez vos marques à votre rythme</h2>
+              </div>
+              <Link className="text-link" href="/guides/premiers-pas">Voir les premiers pas →</Link>
+            </header>
+            <div className="account-onboarding__steps">
+              {onboardingSteps.map((step, index) => (
+                <article className={step.done ? "is-done" : ""} key={step.label}>
+                  <span className="account-onboarding__marker" aria-hidden="true">{step.done ? "✓" : String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <strong>{step.label}</strong>
+                    <p>{step.detail}</p>
+                  </div>
+                  <Link href={step.href}>{step.action} →</Link>
+                </article>
+              ))}
+            </div>
+            <small>Ce parcours est un repère, pas une liste d’obligations. Vous pouvez participer au forum sans avoir terminé chaque étape.</small>
+          </section>
+        ) : null}
+
         <div className="account-grid">
-          <section className="account-card">
+          <section className="account-card" id="profil">
             <p className="eyebrow">Profil</p>
             <h2>Identité communautaire</h2>
             <form className="auth-form" action={updateProfile}>
@@ -129,18 +211,20 @@ export default async function ComptePage({
               <div><dt>Rôle</dt><dd>{roleLabel}</dd></div>
               <div><dt>Participation</dt><dd>{participation.canParticipate ? "Active" : "Suspendue"}</dd></div>
               <div><dt>Identifiant</dt><dd>{profile.username ? `@${profile.username}` : "À définir"}</dd></div>
+              <div><dt>Personnages</dt><dd>{characterCount ?? 0}</dd></div>
               <div><dt>Notifications</dt><dd>{unreadCount ?? 0} non lue{(unreadCount ?? 0) > 1 ? "s" : ""}</dd></div>
               <div><dt>Inscription</dt><dd>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(new Date(profile.created_at))}</dd></div>
             </dl>
             <div className="account-next">
               <strong>{participation.canParticipate ? "Votre espace membre" : "Accès en lecture maintenu"}</strong>
               <p>{participation.canParticipate
-                ? "Forum, personnages, relations et notifications utilisent vos données réelles et les permissions de votre compte."
+                ? "Retrouvez ici les raccourcis vers vos principaux espaces et reprenez facilement votre parcours communautaire."
                 : "Votre compte reste accessible pendant la suspension. La publication redeviendra disponible automatiquement à la fin de la mesure ou après réactivation par l’équipe."}</p>
             </div>
             <div className="account-card__links">
               {role === "admin" ? <Link className="text-link" href="/administration">Administration →</Link> : null}
               {role === "moderator" ? <Link className="text-link" href="/administration/forum">Modération du forum →</Link> : null}
+              <Link className="text-link" href="/guides">Guides et charte →</Link>
               <Link className="text-link" href="/notifications">Notifications →</Link>
               <Link className="text-link" href="/personnages">Voir les personnages →</Link>
               <Link className="text-link" href="/forum">Aller au forum →</Link>
