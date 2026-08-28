@@ -2,12 +2,17 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { ForumTopicEditor } from "@/components/forum-topic-editor";
+import { canUseForumWritePolicy } from "@/lib/forum-access";
+import { getMemberParticipation } from "@/lib/member-participation";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 const errorMessages: Record<string, string> = {
   champs: "Le titre et le premier message sont requis. Vérifiez également leur longueur.",
+  suspendu: "Votre participation est actuellement suspendue. Vous pouvez lire le forum, mais pas publier.",
+  fermee: "La création de sujets est actuellement fermée dans ce forum.",
+  reservee: "La création de sujets est réservée à l’équipe dans ce forum.",
   publication: "Le sujet n’a pas pu être publié. Vérifiez vos droits dans ce forum ou réessayez dans un instant.",
 };
 
@@ -60,10 +65,13 @@ export default async function NewForumTopicPage({
   const role = appMetadata && typeof appMetadata === "object" && "role" in appMetadata
     ? String(appMetadata.role)
     : "member";
-  const creationPolicy = boardRow.topic_creation.toLocaleLowerCase("fr");
-  const staffOnly = creationPolicy.includes("admin") || creationPolicy.includes("staff") || creationPolicy.includes("moderator");
+  const participation = await getMemberParticipation(supabase, userId);
 
-  if (staffOnly && role !== "admin" && role !== "moderator") {
+  if (!participation.canParticipate) {
+    redirect("/compte?message=participation-suspendue");
+  }
+
+  if (!canUseForumWritePolicy(boardRow.topic_creation, userId, role, participation.canParticipate)) {
     redirect(`/forum/${boardRow.slug}`);
   }
 
