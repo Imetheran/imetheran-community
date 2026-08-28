@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Guides",
-  description: "Guides communautaires pour le rôleplay, les personnages et les outils d’Imetheran.",
+  description: "Premiers pas, charte, cadre rôleplay et guides communautaires d’Imetheran.",
 };
 
 type GuideBoard = {
@@ -34,23 +34,29 @@ type GuideTopic = {
 const guidePaths = [
   {
     marker: "01",
-    title: "Débuter en rôleplay",
+    title: "Premiers pas",
     description:
-      "Retrouvez les repères de la communauté pour préparer une scène, rejoindre un groupe et prendre vos marques sans vous perdre dans les usages.",
+      "Le parcours conseillé pour poser votre profil, vous présenter, découvrir les personnages et trouver votre premier échange.",
+    href: "/guides/premiers-pas",
+    action: "Commencer ici",
   },
   {
     marker: "02",
-    title: "Créer un personnage",
+    title: "Charte communautaire",
     description:
-      "Concept, cohérence, fiche et relations : le forum centralise les conseils qui aident à construire un personnage jouable sur la durée.",
+      "Respect, consentement, vie privée, spoilers et modération : le cadre commun qui s’applique à tous les espaces d’Imetheran.",
+    href: "/guides/charte",
+    action: "Lire la charte",
   },
   {
     marker: "03",
-    title: "Outils communautaires",
+    title: "Cadre rôleplay",
     description:
-      "Fonctionnement du forum, chroniques, sociogramme et organisation : les guides expliquent comment utiliser les outils d’Imetheran au quotidien.",
+      "Séparation joueur/personnage, conflits, lore, consentement et rythme : les repères qui permettent de co-écrire sereinement.",
+    href: "/guides/roleplay",
+    action: "Voir les repères RP",
   },
-];
+] as const;
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -103,14 +109,14 @@ export default async function GuidesPage() {
 
       <section className="guides-hero">
         <div className="content-frame guides-hero__content">
-          <p className="eyebrow">Bibliothèque communautaire</p>
+          <p className="eyebrow">Bienvenue dans la communauté</p>
           <h1>Guides</h1>
           <p className="guides-hero__intro">
-            Les ressources utiles pour jouer, écrire et participer à Imetheran. Les contenus vivent dans le forum afin de rester discutables, corrigibles et à jour par la communauté.
+            Commencez par les repères essentiels d’Imetheran, puis approfondissez avec les guides et discussions publiés par la communauté.
           </p>
           <div className="guides-hero__actions">
-            <Link className="button button--primary" href={boardHref}>Ouvrir le Guide du Rôliste</Link>
-            <Link className="button button--ghost" href="/personnages">Voir les personnages</Link>
+            <Link className="button button--primary" href="/guides/premiers-pas">Commencer le parcours</Link>
+            <Link className="button button--ghost" href={boardHref}>Guide du Rôliste</Link>
           </div>
         </div>
       </section>
@@ -118,10 +124,10 @@ export default async function GuidesPage() {
       <section className="content-frame guides-orientation" aria-labelledby="guides-orientation-title">
         <div className="guides-section-heading">
           <div>
-            <p className="eyebrow">Par où commencer ?</p>
-            <h2 id="guides-orientation-title">Trois portes d’entrée</h2>
+            <p className="eyebrow">Repères permanents</p>
+            <h2 id="guides-orientation-title">Trois lectures pour bien commencer</h2>
           </div>
-          <p>Pas de faux articles préremplis : ces rubriques orientent vers les ressources réellement publiées par les membres.</p>
+          <p>Ces pages publiques posent le cadre commun. Elles restent accessibles même si vous n’avez pas encore créé de compte.</p>
         </div>
 
         <div className="guides-paths">
@@ -130,7 +136,7 @@ export default async function GuidesPage() {
               <span className="guides-path__marker">{path.marker}</span>
               <h3>{path.title}</h3>
               <p>{path.description}</p>
-              <Link className="text-link" href={boardHref}>Consulter les sujets →</Link>
+              <Link className="text-link" href={path.href}>{path.action} →</Link>
             </article>
           ))}
         </div>
@@ -151,7 +157,7 @@ export default async function GuidesPage() {
               <span aria-hidden="true">!</span>
               <div>
                 <strong>Le guide ne peut pas être chargé pour le moment.</strong>
-                <p>Le forum reste accessible directement pendant que la connexion est vérifiée.</p>
+                <p>Les repères permanents ci-dessus restent disponibles pendant que le forum se reconnecte.</p>
               </div>
             </div>
           ) : restricted ? (
@@ -194,7 +200,7 @@ export default async function GuidesPage() {
             </div>
           ) : (
             <div className="guides-empty">
-              <p className="eyebrow">Bibliothèque ouverte</p>
+              <p className="eyebrow">Bibliothèque communautaire</p>
               <h3>Aucun guide publié pour le moment</h3>
               <p>Les premiers sujets apparaîtront ici automatiquement dès leur publication dans le Guide du Rôliste.</p>
               <Link className="button button--primary button--small" href={`${boardHref}/nouveau`}>Proposer un guide</Link>
