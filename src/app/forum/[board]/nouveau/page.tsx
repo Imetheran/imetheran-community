@@ -100,14 +100,14 @@ export default async function NewForumTopicPage({
           </nav>
           <p className="eyebrow">Espace membre</p>
           <h1>Nouveau sujet</h1>
-          <p>Le sujet et son premier message seront enregistrés ensemble dans Supabase au moment de la publication.</p>
+          <p>Préparez votre sujet et son premier message avant de les publier ensemble sur le forum.</p>
         </div>
       </section>
 
       <section className="content-frame forum-compose-workspace">
         <div className="forum-access-note">
           <span aria-hidden="true">✦</span>
-          <p><strong>Publication réelle.</strong> Votre compte est l’auteur technique. Dans un espace RP, vous pouvez aussi associer l’un de vos personnages au sujet.</p>
+          <p><strong>Identité de publication.</strong> Votre compte reste associé au sujet. Dans un espace RP, vous pouvez également écrire sous l’identité de l’un de vos personnages.</p>
         </div>
         <ForumTopicEditor
           boardSlug={boardRow.slug}
