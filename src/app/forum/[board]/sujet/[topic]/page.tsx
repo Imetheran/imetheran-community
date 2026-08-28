@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { ForumReadMarker } from "@/components/forum-read-marker";
 import { ForumThreadActions } from "@/components/forum-thread-actions";
 import { ForumReportControl } from "@/components/forum-report-control";
+import { ForumPostOwnerActions } from "@/components/forum-post-owner-actions";
 import { createForumPost } from "@/app/forum/actions";
 import { canUseForumWritePolicy } from "@/lib/forum-access";
 import { getMemberParticipation } from "@/lib/member-participation";
@@ -185,6 +186,33 @@ export default async function ForumTopicPage({
       : query.erreur === "signalement"
         ? { kind: "error", text: "Le signalement n’a pas pu être enregistré. Réessayez dans un instant." }
         : null;
+  const memberFeedback = query.message === "message-modifie"
+    ? { kind: "success", text: "Votre message a bien été modifié." }
+    : query.message === "message-supprime"
+      ? { kind: "success", text: "Votre message a bien été supprimé." }
+      : query.erreur === "edition-champs"
+        ? { kind: "error", text: "Le message doit contenir au moins deux caractères et ne pas dépasser 50 000 caractères." }
+        : query.erreur === "edition-suspendue"
+          ? { kind: "error", text: "Votre participation est suspendue : vous pouvez supprimer un message autorisé, mais pas le modifier." }
+          : query.erreur === "edition-droits"
+            ? { kind: "error", text: "Vous ne pouvez modifier que vos propres messages." }
+            : query.erreur === "edition-fermee"
+              ? { kind: "error", text: "Ce message ne peut plus être modifié car le sujet est verrouillé, terminé, archivé ou masqué par la modération." }
+              : query.erreur === "edition"
+                ? { kind: "error", text: "La modification n’a pas pu être enregistrée." }
+                : query.erreur === "suppression-signalement"
+                  ? { kind: "error", text: "Ce contenu fait l’objet d’un signalement en cours et doit rester disponible pour la modération." }
+                  : query.erreur === "suppression-fermee"
+                    ? { kind: "error", text: "La suppression n’est plus disponible sur un sujet verrouillé, terminé ou archivé." }
+                    : query.erreur === "sujet-reponses"
+                      ? { kind: "error", text: "Ce sujet a reçu une réponse : il ne peut plus être supprimé par son auteur." }
+                      : query.erreur === "suppression-droits"
+                        ? { kind: "error", text: "Vous ne pouvez supprimer que vos propres messages." }
+                        : query.erreur === "suppression-sujet"
+                          ? { kind: "error", text: "Le premier message doit être supprimé avec le sujet entier, uniquement avant toute réponse." }
+                          : query.erreur === "suppression-message"
+                            ? { kind: "error", text: "Le message n’a pas pu être supprimé." }
+                            : null;
 
   return (
     <main className="site-shell forum-thread-page" id="forum-thread-top">
@@ -247,6 +275,12 @@ export default async function ForumTopicPage({
           </div>
         ) : null}
 
+        {memberFeedback ? (
+          <div className={`forum-editor-notice${memberFeedback.kind === "error" ? " forum-editor-notice--error" : ""}`} role={memberFeedback.kind === "error" ? "alert" : "status"}>
+            {memberFeedback.text}
+          </div>
+        ) : null}
+
         {replyError ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{replyError}</div> : null}
 
         {postRows.length > 1 ? (
@@ -267,6 +301,13 @@ export default async function ForumTopicPage({
               .split(/\n{2,}/)
               .map((paragraph: string) => paragraph.trim())
               .filter(Boolean);
+            const isOwnPost = Boolean(userId && post.author_id === userId);
+            const canEditOwnPost = isOwnPost && repliesOpen && participation.canParticipate;
+            const deleteKind = isOwnPost && repliesOpen
+              ? index === 0
+                ? postRows.length === 1 ? "topic" as const : null
+                : "post" as const
+              : null;
 
             return (
               <article className={`forum-post${index === 0 ? " forum-post--topic-author" : ""}`} id={post.id} key={post.id}>
@@ -292,6 +333,18 @@ export default async function ForumTopicPage({
                       {post.is_hidden ? <small>Masqué aux membres · visible par l’équipe</small> : null}
                     </div>
                     <div className="forum-post__actions" aria-label="Actions du message">
+                      {isOwnPost && (canEditOwnPost || deleteKind) ? (
+                        <ForumPostOwnerActions
+                          postId={post.id}
+                          topicId={topic.id}
+                          boardSlug={boardRow.slug}
+                          topicSlug={topic.slug}
+                          content={String(post.content)}
+                          canEdit={canEditOwnPost}
+                          deleteKind={deleteKind}
+                          isFirstPost={index === 0}
+                        />
+                      ) : null}
                       <button type="button" disabled>Citer</button>
                       <ForumReportControl
                         topicId={topic.id}
