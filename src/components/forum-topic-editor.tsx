@@ -3,8 +3,8 @@
 import { useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createForumTopic } from "@/app/forum/actions";
-import { BbcodeContent } from "@/components/bbcode-content";
 import { BbcodeEditor } from "@/components/bbcode-editor";
+import { ForumMessagePreview } from "@/components/forum-message-preview";
 import type { ForumMediaRenderMap } from "@/lib/forum-media";
 import { forumTopicTypeLabel } from "@/lib/forum-presentation";
 
@@ -20,15 +20,6 @@ function PublishButton({ disabled = false }: { disabled?: boolean }) {
       {pending ? "Publication…" : "Publier le sujet"}
     </button>
   );
-}
-
-function initials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase("fr") ?? "")
-    .join("") || "M";
 }
 
 export function ForumTopicEditor({
@@ -197,36 +188,14 @@ export function ForumTopicEditor({
             </div>
 
             <div className="forum-posts forum-topic-publish-preview__posts">
-              <article className="forum-post forum-post--topic-author">
-                <aside className="forum-post__author">
-                  <div className="forum-post__avatar" aria-hidden="true">{initials(memberName)}</div>
-                  <strong>{memberName}</strong>
-                  <span className="forum-post__role">Membre</span>
-                  <span className="forum-post__starter">Auteur du sujet</span>
-                  {selectedCharacter ? (
-                    <div className="forum-post__character">
-                      <small>Écrit avec</small>
-                      <span>{selectedCharacter.name}</span>
-                    </div>
-                  ) : null}
-                </aside>
-
-                <div className="forum-post__body">
-                  <header>
-                    <div>
-                      <span className="forum-post__number">#1</span>
-                      <time>À l’instant</time>
-                      <small>Aperçu avant publication</small>
-                    </div>
-                  </header>
-                  <div className="forum-post__content">
-                    <BbcodeContent
-                      content={content.trim() || "Votre premier message apparaîtra ici."}
-                      mediaMap={mediaMap}
-                    />
-                  </div>
-                </div>
-              </article>
+              <ForumMessagePreview
+                authorName={memberName}
+                characterName={selectedCharacter?.name}
+                content={content.trim() || "Votre premier message apparaîtra ici."}
+                mediaMap={mediaMap}
+                messageNumber={1}
+                topicStarter
+              />
             </div>
 
             {!canPublish ? (
