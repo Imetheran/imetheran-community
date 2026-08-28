@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { signedCharacterPortraitMap } from "@/lib/character-portraits";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -26,10 +27,6 @@ type CharacterRow = {
 
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr") ?? "").join("") || "IM";
-}
-
-function portraitUrl(supabase: Awaited<ReturnType<typeof createClient>>, path: string | null) {
-  return path ? supabase.storage.from("character-portraits").getPublicUrl(path).data.publicUrl : null;
 }
 
 function statusLabel(status: string, visibility: string, hidden: boolean) {
@@ -83,6 +80,8 @@ export default async function CharactersPage() {
         .order("updated_at", { ascending: false })).data ?? []) as CharacterRow[]
     : [];
   const featured = publicCharacters.find((character) => character.is_featured) ?? null;
+  const portraitMap = await signedCharacterPortraitMap(supabase, publicCharacters);
+  const featuredPortrait = featured ? portraitMap.get(featured.id) ?? null : null;
 
   return (
     <main className="site-shell characters-page">
@@ -111,7 +110,7 @@ export default async function CharactersPage() {
         {featured ? (
           <article className="character-spotlight">
             <div className="character-spotlight__portrait" aria-hidden="true">
-              {portraitUrl(supabase, featured.portrait_path) ? <img className="character-live-portrait" src={portraitUrl(supabase, featured.portrait_path) ?? ""} alt="" /> : <span>{initials(featured.name)}</span>}
+              {featuredPortrait ? <img className="character-live-portrait" src={featuredPortrait} alt="" /> : <span>{initials(featured.name)}</span>}
               <small>Personnage mis en avant</small>
             </div>
             <div className="character-spotlight__body">
@@ -146,7 +145,7 @@ export default async function CharactersPage() {
 
         {publicCharacters.length > 0 ? (
           <div className="character-grid">
-            {publicCharacters.map((character) => <CharacterCard character={character} portrait={portraitUrl(supabase, character.portrait_path)} key={character.id} />)}
+            {publicCharacters.map((character) => <CharacterCard character={character} portrait={portraitMap.get(character.id) ?? null} key={character.id} />)}
           </div>
         ) : (
           <div className="character-live-empty">
