@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { Sociogram, type SociogramCharacter, type SociogramRelationship } from "@/components/sociogram";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { relationshipKinds, type RelationshipKind } from "@/content/relationship-content";
+import { signedCharacterPortraitMap } from "@/lib/character-portraits";
 import { createClient } from "@/lib/supabase/server";
 import {
   createCharacterRelationship,
@@ -113,6 +114,7 @@ export default async function LinksPage({
       description: relationship.description,
       intensity: (relationship.intensity >= 3 ? 3 : relationship.intensity <= 1 ? 1 : 2) as 1 | 2 | 3,
     }));
+  const portraitMap = await signedCharacterPortraitMap(supabase, publicCharacters);
   const graphCharacters: SociogramCharacter[] = publicCharacters.map((character) => ({
     id: character.id,
     slug: character.slug,
@@ -121,7 +123,7 @@ export default async function LinksPage({
     people: character.people ?? "",
     occupation: character.occupation ?? "",
     initials: initials(character.name),
-    portraitUrl: character.portrait_path ? supabase.storage.from("character-portraits").getPublicUrl(character.portrait_path).data.publicUrl : null,
+    portraitUrl: portraitMap.get(character.id) ?? null,
   }));
 
   let ownCharacters: CharacterRow[] = [];

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CharacterRelations } from "@/components/character-relations";
 import { SiteHeader } from "@/components/site-header";
+import { signedCharacterPortraitUrl } from "@/lib/character-portraits";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -59,9 +60,7 @@ export default async function CharacterProfilePage({
   if (error || !character) notFound();
 
   const isOwner = userId === character.owner_id;
-  const portraitUrl = character.portrait_path
-    ? supabase.storage.from("character-portraits").getPublicUrl(character.portrait_path).data.publicUrl
-    : null;
+  const portraitUrl = await signedCharacterPortraitUrl(supabase, character.portrait_path);
   const traits = Array.isArray(character.traits) ? character.traits : [];
   const rawHooks = Array.isArray(character.hooks) ? character.hooks : [];
   const hooks: Hook[] = rawHooks
