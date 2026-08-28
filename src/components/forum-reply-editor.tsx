@@ -6,12 +6,15 @@ import { createForumPost } from "@/app/forum/actions";
 import { BbcodeEditor } from "@/components/bbcode-editor";
 import { ForumMessagePreview } from "@/components/forum-message-preview";
 import type { ForumMediaRenderMap } from "@/lib/forum-media";
+import { FORUM_QUOTE_EVENT } from "@/lib/forum-quotes";
 import { createClient } from "@/lib/supabase/client";
 
 type CharacterOption = {
   id: string;
   name: string;
 };
+
+type QuoteEvent = CustomEvent<{ quote?: string }>;
 
 function ReplyButton({ disabled = false }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
@@ -41,8 +44,10 @@ export function ForumReplyEditor({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [memberName, setMemberName] = useState("Membre");
   const [nextMessageNumber, setNextMessageNumber] = useState(1);
+  const [quoteNotice, setQuoteNotice] = useState<string | null>(null);
   const selectedCharacter = characters.find((character) => character.id === characterId);
   const canPublish = content.trim().length >= 2;
+  const editorId = `forum-reply-content-${topicId}`;
 
   useEffect(() => {
     const supabase = createClient();
@@ -76,6 +81,32 @@ export function ForumReplyEditor({
     return () => { active = false; };
   }, [topicId]);
 
+  useEffect(() => {
+    const handleQuote = (event: Event) => {
+      const quote = (event as QuoteEvent).detail?.quote?.trim();
+      if (!quote) return;
+
+      setPreviewOpen(false);
+      setQuoteNotice(null);
+      setContent((current) => {
+        const prefix = current.trimEnd();
+        const next = `${prefix}${prefix ? "\n\n" : ""}${quote}\n\n`;
+        if (next.length > 50000) {
+          setQuoteNotice("La citation ne peut pas être ajoutée : votre réponse atteindrait la limite de 50 000 caractères.");
+          return current;
+        }
+        return next;
+      });
+
+      requestAnimationFrame(() => {
+        document.getElementById(editorId)?.focus();
+      });
+    };
+
+    window.addEventListener(FORUM_QUOTE_EVENT, handleQuote);
+    return () => window.removeEventListener(FORUM_QUOTE_EVENT, handleQuote);
+  }, [editorId]);
+
   return (
     <form action={createForumPost}>
       <input type="hidden" name="board_slug" value={boardSlug} />
@@ -95,6 +126,7 @@ export function ForumReplyEditor({
         </div>
 
         <BbcodeEditor
+          id={editorId}
           name="content"
           value={content}
           onChange={setContent}
@@ -107,6 +139,8 @@ export function ForumReplyEditor({
           maxLength={50000}
           required
         />
+
+        {quoteNotice ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{quoteNotice}</div> : null}
 
         <div className="forum-reply-box__footer">
           <span>Vérifiez le rendu du message avant de le publier.</span>
