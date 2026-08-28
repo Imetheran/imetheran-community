@@ -52,7 +52,7 @@ export function SiteHeader() {
           </div>
         </div>
       </header>
-      <span id="contenu-principal" className="skip-target" tabIndex={-1} aria-hidden="true" />
+      <span id="contenu-principal" className="skip-target" tabIndex={-1} />
     </>
   );
 }
