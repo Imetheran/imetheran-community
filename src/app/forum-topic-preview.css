@@ -1,0 +1,109 @@
+.forum-topic-editor {
+  display: block;
+}
+
+#forum-topic-editor-compose {
+  display: grid;
+  gap: .9rem;
+}
+
+#forum-topic-editor-compose[hidden] {
+  display: none;
+}
+
+.forum-topic-publish-preview {
+  display: grid;
+  gap: 1rem;
+  scroll-margin-top: 90px;
+  outline: none;
+}
+
+.forum-topic-publish-preview__intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
+}
+
+.forum-topic-publish-preview__intro h2 {
+  margin: .12rem 0 .35rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.5rem);
+  font-weight: 500;
+}
+
+.forum-topic-publish-preview__intro p:not(.eyebrow) {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.forum-topic-publish-preview__thread-head {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-raised), var(--surface));
+}
+
+.forum-topic-publish-preview__thread-head h1 {
+  max-width: 1000px;
+  margin: .65rem 0 .55rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.02;
+  font-weight: 500;
+}
+
+.forum-topic-publish-preview__thread-head > p {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+}
+
+.forum-topic-publish-preview__posts {
+  margin-top: 0;
+}
+
+.forum-topic-publish-preview .forum-post__starter {
+  margin-top: .45rem;
+  color: var(--accent-bright);
+  font-family: var(--font-ui);
+  font-size: .52rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.forum-topic-publish-preview .forum-post__character {
+  cursor: default;
+}
+
+.forum-topic-publish-preview__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .6rem;
+  flex-wrap: wrap;
+  padding-top: .3rem;
+}
+
+@media (max-width: 780px) {
+  .forum-topic-publish-preview__intro {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .forum-topic-publish-preview__actions {
+    flex-direction: column-reverse;
+  }
+
+  .forum-topic-publish-preview__actions .button {
+    width: 100%;
+  }
+}
