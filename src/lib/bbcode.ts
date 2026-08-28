@@ -1,4 +1,4 @@
-const supportedBbcodeTagPattern = /\[(?:\/?)(?:b|i|u|s|h2|h3|center|right|quote|code|spoiler|color|size|url)(?:=[^\]]*)?\]|\[hr\]/gi;
+const supportedBbcodeTagPattern = /\[(?:\/?)(?:b|i|u|s|h2|h3|center|right|quote|code|spoiler|color|size|url|img)(?:=[^\]]*)?\]|\[hr\]/gi;
 
 export function stripBbcode(value: string) {
   return value
