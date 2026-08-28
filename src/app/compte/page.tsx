@@ -140,6 +140,7 @@ export default async function ComptePage({
             </div>
             <div className="account-card__links">
               {role === "admin" ? <Link className="text-link" href="/administration">Administration →</Link> : null}
+              {role === "moderator" ? <Link className="text-link" href="/administration/forum">Modération du forum →</Link> : null}
               <Link className="text-link" href="/notifications">Notifications →</Link>
               <Link className="text-link" href="/personnages">Voir les personnages →</Link>
               <Link className="text-link" href="/forum">Aller au forum →</Link>
