@@ -1,0 +1,16 @@
+.forum-post-owner { display: grid; gap: .55rem; }
+.forum-post-owner__buttons { display: flex; align-items: center; gap: .35rem; }
+.forum-post-owner__buttons form { display: inline-flex; margin: 0; }
+.forum-post-owner__buttons button { cursor: pointer; }
+.forum-post-owner__delete { color: #d99090 !important; }
+.forum-post-owner__editor { margin: .35rem 0 .75rem; padding: .9rem; display: grid; gap: .55rem; border: 1px solid var(--border); background: var(--surface-soft); }
+.forum-post-owner__editor label { color: var(--accent-bright); font-family: var(--font-ui); font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.forum-post-owner__editor textarea { width: 100%; min-height: 150px; padding: .85rem; resize: vertical; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; line-height: 1.6; }
+.forum-post-owner__editor-footer { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.forum-post-owner__editor-footer small { color: var(--muted); font-size: .62rem; }
+
+@media (max-width: 720px) {
+  .forum-post__body > header { align-items: flex-start; }
+  .forum-post__actions { flex-wrap: wrap; justify-content: flex-end; }
+  .forum-post-owner__editor-footer { align-items: stretch; flex-direction: column; }
+}
