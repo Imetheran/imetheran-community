@@ -287,8 +287,14 @@ export function BbcodeEditor({
         </div>
 
         {previewMode === "toggle" ? (
-          <button className="bbcode-editor__preview-toggle" type="button" onClick={() => setPreviewOpen((open) => !open)} aria-expanded={previewOpen}>
-            {previewOpen ? "Masquer l’aperçu" : "Aperçu"}
+          <button
+            className="bbcode-editor__preview-toggle"
+            type="button"
+            onClick={() => setPreviewOpen((open) => !open)}
+            aria-expanded={previewOpen}
+            aria-label={previewOpen ? "Revenir à l’édition du message" : "Prévisualiser le message"}
+          >
+            {previewOpen ? "← Revenir à l’édition" : "Prévisualiser le message"}
           </button>
         ) : null}
       </div>
@@ -316,9 +322,9 @@ export function BbcodeEditor({
       {imageError ? <div className="bbcode-editor__media-error" role="alert">{imageError}</div> : null}
 
       {previewMode === "toggle" && previewOpen ? (
-        <div className="bbcode-editor__preview" aria-label="Aperçu du message">
-          <div className="bbcode-editor__preview-heading"><span>Aperçu</span><small>Rendu tel qu’il apparaîtra sur le forum</small></div>
-          <BbcodeContent content={currentValue || "Votre aperçu apparaîtra ici."} mediaMap={mediaMap} />
+        <div className="bbcode-editor__preview" aria-label="Prévisualisation du message">
+          <div className="bbcode-editor__preview-heading"><span>Prévisualisation</span><small>Rendu tel qu’il apparaîtra sur le forum</small></div>
+          <BbcodeContent content={currentValue || "Votre prévisualisation apparaîtra ici."} mediaMap={mediaMap} />
         </div>
       ) : null}
     </div>
