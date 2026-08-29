@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { GlobalThemeSwitcher } from "@/components/theme-toggle";
 import "./globals.css";
 import "./content-hub.css";
 import "./home-live.css";
@@ -36,6 +37,7 @@ import "./legal.css";
 import "./expansion-themes.css";
 import "./final-polish.css";
 import "./accessibility.css";
+import "./global-theme-selector.css";
 
 export const metadata: Metadata = {
   title: {
@@ -49,7 +51,7 @@ export const metadata: Metadata = {
 const themeBootstrap = `(() => {
   try {
     const saved = localStorage.getItem("imetheran-theme");
-    const allowed = ["dawntrail", "realm-reborn", "heavensward", "stormblood", "shadowbringers", "endwalker", "evercold"];
+    const allowed = ["realm-reborn", "heavensward", "stormblood", "shadowbringers", "endwalker", "dawntrail", "evercold"];
     if (saved && allowed.includes(saved)) document.documentElement.dataset.theme = saved;
   } catch {}
 })();`;
@@ -60,7 +62,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <GlobalThemeSwitcher />
+      </body>
     </html>
   );
 }

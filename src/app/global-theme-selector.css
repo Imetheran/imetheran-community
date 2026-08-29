@@ -1,0 +1,396 @@
+/* Global visual-theme control. It deliberately lives outside page navigation and hero content. */
+
+.global-theme-switcher {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 90;
+  width: min(340px, calc(100vw - 2rem));
+  pointer-events: none;
+  font-family: var(--font-ui);
+}
+
+.global-theme-switcher__trigger,
+.global-theme-switcher__panel {
+  pointer-events: auto;
+}
+
+.global-theme-switcher__trigger {
+  width: max-content;
+  max-width: 100%;
+  min-height: 52px;
+  margin-left: auto;
+  padding: .5rem .62rem .5rem .55rem;
+  display: grid;
+  grid-template-columns: 34px minmax(0, auto) 24px;
+  align-items: center;
+  gap: .6rem;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 72%, transparent);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-raised) 94%, transparent), color-mix(in srgb, var(--surface-glass) 98%, transparent));
+  color: var(--text);
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, .42),
+    inset 0 1px 0 color-mix(in srgb, var(--accent-bright) 14%, transparent),
+    0 0 22px var(--theme-glow-soft);
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+}
+
+.global-theme-switcher__trigger:hover,
+.global-theme-switcher__trigger:focus-visible {
+  border-color: var(--border-strong);
+  outline: none;
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, .46),
+    0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 0 24px var(--theme-glow);
+}
+
+.global-theme-switcher__trigger-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent-bright) 42%, transparent);
+  border-radius: 10px;
+  color: var(--accent-bright);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  box-shadow: inset 0 0 16px var(--theme-glow-soft);
+}
+
+.global-theme-switcher__trigger-copy {
+  min-width: 0;
+  display: grid;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.global-theme-switcher__trigger-copy small {
+  color: var(--muted);
+  font-size: .59rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.global-theme-switcher__trigger-copy strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: .78rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-theme-switcher__trigger-arrow {
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.global-theme-switcher__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + .7rem);
+  width: 100%;
+  max-height: min(70vh, 610px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 72%, transparent);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0, var(--theme-glow-soft), transparent 14rem),
+    color-mix(in srgb, var(--surface-glass) 98%, var(--surface));
+  color: var(--text);
+  box-shadow:
+    0 26px 70px rgba(0,0,0,.54),
+    inset 0 1px 0 color-mix(in srgb, var(--accent-bright) 10%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.global-theme-switcher__panel[hidden] {
+  display: none;
+}
+
+.global-theme-switcher__header {
+  padding: .85rem .85rem .75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.global-theme-switcher__header > div {
+  min-width: 0;
+  display: grid;
+  gap: .05rem;
+}
+
+.global-theme-switcher__header span {
+  color: var(--muted);
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.global-theme-switcher__header strong {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-theme-switcher__header button {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.global-theme-switcher__header button:hover,
+.global-theme-switcher__header button:focus-visible {
+  border-color: var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  outline: none;
+}
+
+.global-theme-switcher__options {
+  padding: .45rem;
+  display: grid;
+  gap: .22rem;
+}
+
+.global-theme-switcher__option {
+  width: 100%;
+  min-height: 54px;
+  padding: .45rem .55rem;
+  display: grid;
+  grid-template-columns: 25px 38px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: .55rem;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.global-theme-switcher__option:hover,
+.global-theme-switcher__option:focus-visible {
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--surface-soft) 88%, var(--accent) 12%);
+  outline: none;
+}
+
+.global-theme-switcher__option[aria-checked="true"] {
+  border-color: color-mix(in srgb, var(--border-strong) 72%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 13%, var(--surface-soft)), var(--surface-soft));
+}
+
+.global-theme-switcher__index {
+  color: var(--muted);
+  font-size: .59rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.global-theme-switcher__swatch {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 9px;
+  background: linear-gradient(135deg, #6c9ba4, #16323a 62%, #b7e7e7);
+  box-shadow: inset 0 0 12px rgba(0,0,0,.24);
+}
+
+.global-theme-switcher__option[data-theme-option="heavensward"] .global-theme-switcher__swatch {
+  background: linear-gradient(135deg, #c9d9ef, #344866 58%, #778fb5);
+}
+
+.global-theme-switcher__option[data-theme-option="stormblood"] .global-theme-switcher__swatch {
+  background: linear-gradient(135deg, #ec9b82, #71352b 58%, #b54f3c);
+}
+
+.global-theme-switcher__option[data-theme-option="shadowbringers"] .global-theme-switcher__swatch {
+  background: linear-gradient(135deg, #e1c0ef, #4d395c 55%, #17111f);
+}
+
+.global-theme-switcher__option[data-theme-option="endwalker"] .global-theme-switcher__swatch {
+  background: linear-gradient(135deg, #d8d0f1, #443c63 52%, #10131f);
+}
+
+.global-theme-switcher__option[data-theme-option="dawntrail"] .global-theme-switcher__swatch {
+  background: linear-gradient(135deg, #f3d283, #9d642b 50%, #2c6f70);
+}
+
+.global-theme-switcher__option[data-theme-option="evercold"] .global-theme-switcher__swatch {
+  background: linear-gradient(135deg, #c9efff, #315f78 52%, #091721);
+}
+
+.global-theme-switcher__copy {
+  min-width: 0;
+  display: grid;
+  line-height: 1.15;
+}
+
+.global-theme-switcher__copy strong {
+  overflow: hidden;
+  font-size: .78rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-theme-switcher__copy small {
+  margin-top: .15rem;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: .64rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-theme-switcher__check {
+  color: var(--accent-bright);
+  font-weight: 900;
+  text-align: center;
+}
+
+.global-theme-switcher__note {
+  display: block;
+  padding: .72rem .95rem .85rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .61rem;
+  line-height: 1.45;
+}
+
+/* Theme artwork is cropped as atmosphere only: no expansion logo is rendered in the hero. */
+.expansion-logo {
+  display: none !important;
+}
+
+.hero,
+.section-hero,
+.forum-hero,
+.forum-subhero {
+  overflow: hidden;
+}
+
+.hero__image,
+.section-hero__image,
+.forum-hero__image,
+.forum-subhero__image {
+  transform: scale(var(--hero-crop-scale, 1.04));
+  transform-origin: var(--hero-crop-origin, center center);
+}
+
+html[data-theme="realm-reborn"] {
+  --hero-crop-scale: 1.16;
+  --hero-crop-origin: center top;
+  --hero-position: center 24%;
+}
+
+html[data-theme="heavensward"] {
+  --hero-crop-scale: 1.17;
+  --hero-crop-origin: center top;
+  --hero-position: center 22%;
+}
+
+html[data-theme="stormblood"] {
+  --hero-crop-scale: 1.2;
+  --hero-crop-origin: center top;
+  --hero-position: center 18%;
+}
+
+html[data-theme="shadowbringers"] {
+  --hero-crop-scale: 1.14;
+  --hero-crop-origin: center top;
+  --hero-position: center 28%;
+}
+
+html[data-theme="endwalker"] {
+  --hero-crop-scale: 1.16;
+  --hero-crop-origin: center top;
+  --hero-position: center 24%;
+}
+
+html[data-theme="dawntrail"] {
+  --hero-crop-scale: 1.12;
+  --hero-crop-origin: 70% center;
+  --hero-position: 70% 38%;
+}
+
+html[data-theme="evercold"] {
+  --hero-crop-scale: 1.14;
+  --hero-crop-origin: center top;
+  --hero-position: center 28%;
+}
+
+@media (max-width: 640px) {
+  .global-theme-switcher {
+    right: max(.75rem, env(safe-area-inset-right));
+    bottom: max(.75rem, env(safe-area-inset-bottom));
+    width: min(320px, calc(100vw - 1.5rem));
+  }
+
+  .global-theme-switcher__trigger {
+    min-height: 48px;
+    grid-template-columns: 32px minmax(0, auto) 20px;
+    border-radius: 13px;
+  }
+
+  .global-theme-switcher__trigger-mark {
+    width: 32px;
+    height: 32px;
+  }
+
+  .global-theme-switcher__panel {
+    max-height: min(68vh, 560px);
+  }
+
+  .global-theme-switcher__option {
+    min-height: 50px;
+  }
+
+  html[data-theme] {
+    --hero-crop-scale: 1.2;
+  }
+}
+
+@media (max-width: 390px) {
+  .global-theme-switcher__trigger-copy strong {
+    max-width: 132px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .global-theme-switcher *,
+  .hero__image,
+  .section-hero__image,
+  .forum-hero__image,
+  .forum-subhero__image {
+    transition: none !important;
+  }
+}
+
+@media print {
+  .global-theme-switcher {
+    display: none !important;
+  }
+}
