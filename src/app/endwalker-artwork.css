@@ -1,8 +1,9 @@
-/* Official Endwalker artwork supplied for the Imetheran theme.
-   The source was cropped from the left and bottom so the embedded ENDWALKER title
-   and copyright are not present in the served theme asset. */
+/* Endwalker artwork.
+   The local WebP asset added during the Endwalker theme rollout was truncated in
+   production, so this theme now uses the official Square Enix Fan Kit wallpaper
+   directly while preserving the existing hero framing. */
 html[data-theme="endwalker"] {
-  --hero-image: url("/themes/endwalker.webp");
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/f/zo1FPaaFPOyfgn9QarwuVI2RfQ.jpg");
   --hero-position: center center;
   --hero-filter: saturate(.94) contrast(1.04) brightness(.82);
 }
