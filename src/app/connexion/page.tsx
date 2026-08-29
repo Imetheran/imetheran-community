@@ -135,7 +135,7 @@ export default async function ConnexionPage({
                 <button className="button button--primary" type="submit">Créer mon compte</button>
               </form>
               <p className="auth-charter-note">
-                Avant de rejoindre la communauté, prenez connaissance de la <Link href="/guides/charte">charte d’Imetheran</Link> et du <Link href="/guides/roleplay">cadre rôleplay</Link>.
+                Avant de rejoindre la communauté, prenez connaissance de la <Link href="/guides/charte">charte d’Imetheran</Link>, du <Link href="/guides/roleplay">cadre rôleplay</Link> et de la <Link href="/confidentialite">politique de confidentialité</Link>.
               </p>
             </section>
           </div>
