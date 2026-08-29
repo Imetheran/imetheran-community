@@ -1,0 +1,25 @@
+/* Supplied official Heavensward artwork, cropped before integration so the embedded title/copyright band never enters the hero viewport. */
+html[data-theme="heavensward"] {
+  --hero-image: url("/themes/heavensward.webp");
+  --hero-position: center center;
+  --hero-filter: saturate(.9) contrast(1.05) brightness(.8);
+}
+
+html[data-theme="heavensward"] .hero__image,
+html[data-theme="heavensward"] .section-hero__image,
+html[data-theme="heavensward"] .forum-hero__image,
+html[data-theme="heavensward"] .forum-subhero__image {
+  background-image: var(--hero-image);
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 700px) {
+  html[data-theme="heavensward"] .hero__image,
+  html[data-theme="heavensward"] .section-hero__image,
+  html[data-theme="heavensward"] .forum-hero__image,
+  html[data-theme="heavensward"] .forum-subhero__image {
+    background-position: 54% center;
+  }
+}
