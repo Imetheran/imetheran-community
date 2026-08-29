@@ -32,6 +32,7 @@ import "./admin.css";
 import "./admin-members.css";
 import "./admin-chronicles.css";
 import "./admin-gazettes.css";
+import "./legal.css";
 import "./accessibility.css";
 
 export const metadata: Metadata = {

@@ -48,6 +48,7 @@ export function SiteHeader() {
           <div className="topbar__member">
             <span className="topbar__status">Communauté RP</span>
             <Link className="topbar__utility" href="/recherche" aria-label="Rechercher sur Imetheran">⌕ Recherche</Link>
+            <Link className="topbar__utility" href="/mentions-legales" aria-current={pathname.startsWith("/mentions-legales") || pathname.startsWith("/confidentialite") ? "page" : undefined}>Légal</Link>
             <AuthNav />
           </div>
         </div>

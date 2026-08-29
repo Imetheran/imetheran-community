@@ -14,6 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/guides/roleplay", priority: 0.75, changeFrequency: "monthly" as const },
     { path: "/personnages", priority: 0.7, changeFrequency: "daily" as const },
     { path: "/liens", priority: 0.6, changeFrequency: "weekly" as const },
+    { path: "/mentions-legales", priority: 0.35, changeFrequency: "monthly" as const },
+    { path: "/confidentialite", priority: 0.35, changeFrequency: "monthly" as const },
   ];
 
   return routes.map((route) => ({
