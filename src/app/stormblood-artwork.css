@@ -1,0 +1,35 @@
+/* Official Stormblood artwork from the FINAL FANTASY XIV fan kit.
+   The expansion title and copyright live in the lower band of the source,
+   so that band stays physically outside every hero viewport. */
+html[data-theme="stormblood"] {
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/E/7CDyUDRdKdK5r_9LD_RgC5w88g.jpg");
+  --hero-position: center top;
+  --hero-filter: saturate(.96) contrast(1.04) brightness(.82);
+}
+
+html[data-theme="stormblood"] .hero,
+html[data-theme="stormblood"] .section-hero,
+html[data-theme="stormblood"] .forum-hero,
+html[data-theme="stormblood"] .forum-subhero {
+  overflow: hidden;
+}
+
+html[data-theme="stormblood"] .hero__image,
+html[data-theme="stormblood"] .section-hero__image,
+html[data-theme="stormblood"] .forum-hero__image,
+html[data-theme="stormblood"] .forum-subhero__image {
+  inset: 0 0 -34% 0;
+  background-image: var(--hero-image);
+  background-position: center top;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 700px) {
+  html[data-theme="stormblood"] .hero__image,
+  html[data-theme="stormblood"] .section-hero__image,
+  html[data-theme="stormblood"] .forum-hero__image,
+  html[data-theme="stormblood"] .forum-subhero__image {
+    background-position: 56% top;
+  }
+}
