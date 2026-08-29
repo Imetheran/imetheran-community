@@ -1,0 +1,35 @@
+/* Official Endwalker artwork supplied for the Imetheran theme.
+   The source was cropped from the left and bottom so the embedded ENDWALKER title
+   and copyright are not present in the served theme asset. */
+html[data-theme="endwalker"] {
+  --hero-image: url("/themes/endwalker.webp");
+  --hero-position: center center;
+  --hero-filter: saturate(.94) contrast(1.04) brightness(.82);
+}
+
+html[data-theme="endwalker"] .hero,
+html[data-theme="endwalker"] .section-hero,
+html[data-theme="endwalker"] .forum-hero,
+html[data-theme="endwalker"] .forum-subhero {
+  overflow: hidden;
+}
+
+html[data-theme="endwalker"] .hero__image,
+html[data-theme="endwalker"] .section-hero__image,
+html[data-theme="endwalker"] .forum-hero__image,
+html[data-theme="endwalker"] .forum-subhero__image {
+  inset: 0;
+  background-image: var(--hero-image);
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 700px) {
+  html[data-theme="endwalker"] .hero__image,
+  html[data-theme="endwalker"] .section-hero__image,
+  html[data-theme="endwalker"] .forum-hero__image,
+  html[data-theme="endwalker"] .forum-subhero__image {
+    background-position: 56% center;
+  }
+}

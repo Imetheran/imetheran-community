@@ -38,6 +38,7 @@ import "./expansion-themes.css";
 import "./heavensward-artwork.css";
 import "./stormblood-artwork.css";
 import "./shadowbringers-artwork.css";
+import "./endwalker-artwork.css";
 import "./final-polish.css";
 import "./accessibility.css";
 import "./global-theme-selector.css";
