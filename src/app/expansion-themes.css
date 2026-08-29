@@ -28,10 +28,10 @@ html[data-theme="realm-reborn"] {
   --border: rgba(114, 194, 200, .3);
   --border-strong: rgba(158, 232, 234, .58);
   --shadow: rgba(0, 7, 12, .7);
-  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/3/LcGqqKx9Y_jhjCKRUSR6JshdMY.jpg");
+  --hero-image: url("https://wallpapers.com/images/hd/final-fantasy-14-three-city-states-0a2ieka7waxee10d.jpg");
   --expansion-logo: none;
-  --hero-position: center 34%;
-  --hero-filter: saturate(.9) contrast(1.04) brightness(.82);
+  --hero-position: center top;
+  --hero-filter: saturate(.98) contrast(1.03) brightness(.84);
   --brand-font-family: var(--font-display);
   --brand-font-size: clamp(3.5rem, 7vw, 6.4rem);
   --brand-font-weight: 500;
@@ -177,6 +177,26 @@ html[data-theme="evercold"] {
 .forum-hero__image,
 .forum-subhero__image {
   filter: var(--hero-filter);
+}
+
+/* The ARR source wallpaper contains its title/copyright in the lower band.
+   Keep that band physically outside every hero viewport instead of blurring or masking it. */
+html[data-theme="realm-reborn"] .hero,
+html[data-theme="realm-reborn"] .section-hero,
+html[data-theme="realm-reborn"] .forum-hero,
+html[data-theme="realm-reborn"] .forum-subhero {
+  overflow: hidden;
+}
+
+html[data-theme="realm-reborn"] .hero__image,
+html[data-theme="realm-reborn"] .section-hero__image,
+html[data-theme="realm-reborn"] .forum-hero__image,
+html[data-theme="realm-reborn"] .forum-subhero__image {
+  inset: 0 0 -30% 0;
+  background-image: var(--hero-image);
+  background-position: center top;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 html:not([data-theme="dawntrail"]):not([data-theme="evercold"]) .expansion-logo {
