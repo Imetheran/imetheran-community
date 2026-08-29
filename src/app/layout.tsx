@@ -35,6 +35,7 @@ import "./admin-chronicles.css";
 import "./admin-gazettes.css";
 import "./legal.css";
 import "./expansion-themes.css";
+import "./heavensward-artwork.css";
 import "./final-polish.css";
 import "./accessibility.css";
 import "./global-theme-selector.css";
