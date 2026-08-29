@@ -1,0 +1,237 @@
+/* Expansion-inspired visual themes.
+   The structure stays identical across themes; only tokens, artwork framing and atmosphere change. */
+
+html[data-theme] {
+  --theme-glow: color-mix(in srgb, var(--accent) 18%, transparent);
+  --theme-glow-soft: color-mix(in srgb, var(--accent) 8%, transparent);
+  --theme-line: color-mix(in srgb, var(--accent-bright) 38%, transparent);
+  --hero-filter: saturate(1.04) contrast(1.02);
+  --expansion-name: "";
+  --expansion-subtitle: "";
+}
+
+html[data-theme="realm-reborn"] {
+  color-scheme: dark;
+  --page-bg: #080d12;
+  --surface: #101820;
+  --surface-soft: #17232d;
+  --surface-raised: #1d2d39;
+  --surface-glass: rgba(9, 16, 22, .93);
+  --paper: #d8e0df;
+  --paper-soft: #e8eeee;
+  --ink: #122026;
+  --text: #eef7f6;
+  --muted: #a9c6c6;
+  --accent: #56a8b5;
+  --accent-bright: #a7edf0;
+  --accent-dark: #285e6b;
+  --border: rgba(114, 194, 200, .3);
+  --border-strong: rgba(158, 232, 234, .58);
+  --shadow: rgba(0, 7, 12, .7);
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/3/LcGqqKx9Y_jhjCKRUSR6JshdMY.jpg");
+  --expansion-logo: none;
+  --hero-position: center 34%;
+  --hero-filter: saturate(.9) contrast(1.04) brightness(.82);
+  --brand-font-family: var(--font-display);
+  --brand-font-size: clamp(3.5rem, 7vw, 6.4rem);
+  --brand-font-weight: 500;
+  --brand-letter-spacing: .055em;
+  --expansion-name: "A REALM REBORN";
+  --expansion-subtitle: "Le cristal se réveille";
+}
+
+html[data-theme="heavensward"] {
+  color-scheme: dark;
+  --page-bg: #080c14;
+  --surface: #101722;
+  --surface-soft: #172131;
+  --surface-raised: #202c3d;
+  --surface-glass: rgba(9, 14, 24, .94);
+  --paper: #dce2ea;
+  --paper-soft: #edf0f5;
+  --ink: #151a24;
+  --text: #f2f5fb;
+  --muted: #b6c1d3;
+  --accent: #728db8;
+  --accent-bright: #c2d4f0;
+  --accent-dark: #394c70;
+  --border: rgba(125, 153, 196, .31);
+  --border-strong: rgba(184, 205, 237, .58);
+  --shadow: rgba(0, 4, 13, .74);
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/w/ojtJgAsdIqFiI_zHKpQnnpPozo.jpg");
+  --expansion-logo: none;
+  --hero-position: center 32%;
+  --hero-filter: saturate(.78) contrast(1.08) brightness(.76);
+  --brand-font-family: var(--font-display);
+  --brand-font-size: clamp(3.5rem, 7vw, 6.4rem);
+  --brand-font-weight: 500;
+  --brand-letter-spacing: .07em;
+  --expansion-name: "HEAVENSWARD";
+  --expansion-subtitle: "Sous les cieux d’Ishgard";
+}
+
+html[data-theme="stormblood"] {
+  color-scheme: dark;
+  --page-bg: #100908;
+  --surface: #1b100f;
+  --surface-soft: #281716;
+  --surface-raised: #35201d;
+  --surface-glass: rgba(24, 12, 11, .94);
+  --paper: #e5d7cd;
+  --paper-soft: #efe4dd;
+  --ink: #26120f;
+  --text: #fff0e8;
+  --muted: #d2b2a3;
+  --accent: #bd5945;
+  --accent-bright: #f0a38d;
+  --accent-dark: #71352b;
+  --border: rgba(203, 91, 69, .3);
+  --border-strong: rgba(237, 145, 124, .6);
+  --shadow: rgba(18, 3, 2, .72);
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/h/tc-V3QoRPlpbVmgIZRTAtiy2kU.jpg");
+  --expansion-logo: none;
+  --hero-position: center 37%;
+  --hero-filter: saturate(.9) contrast(1.08) brightness(.75);
+  --brand-font-family: var(--font-display);
+  --brand-font-size: clamp(3.5rem, 7vw, 6.4rem);
+  --brand-font-weight: 500;
+  --brand-letter-spacing: .055em;
+  --expansion-name: "STORMBLOOD";
+  --expansion-subtitle: "Le chant de la rébellion";
+}
+
+html[data-theme="shadowbringers"] {
+  color-scheme: dark;
+  --page-bg: #09070d;
+  --surface: #14101a;
+  --surface-soft: #1e1727;
+  --surface-raised: #2a2034;
+  --surface-glass: rgba(16, 11, 21, .95);
+  --paper: #ddd7e4;
+  --paper-soft: #eeeaf1;
+  --ink: #1e1725;
+  --text: #f5eff8;
+  --muted: #c8b6d1;
+  --accent: #9b72ae;
+  --accent-bright: #e2bff0;
+  --accent-dark: #563e66;
+  --border: rgba(169, 119, 189, .29);
+  --border-strong: rgba(222, 180, 239, .58);
+  --shadow: rgba(5, 1, 8, .78);
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/promo/h/4/EXD9wsTHNfJb4FPYdU42l_0y78.jpg");
+  --expansion-logo: none;
+  --hero-position: center 42%;
+  --hero-filter: saturate(.72) contrast(1.14) brightness(.68);
+  --brand-font-family: var(--font-display);
+  --brand-font-size: clamp(3.5rem, 7vw, 6.4rem);
+  --brand-font-weight: 500;
+  --brand-letter-spacing: .07em;
+  --expansion-name: "SHADOWBRINGERS";
+  --expansion-subtitle: "Entre ombre et lumière";
+}
+
+html[data-theme="endwalker"] {
+  color-scheme: dark;
+  --page-bg: #080911;
+  --surface: #11131e;
+  --surface-soft: #191d2c;
+  --surface-raised: #22283b;
+  --surface-glass: rgba(10, 12, 22, .95);
+  --paper: #dddce8;
+  --paper-soft: #efeff4;
+  --ink: #181927;
+  --text: #f5f4fb;
+  --muted: #bbbdd3;
+  --accent: #867aaf;
+  --accent-bright: #d2c9ef;
+  --accent-dark: #484066;
+  --border: rgba(142, 132, 185, .3);
+  --border-strong: rgba(205, 195, 234, .6);
+  --shadow: rgba(2, 3, 12, .78);
+  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/f/zo1FPaaFPOyfgn9QarwuVI2RfQ.jpg");
+  --expansion-logo: none;
+  --hero-position: center 37%;
+  --hero-filter: saturate(.76) contrast(1.08) brightness(.72);
+  --brand-font-family: var(--font-display);
+  --brand-font-size: clamp(3.5rem, 7vw, 6.4rem);
+  --brand-font-weight: 500;
+  --brand-letter-spacing: .08em;
+  --expansion-name: "ENDWALKER";
+  --expansion-subtitle: "Jusqu’aux étoiles";
+}
+
+html[data-theme="dawntrail"] {
+  --theme-glow: rgba(235, 173, 75, .2);
+  --theme-glow-soft: rgba(235, 173, 75, .08);
+  --hero-filter: saturate(1.02) contrast(1.03) brightness(.9);
+}
+
+html[data-theme="evercold"] {
+  --theme-glow: rgba(117, 193, 224, .2);
+  --theme-glow-soft: rgba(117, 193, 224, .08);
+  --hero-filter: saturate(.82) contrast(1.08) brightness(.82);
+}
+
+.hero__image,
+.section-hero__image,
+.forum-hero__image,
+.forum-subhero__image {
+  filter: var(--hero-filter);
+}
+
+html:not([data-theme="dawntrail"]):not([data-theme="evercold"]) .expansion-logo {
+  width: min(440px, 86vw);
+  height: auto;
+  min-height: 62px;
+  margin-bottom: 1.15rem;
+  padding: .7rem 2rem .65rem;
+  display: grid;
+  place-items: center;
+  border-block: 1px solid var(--theme-line);
+  background: linear-gradient(90deg, transparent, var(--theme-glow-soft), transparent);
+  font-family: var(--font-display);
+  text-align: center;
+}
+
+html:not([data-theme="dawntrail"]):not([data-theme="evercold"]) .expansion-logo::before {
+  content: var(--expansion-name);
+  color: var(--text);
+  font-size: clamp(1rem, 2.4vw, 1.55rem);
+  letter-spacing: .19em;
+  line-height: 1.1;
+  text-shadow: 0 3px 16px rgba(0,0,0,.82);
+}
+
+html:not([data-theme="dawntrail"]):not([data-theme="evercold"]) .expansion-logo::after {
+  content: var(--expansion-subtitle);
+  margin-top: .3rem;
+  color: var(--accent-bright);
+  font-family: var(--font-ui);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.home-section--chronicles {
+  background:
+    radial-gradient(circle at 82% 8%, var(--theme-glow-soft), transparent 22rem),
+    color-mix(in srgb, var(--page-bg) 80%, #050609);
+}
+
+.site-shell,
+.forum-page,
+.legal-page,
+.auth-page {
+  background:
+    radial-gradient(circle at 50% 0, var(--theme-glow-soft), transparent 34rem),
+    var(--page-bg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme] .hero__image,
+  html[data-theme] .forum-hero__image,
+  html[data-theme] .forum-subhero__image {
+    transition: filter .24s ease, background-image .24s ease, background-position .24s ease;
+  }
+}
