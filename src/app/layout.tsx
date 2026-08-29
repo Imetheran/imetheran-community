@@ -33,6 +33,8 @@ import "./admin-members.css";
 import "./admin-chronicles.css";
 import "./admin-gazettes.css";
 import "./legal.css";
+import "./expansion-themes.css";
+import "./final-polish.css";
 import "./accessibility.css";
 
 export const metadata: Metadata = {
@@ -44,9 +46,20 @@ export const metadata: Metadata = {
     "Communauté francophone Final Fantasy XIV consacrée au jeu de rôle, aux chroniques et aux personnages.",
 };
 
+const themeBootstrap = `(() => {
+  try {
+    const saved = localStorage.getItem("imetheran-theme");
+    const allowed = ["dawntrail", "realm-reborn", "heavensward", "stormblood", "shadowbringers", "endwalker", "evercold"];
+    if (saved && allowed.includes(saved)) document.documentElement.dataset.theme = saved;
+  } catch {}
+})();`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" data-theme="dawntrail" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
       <body>{children}</body>
     </html>
   );

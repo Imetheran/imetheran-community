@@ -1,0 +1,300 @@
+/* Final visual pass before beta: shared depth, forum hierarchy and theme selector refinement. */
+
+.topbar {
+  background:
+    linear-gradient(180deg, rgba(10, 10, 11, .97), rgba(7, 7, 8, .94));
+  backdrop-filter: blur(12px);
+}
+
+.main-nav__link[aria-current="page"] {
+  color: var(--accent-bright);
+}
+
+.main-nav__link[aria-current="page"]::after {
+  left: .45rem;
+  right: .45rem;
+  box-shadow: 0 0 12px var(--theme-glow);
+}
+
+.theme-selector {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--border-strong) 72%, transparent);
+  background:
+    linear-gradient(110deg, color-mix(in srgb, var(--surface-raised) 78%, transparent), color-mix(in srgb, var(--surface-glass) 94%, transparent));
+  box-shadow:
+    0 14px 36px rgba(0,0,0,.34),
+    inset 0 1px 0 color-mix(in srgb, var(--accent-bright) 12%, transparent);
+}
+
+.theme-selector::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, transparent, var(--accent-bright), transparent);
+  box-shadow: 0 0 18px var(--theme-glow);
+}
+
+.theme-selector__emblem {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: inset 0 0 12px var(--theme-glow-soft);
+}
+
+.theme-selector select {
+  border-color: color-mix(in srgb, var(--border-strong) 64%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 82%, transparent), var(--surface-soft));
+}
+
+.hero__veil,
+.forum-hero__veil,
+.forum-subhero__veil {
+  background:
+    linear-gradient(90deg, rgba(2,3,5,.82), rgba(3,4,6,.22) 34%, rgba(3,4,6,.25) 68%, rgba(2,3,5,.82)),
+    linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.15) 42%, rgba(5,6,8,.9)),
+    radial-gradient(circle at 50% 38%, transparent 0 22%, color-mix(in srgb, var(--theme-glow) 50%, transparent) 72%, transparent 100%);
+}
+
+.forum-hero,
+.forum-subhero {
+  box-shadow: inset 0 -38px 80px rgba(0,0,0,.2);
+}
+
+.forum-index__summary,
+.forum-topic-group,
+.forum-reply-box,
+.forum-empty-board,
+.forum-post {
+  box-shadow:
+    0 20px 48px rgba(0,0,0,.18),
+    inset 0 1px 0 color-mix(in srgb, var(--accent-bright) 5%, transparent);
+}
+
+.forum-section {
+  position: relative;
+  box-shadow:
+    0 22px 54px rgba(0,0,0,.22),
+    inset 0 1px 0 color-mix(in srgb, var(--accent-bright) 5%, transparent);
+}
+
+.forum-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-bright) 4%, transparent), transparent 28%),
+    repeating-linear-gradient(135deg, transparent 0 22px, color-mix(in srgb, var(--accent) 2.5%, transparent) 22px 23px);
+  opacity: .65;
+}
+
+.forum-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.forum-section__header {
+  overflow: hidden;
+}
+
+.forum-section__header::after {
+  content: "";
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  right: -90px;
+  top: -110px;
+  border: 1px solid color-mix(in srgb, var(--accent-bright) 12%, transparent);
+  transform: rotate(45deg);
+  box-shadow: 0 0 50px var(--theme-glow-soft);
+}
+
+.forum-section__number,
+.forum-board__icon,
+.forum-index__notice-mark {
+  box-shadow:
+    inset 0 0 18px var(--theme-glow-soft),
+    0 8px 24px rgba(0,0,0,.15);
+}
+
+.forum-board {
+  position: relative;
+  isolation: isolate;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.forum-board::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  z-index: -1;
+  background: var(--accent-bright);
+  opacity: 0;
+  transform: scaleY(.35);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.forum-board:hover,
+.forum-board:focus-visible {
+  transform: translateX(2px);
+  box-shadow: inset 18px 0 34px color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.forum-board:hover::before,
+.forum-board:focus-visible::before {
+  opacity: .8;
+  transform: scaleY(1);
+}
+
+.forum-board__main h3,
+.forum-topic-row__title h2 {
+  text-shadow: 0 1px 14px color-mix(in srgb, var(--theme-glow) 50%, transparent);
+}
+
+.forum-topic-row {
+  position: relative;
+  isolation: isolate;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.forum-topic-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: var(--accent-bright);
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.forum-topic-row:hover,
+.forum-topic-row:focus-visible {
+  transform: translateX(2px);
+  box-shadow: inset 18px 0 32px color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.forum-topic-row:hover::before,
+.forum-topic-row:focus-visible::before,
+.forum-topic-row--pinned::before {
+  opacity: .82;
+}
+
+.forum-topic-row--pinned {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 9%, var(--surface)), var(--surface) 48%);
+}
+
+.forum-thread-head {
+  background:
+    radial-gradient(circle at 82% 20%, var(--theme-glow-soft), transparent 24rem),
+    linear-gradient(180deg, var(--surface-raised), var(--surface));
+}
+
+.forum-post {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--border) 90%, transparent);
+}
+
+.forum-post::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent-dark));
+  opacity: .52;
+}
+
+.forum-post:first-child {
+  border-color: color-mix(in srgb, var(--border-strong) 78%, transparent);
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.24),
+    0 0 0 1px color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.forum-post:first-child::before {
+  width: 3px;
+  opacity: .92;
+  box-shadow: 0 0 18px var(--theme-glow);
+}
+
+.forum-post__author {
+  background:
+    radial-gradient(circle at 50% 0, var(--theme-glow-soft), transparent 10rem),
+    linear-gradient(180deg, var(--surface-soft), color-mix(in srgb, var(--surface) 72%, var(--surface-soft)));
+}
+
+.forum-post__avatar {
+  position: relative;
+  box-shadow:
+    inset 0 0 24px var(--theme-glow-soft),
+    0 10px 32px rgba(0,0,0,.2);
+}
+
+.forum-post__body > header {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--surface-raised) 96%, var(--accent) 4%), var(--surface-raised));
+}
+
+.forum-post__content {
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--accent) 3%, transparent), transparent 22rem);
+}
+
+.forum-post__content blockquote,
+.bbcode-quote {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--surface-soft) 72%, transparent);
+}
+
+.forum-reply-box {
+  background:
+    radial-gradient(circle at 100% 0, var(--theme-glow-soft), transparent 20rem),
+    var(--surface);
+}
+
+.forum-reply-box textarea,
+.forum-topic-editor textarea,
+.forum-topic-editor input,
+.forum-topic-editor select {
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.forum-reply-box textarea:focus,
+.forum-topic-editor textarea:focus,
+.forum-topic-editor input:focus,
+.forum-topic-editor select:focus {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--surface-soft) 94%, var(--accent) 6%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}
+
+.button--primary {
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.24),
+    inset 0 1px 0 color-mix(in srgb, white 14%, transparent),
+    0 0 18px color-mix(in srgb, var(--theme-glow) 38%, transparent);
+}
+
+@media (max-width: 760px) {
+  .forum-board:hover,
+  .forum-board:focus-visible,
+  .forum-topic-row:hover,
+  .forum-topic-row:focus-visible {
+    transform: none;
+  }
+
+  .theme-selector {
+    width: min(100%, 420px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forum-board,
+  .forum-topic-row {
+    transition: none;
+  }
+}
