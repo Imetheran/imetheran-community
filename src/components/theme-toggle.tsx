@@ -2,14 +2,26 @@
 
 import { useEffect, useState } from "react";
 
-type Theme = "dawntrail" | "evercold";
+export type Theme =
+  | "dawntrail"
+  | "realm-reborn"
+  | "heavensward"
+  | "stormblood"
+  | "shadowbringers"
+  | "endwalker"
+  | "evercold";
 
-const themes: ReadonlyArray<{ value: Theme; label: string; subtitle: string }> = [
+export const themes: ReadonlyArray<{ value: Theme; label: string; subtitle: string }> = [
   { value: "dawntrail", label: "Dawntrail", subtitle: "Soleil & aventure" },
+  { value: "realm-reborn", label: "A Realm Reborn", subtitle: "Cristal & renaissance" },
+  { value: "heavensward", label: "Heavensward", subtitle: "Azur & dragons" },
+  { value: "stormblood", label: "Stormblood", subtitle: "Carmin & rébellion" },
+  { value: "shadowbringers", label: "Shadowbringers", subtitle: "Ombre & lumière" },
+  { value: "endwalker", label: "Endwalker", subtitle: "Étoiles & crépuscule" },
   { value: "evercold", label: "Evercold", subtitle: "Glace & mystère" },
 ];
 
-function isTheme(value: string | null): value is Theme {
+export function isTheme(value: string | null): value is Theme {
   return themes.some((theme) => theme.value === value);
 }
 
@@ -36,7 +48,7 @@ export function ThemeToggle() {
     <label className="theme-selector">
       <span className="theme-selector__emblem" aria-hidden="true">✦</span>
       <span className="theme-selector__copy">
-        <span className="theme-selector__label">Thème</span>
+        <span className="theme-selector__label">Ambiance visuelle</span>
         <span className="theme-selector__meta">{activeTheme.subtitle}</span>
       </span>
       <span className="theme-selector__control">
