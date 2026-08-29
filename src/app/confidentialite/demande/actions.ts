@@ -22,10 +22,11 @@ export async function submitPrivacyRequest(formData: FormData) {
   if (message.length < 10 || message.length > 4000) redirect("/confidentialite/demande?erreur=message");
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("submit_privacy_request", {
-    p_email: email,
-    p_request_type: requestType,
-    p_message: message,
+  const { error } = await supabase.from("privacy_requests").insert({
+    email,
+    request_type: requestType,
+    message,
+    user_id: null,
   });
 
   if (error) {
