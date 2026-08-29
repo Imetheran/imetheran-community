@@ -1,0 +1,35 @@
+/* Official Heavensward wallpaper supplied by Square Enix's TGS 2015 fan kit.
+   The title/copyright lives in the lower ~24% of the source, so the image layer is
+   extended below the hero and clipped by its parent instead of being blurred or edited. */
+html[data-theme="heavensward"] {
+  --hero-image: url("https://www.finalfantasyxiv.com/tgs_2015/fankit/i62frAm/ffxiv_pcw23002_1920x1080.jpg");
+  --hero-position: center top;
+  --hero-filter: saturate(.9) contrast(1.05) brightness(.8);
+}
+
+html[data-theme="heavensward"] .hero,
+html[data-theme="heavensward"] .section-hero,
+html[data-theme="heavensward"] .forum-hero,
+html[data-theme="heavensward"] .forum-subhero {
+  overflow: hidden;
+}
+
+html[data-theme="heavensward"] .hero__image,
+html[data-theme="heavensward"] .section-hero__image,
+html[data-theme="heavensward"] .forum-hero__image,
+html[data-theme="heavensward"] .forum-subhero__image {
+  inset: 0 0 -32% 0;
+  background-image: var(--hero-image);
+  background-position: center top;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 700px) {
+  html[data-theme="heavensward"] .hero__image,
+  html[data-theme="heavensward"] .section-hero__image,
+  html[data-theme="heavensward"] .forum-hero__image,
+  html[data-theme="heavensward"] .forum-subhero__image {
+    background-position: 54% top;
+  }
+}
