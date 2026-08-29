@@ -229,6 +229,8 @@ export default async function ComptePage({
               <Link className="text-link" href="/personnages">Voir les personnages →</Link>
               <Link className="text-link" href="/forum">Aller au forum →</Link>
               <Link className="text-link" href="/compte/mot-de-passe">Changer mon mot de passe →</Link>
+              <Link className="text-link" href="/confidentialite">Confidentialité et données →</Link>
+              <Link className="text-link" href="/confidentialite/demande">Exercer mes droits →</Link>
             </div>
             <form action="/auth/signout" method="post">
               <button className="button button--ghost button--small" type="submit">Se déconnecter</button>
