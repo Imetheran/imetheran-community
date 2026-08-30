@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export type Theme =
   | "realm-reborn"
@@ -32,7 +33,7 @@ function applyTheme(nextTheme: Theme) {
 
 /**
  * Ancien point d'insertion conservé le temps que les pages historiques soient nettoyées.
- * Le sélecteur est désormais rendu une seule fois depuis le layout racine.
+ * Le sélecteur est rendu une seule fois depuis le layout racine, dans le pied de page global.
  */
 export function ThemeToggle() {
   return null;
@@ -40,8 +41,6 @@ export function ThemeToggle() {
 
 export function GlobalThemeSwitcher() {
   const [theme, setTheme] = useState<Theme>("dawntrail");
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("imetheran-theme");
@@ -51,90 +50,52 @@ export function GlobalThemeSwitcher() {
     document.documentElement.dataset.theme = initial;
   }, []);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const closeOnOutside = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("pointerdown", closeOnOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeOnOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [open]);
-
-  function selectTheme(nextTheme: Theme) {
-    setTheme(nextTheme);
-    applyTheme(nextTheme);
-    setOpen(false);
-  }
-
   const activeTheme = themes.find((item) => item.value === theme) ?? themes[5];
 
-  return (
-    <div className="global-theme-switcher" ref={rootRef}>
-      <div
-        className="global-theme-switcher__panel"
-        id="imetheran-theme-panel"
-        hidden={!open}
-        aria-label="Choisir l’ambiance visuelle"
-      >
-        <header className="global-theme-switcher__header">
-          <div>
-            <span>Ambiance visuelle</span>
-            <strong>{activeTheme.label}</strong>
-          </div>
-          <button type="button" onClick={() => setOpen(false)} aria-label="Fermer le sélecteur d’ambiance">×</button>
-        </header>
+  function selectTheme(value: string) {
+    if (!isTheme(value)) return;
+    setTheme(value);
+    applyTheme(value);
+  }
 
-        <div className="global-theme-switcher__options" role="radiogroup" aria-label="Thèmes visuels d’Imetheran">
-          {themes.map((item, index) => {
-            const active = item.value === theme;
-            return (
-              <button
-                className="global-theme-switcher__option"
-                type="button"
-                role="radio"
-                aria-checked={active}
-                data-theme-option={item.value}
-                key={item.value}
-                onClick={() => selectTheme(item.value)}
-              >
-                <span className="global-theme-switcher__index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                <span className="global-theme-switcher__swatch" aria-hidden="true" />
-                <span className="global-theme-switcher__copy">
-                  <strong>{item.label}</strong>
-                  <small>{item.subtitle}</small>
-                </span>
-                <span className="global-theme-switcher__check" aria-hidden="true">{active ? "✓" : ""}</span>
-              </button>
-            );
-          })}
+  return (
+    <footer className="site-global-footer">
+      <div className="site-global-footer__inner content-frame">
+        <div className="site-global-footer__identity">
+          <span className="site-global-footer__mark" aria-hidden="true">✦</span>
+          <div>
+            <strong>Imetheran</strong>
+            <small>Communauté non officielle Final Fantasy XIV</small>
+          </div>
         </div>
 
-        <small className="global-theme-switcher__note">Les six extensions suivent leur ordre de sortie. Evercold reste l’ambiance originale d’Imetheran.</small>
+        <nav className="site-global-footer__links" aria-label="Liens de pied de page">
+          <Link href="/mentions-legales">Mentions légales</Link>
+          <Link href="/confidentialite">Confidentialité</Link>
+        </nav>
+
+        <label className="footer-theme-control">
+          <span className="footer-theme-control__label">Ambiance</span>
+          <span className="footer-theme-control__field">
+            <select
+              value={theme}
+              onChange={(event) => selectTheme(event.target.value)}
+              aria-label="Choisir l’ambiance visuelle"
+            >
+              {themes.map((item) => (
+                <option value={item.value} key={item.value}>{item.label}</option>
+              ))}
+            </select>
+            <span aria-hidden="true">⌄</span>
+          </span>
+          <small>{activeTheme.subtitle}</small>
+        </label>
       </div>
 
-      <button
-        className="global-theme-switcher__trigger"
-        type="button"
-        aria-expanded={open}
-        aria-controls="imetheran-theme-panel"
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span className="global-theme-switcher__trigger-mark" aria-hidden="true">✦</span>
-        <span className="global-theme-switcher__trigger-copy">
-          <small>Ambiance</small>
-          <strong>{activeTheme.label}</strong>
-        </span>
-        <span className="global-theme-switcher__trigger-arrow" aria-hidden="true">{open ? "↓" : "↑"}</span>
-      </button>
-    </div>
+      <div className="site-global-footer__legal content-frame">
+        <span>FINAL FANTASY XIV © SQUARE ENIX CO., LTD. Tous droits réservés.</span>
+        <span>Site communautaire non officiel.</span>
+      </div>
+    </footer>
   );
 }
