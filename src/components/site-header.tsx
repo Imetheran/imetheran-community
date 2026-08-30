@@ -28,8 +28,11 @@ export function SiteHeader() {
       <header className="topbar">
         <div className="topbar__inner content-frame">
           <Link className="topbar__brand" href="/" aria-label="Accueil Imetheran">
-            <span aria-hidden="true">✦</span>
-            <strong>Imetheran</strong>
+            <span className="topbar__brand-mark" aria-hidden="true">✦</span>
+            <span className="topbar__brand-copy">
+              <strong>Imetheran</strong>
+              <small>Communauté RP</small>
+            </span>
           </Link>
 
           <nav className="main-nav" aria-label="Navigation principale">
@@ -46,9 +49,10 @@ export function SiteHeader() {
           </nav>
 
           <div className="topbar__member">
-            <span className="topbar__status">Communauté RP</span>
-            <Link className="topbar__utility" href="/recherche" aria-label="Rechercher sur Imetheran">⌕ Recherche</Link>
-            <Link className="topbar__utility" href="/mentions-legales" aria-current={pathname.startsWith("/mentions-legales") || pathname.startsWith("/confidentialite") ? "page" : undefined}>Légal</Link>
+            <Link className="topbar__utility topbar__search" href="/recherche" aria-label="Rechercher sur Imetheran">
+              <span aria-hidden="true">⌕</span>
+              <span>Recherche</span>
+            </Link>
             <AuthNav />
           </div>
         </div>
