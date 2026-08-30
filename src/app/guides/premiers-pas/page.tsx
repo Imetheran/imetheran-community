@@ -59,6 +59,9 @@ export default function FirstStepsGuidePage() {
         <p>
           Imetheran rassemble plusieurs outils — forum, personnages, relations, chroniques et gazettes — mais aucun ne constitue une obligation. Le bon point de départ est celui qui vous donne envie de parler aux autres et de jouer.
         </p>
+        <p>
+          Chaque étape ci-dessous s’ouvre dans un nouvel onglet afin de garder ce parcours disponible comme fil conducteur.
+        </p>
       </section>
 
       <section className="guide-step-list" aria-label="Parcours conseillé">
@@ -68,7 +71,15 @@ export default function FirstStepsGuidePage() {
             <div>
               <h2>{step.title}</h2>
               <p>{step.text}</p>
-              <Link className="text-link" href={step.href}>{step.action} →</Link>
+              <Link
+                className="text-link"
+                href={step.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${step.action} — ouvre dans un nouvel onglet`}
+              >
+                {step.action} ↗
+              </Link>
             </div>
           </article>
         ))}
