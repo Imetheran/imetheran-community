@@ -1,0 +1,78 @@
+/* Theme-aware polish for the maintenance ornament. */
+.maintenance-hero {
+  --maintenance-ornament-width: min(900px, 76vw);
+  --maintenance-ornament-opacity: .22;
+  --maintenance-ornament-y: -50%;
+  --maintenance-particle-opacity: .18;
+}
+
+.maintenance-hero__scene::before {
+  opacity: var(--maintenance-particle-opacity);
+  background-size: 68px 68px, auto;
+}
+
+.maintenance-hero__scene::after {
+  width: var(--maintenance-ornament-width);
+  translate: -50% var(--maintenance-ornament-y);
+  opacity: var(--maintenance-ornament-opacity);
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 22%, transparent));
+}
+
+html[data-theme="realm-reborn"] .maintenance-hero {
+  --maintenance-ornament-width: min(870px, 74vw);
+  --maintenance-ornament-opacity: .21;
+  --maintenance-particle-opacity: .16;
+}
+
+html[data-theme="heavensward"] .maintenance-hero {
+  --maintenance-ornament-width: min(900px, 76vw);
+  --maintenance-ornament-opacity: .23;
+  --maintenance-particle-opacity: .18;
+}
+
+html[data-theme="stormblood"] .maintenance-hero {
+  --maintenance-ornament-width: min(860px, 73vw);
+  --maintenance-ornament-opacity: .18;
+  --maintenance-particle-opacity: .13;
+}
+
+html[data-theme="shadowbringers"] .maintenance-hero {
+  --maintenance-ornament-width: min(910px, 77vw);
+  --maintenance-ornament-opacity: .24;
+  --maintenance-particle-opacity: .2;
+}
+
+html[data-theme="endwalker"] .maintenance-hero {
+  --maintenance-ornament-width: min(890px, 75vw);
+  --maintenance-ornament-opacity: .22;
+  --maintenance-particle-opacity: .18;
+}
+
+html[data-theme="dawntrail"] .maintenance-hero {
+  --maintenance-ornament-width: min(850px, 72vw);
+  --maintenance-ornament-opacity: .18;
+  --maintenance-particle-opacity: .14;
+}
+
+html[data-theme="evercold"] .maintenance-hero {
+  --maintenance-ornament-width: min(900px, 76vw);
+  --maintenance-ornament-opacity: .24;
+  --maintenance-particle-opacity: .2;
+}
+
+@media (max-width: 900px) {
+  .maintenance-hero {
+    --maintenance-ornament-width: 780px;
+    --maintenance-ornament-opacity: .18;
+    --maintenance-particle-opacity: .13;
+  }
+}
+
+@media (max-width: 620px) {
+  .maintenance-hero {
+    --maintenance-ornament-width: 650px;
+    --maintenance-ornament-opacity: .15;
+    --maintenance-ornament-y: -48%;
+    --maintenance-particle-opacity: .1;
+  }
+}
