@@ -271,9 +271,9 @@ html[data-theme="shadowbringers"] {
 }
 
 html[data-theme="endwalker"] {
-  --hero-crop-scale: 1.16;
-  --hero-crop-origin: center top;
-  --hero-position: center 24%;
+  --hero-crop-scale: 1;
+  --hero-crop-origin: center center;
+  --hero-position: center 58%;
 }
 
 html[data-theme="dawntrail"] {
@@ -373,6 +373,11 @@ html[data-theme="evercold"] {
 
   html[data-theme] {
     --hero-crop-scale: 1.2;
+  }
+
+  html[data-theme="endwalker"] {
+    --hero-crop-scale: 1;
+    --hero-position: 55% 56%;
   }
 }
 
