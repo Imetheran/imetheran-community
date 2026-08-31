@@ -1,6 +1,6 @@
 /* Endwalker artwork.
-   Use the official title-free Endwalker key art so the expansion logo never appears
-   inside site heroes. The crop keeps the Scions grouped in the visible header area. */
+   Use the title-free Endwalker key art and render it without any additional CSS
+   scaling. background-size: cover only fills the hero, as with the other themes. */
 html[data-theme="endwalker"] {
   --hero-image: url("https://img.finalfantasyxiv.com/lds/promo/h/g/yAhkYrzwI7-C_PVf9LP32Bu3_A.jpg");
   --hero-position: center 58%;
@@ -23,10 +23,19 @@ html[data-theme="endwalker"] .forum-subhero__image {
   background-position: var(--hero-position, center center);
   background-size: cover;
   background-repeat: no-repeat;
+  transform: none !important;
+  transform-origin: initial !important;
 }
 
 @media (max-width: 700px) {
   html[data-theme="endwalker"] {
     --hero-position: 55% 56%;
+  }
+
+  html[data-theme="endwalker"] .hero__image,
+  html[data-theme="endwalker"] .section-hero__image,
+  html[data-theme="endwalker"] .forum-hero__image,
+  html[data-theme="endwalker"] .forum-subhero__image {
+    transform: none !important;
   }
 }
