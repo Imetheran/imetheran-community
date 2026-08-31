@@ -27,6 +27,7 @@ import "./guides.css";
 import "./guide-articles.css";
 import "./community-tools.css";
 import "./maintenance.css";
+import "./maintenance-compact.css";
 import "./auth.css";
 import "./account-onboarding.css";
 import "./admin.css";
