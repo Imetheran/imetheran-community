@@ -25,6 +25,7 @@ function errorLabel(value?: string) {
   if (value === "titre") return "Le titre de une est obligatoire.";
   if (value === "publication") return "Ajoutez au minimum un titre de une et un résumé avant publication.";
   if (value === "article") return "L’article n’a pas pu être enregistré.";
+  if (value === "couverture") return "La couverture n’a pas pu être enregistrée. Utilisez un JPG, PNG ou WebP de 4 Mo maximum.";
   return "L’opération n’a pas pu être terminée. Vérifiez les données puis réessayez.";
 }
 
@@ -48,6 +49,8 @@ export default async function EditGazettePage({ params, searchParams }: { params
   const message = messageLabel(query.message);
   const error = errorLabel(query.erreur);
   const highlights = ((gazette.highlights ?? []) as string[]).join(", ");
+  const coverImage = gazette.cover_image ?? "";
+  const coverIsStored = coverImage.includes("/storage/v1/object/public/gazette-covers/");
 
   return (
     <main className="site-shell admin-page admin-gazettes-page">
@@ -67,8 +70,9 @@ export default async function EditGazettePage({ params, searchParams }: { params
         <div className="admin-gazette-layout">
           <section className="admin-panel admin-chronicle-editor-panel">
             <header className="admin-panel__head"><div><p className="eyebrow">Numéro</p><h2>Informations éditoriales</h2></div><span className="admin-panel__status">{gazettePublicationLabels[publicationStatus]}</span></header>
-            <form className="admin-chronicle-form" action={updateGazette}>
+            <form className="admin-chronicle-form" action={updateGazette} encType="multipart/form-data">
               <input type="hidden" name="gazette_id" value={gazette.id} />
+              <input type="hidden" name="cover_image" value={coverImage} />
               <label className="admin-chronicle-field"><span>Nom du journal</span><input name="title" maxLength={160} defaultValue={gazette.title} /></label>
               <label className="admin-chronicle-field"><span>Numéro</span><input name="issue_number" type="number" min={0} max={9999} defaultValue={gazette.issue_number} /></label>
               <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Titre à la une *</span><input name="headline" maxLength={220} required defaultValue={gazette.headline} /></label>
@@ -76,7 +80,38 @@ export default async function EditGazettePage({ params, searchParams }: { params
               <label className="admin-chronicle-field"><span>Édition / sous-titre</span><input name="edition" maxLength={180} defaultValue={gazette.edition ?? ""} /></label>
               <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Résumé</span><textarea name="excerpt" rows={6} maxLength={8000} defaultValue={gazette.excerpt ?? ""} /></label>
               <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Rubriques mises en avant</span><input name="highlights" defaultValue={highlights} /><small>Séparez les rubriques par des virgules.</small></label>
-              <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Image de couverture officielle FFXIV</span><input name="cover_image" type="url" maxLength={1200} defaultValue={gazette.cover_image ?? ""} /><small>Uniquement une image officielle Final Fantasy XIV.</small></label>
+
+              <div className="admin-gazette-cover-field">
+                <div className="admin-gazette-cover-field__heading">
+                  <div><span>Image de couverture</span><small>{coverImage ? (coverIsStored ? "Stockée dans Imetheran" : "Image externe") : "Aucune couverture personnalisée"}</small></div>
+                  {coverImage ? <a href={coverImage} target="_blank" rel="noopener noreferrer">Ouvrir l’image ↗</a> : null}
+                </div>
+
+                {coverImage ? (
+                  <div className="admin-gazette-cover-preview">
+                    <img src={coverImage} alt="Aperçu de la couverture actuelle" />
+                  </div>
+                ) : (
+                  <div className="admin-gazette-cover-preview admin-gazette-cover-preview--empty"><span>✦</span><strong>Aucune image de couverture</strong><small>Le visuel par défaut de la Gazette sera utilisé.</small></div>
+                )}
+
+                <div className="admin-gazette-cover-controls">
+                  <label>
+                    <span>Importer / remplacer</span>
+                    <input name="cover_file" type="file" accept="image/jpeg,image/png,image/webp" />
+                    <small>JPG, PNG ou WebP · 4 Mo maximum. Un nouvel upload remplace automatiquement l’ancien.</small>
+                  </label>
+                  <label>
+                    <span>URL externe · facultatif</span>
+                    <input name="cover_url" type="url" maxLength={1200} defaultValue={coverIsStored ? "" : coverImage} placeholder="https://…" />
+                    <small>Si aucune image n’est importée, cette URL peut servir de couverture.</small>
+                  </label>
+                </div>
+
+                {coverImage ? <label className="admin-gazette-cover-remove"><input name="remove_cover" type="checkbox" /><span>Retirer la couverture actuelle au prochain enregistrement</span></label> : null}
+                <p>Utilisez uniquement une image que vous êtes autorisé à publier.</p>
+              </div>
+
               <div className="admin-chronicle-form__actions"><button className="button button--primary" type="submit">Enregistrer le numéro</button></div>
             </form>
           </section>
