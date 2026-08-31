@@ -1,5 +1,6 @@
 name: Install Endwalker header asset
 
+# One-shot installer for the supplied 1920x1080 Endwalker artwork.
 on:
   push:
     branches:
