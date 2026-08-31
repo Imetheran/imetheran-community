@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { readSiteRuntimeSettings } from "@/lib/site-runtime";
 import { updateSession } from "@/lib/supabase/proxy";
 
 const maintenanceAllowedPrefixes = ["/administration", "/auth"];
@@ -13,19 +14,25 @@ function isMaintenanceAllowed(pathname: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  const maintenanceEnabled = process.env.MAINTENANCE_MODE?.toLowerCase() === "true";
   const { pathname } = request.nextUrl;
 
-  if (maintenanceEnabled && !isMaintenanceAllowed(pathname)) {
+  // Keep the maintenance page autonomous so it still renders if Supabase is unavailable.
+  if (pathname === "/maintenance") {
+    return NextResponse.next({ request });
+  }
+
+  // Administration and authentication routes remain reachable while the public site is closed.
+  if (isMaintenanceAllowed(pathname)) {
+    return updateSession(request);
+  }
+
+  const { maintenanceEnabled } = await readSiteRuntimeSettings();
+
+  if (maintenanceEnabled) {
     const maintenanceUrl = request.nextUrl.clone();
     maintenanceUrl.pathname = "/maintenance";
     maintenanceUrl.search = "";
     return NextResponse.redirect(maintenanceUrl, 307);
-  }
-
-  // La page de maintenance doit rester autonome, y compris si Supabase est indisponible.
-  if (pathname === "/maintenance") {
-    return NextResponse.next({ request });
   }
 
   return updateSession(request);
