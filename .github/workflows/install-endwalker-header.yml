@@ -1,0 +1,79 @@
+name: Install Endwalker header asset
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/install-endwalker-header.yml
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download the supplied Endwalker artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/themes
+          curl --fail --location --retry 3 --retry-delay 2 \
+            --user-agent 'Mozilla/5.0' \
+            'https://wallpapercave.com/wp/wp10255305.jpg' \
+            --output public/themes/endwalker-header.jpg
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('public/themes/endwalker-header.jpg')
+          data = path.read_bytes()
+          if not data.startswith(b'\xff\xd8'):
+              raise SystemExit('Downloaded file is not a JPEG')
+
+          i = 2
+          width = height = None
+          sof = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
+          while i < len(data) - 9:
+              if data[i] != 0xFF:
+                  i += 1
+                  continue
+              while i < len(data) and data[i] == 0xFF:
+                  i += 1
+              marker = data[i]
+              i += 1
+              if marker in {0xD8, 0xD9}:
+                  continue
+              if i + 2 > len(data):
+                  break
+              length = int.from_bytes(data[i:i+2], 'big')
+              if marker in sof and i + 7 < len(data):
+                  height = int.from_bytes(data[i+3:i+5], 'big')
+                  width = int.from_bytes(data[i+5:i+7], 'big')
+                  break
+              i += length
+
+          if (width, height) != (1920, 1080):
+              raise SystemExit(f'Unexpected image dimensions: {width}x{height}')
+          print(f'Validated {width}x{height} JPEG ({len(data)} bytes)')
+          PY
+
+      - name: Commit binary asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/themes/endwalker-header.jpg
+          if git diff --cached --quiet; then
+            echo 'Asset already up to date.'
+            exit 0
+          fi
+          git commit -m 'feat: add supplied Endwalker header artwork'
+          git push origin HEAD:main
