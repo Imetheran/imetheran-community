@@ -1,9 +1,10 @@
 /* Endwalker artwork.
-   Use the title-free Endwalker key art and render it without any additional CSS
-   scaling. background-size: cover only fills the hero, as with the other themes. */
+   Use the supplied 1920x1080 title-free artwork from the repository and render it
+   without any additional CSS scaling. background-size: cover only fills the hero,
+   matching the treatment used by the other theme artworks. */
 html[data-theme="endwalker"] {
-  --hero-image: url("https://img.finalfantasyxiv.com/lds/promo/h/g/yAhkYrzwI7-C_PVf9LP32Bu3_A.jpg");
-  --hero-position: center 58%;
+  --hero-image: url("/themes/endwalker-header.jpg");
+  --hero-position: center center;
   --hero-filter: saturate(.96) contrast(1.03) brightness(.84);
 }
 
@@ -29,7 +30,7 @@ html[data-theme="endwalker"] .forum-subhero__image {
 
 @media (max-width: 700px) {
   html[data-theme="endwalker"] {
-    --hero-position: 55% 56%;
+    --hero-position: center center;
   }
 
   html[data-theme="endwalker"] .hero__image,
