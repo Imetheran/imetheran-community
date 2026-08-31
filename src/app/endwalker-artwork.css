@@ -1,11 +1,10 @@
 /* Endwalker artwork.
-   The local WebP asset added during the Endwalker theme rollout was truncated in
-   production, so this theme now uses the official Square Enix Fan Kit wallpaper
-   directly while preserving the existing hero framing. */
+   Use the official title-free Endwalker key art so the expansion logo never appears
+   inside site heroes. The crop keeps the Scions grouped in the visible header area. */
 html[data-theme="endwalker"] {
-  --hero-image: url("https://lds-img.finalfantasyxiv.com/h/f/zo1FPaaFPOyfgn9QarwuVI2RfQ.jpg");
-  --hero-position: center center;
-  --hero-filter: saturate(.94) contrast(1.04) brightness(.82);
+  --hero-image: url("https://img.finalfantasyxiv.com/lds/promo/h/g/yAhkYrzwI7-C_PVf9LP32Bu3_A.jpg");
+  --hero-position: center 58%;
+  --hero-filter: saturate(.96) contrast(1.03) brightness(.84);
 }
 
 html[data-theme="endwalker"] .hero,
@@ -21,16 +20,13 @@ html[data-theme="endwalker"] .forum-hero__image,
 html[data-theme="endwalker"] .forum-subhero__image {
   inset: 0;
   background-image: var(--hero-image);
-  background-position: center center;
+  background-position: var(--hero-position, center center);
   background-size: cover;
   background-repeat: no-repeat;
 }
 
 @media (max-width: 700px) {
-  html[data-theme="endwalker"] .hero__image,
-  html[data-theme="endwalker"] .section-hero__image,
-  html[data-theme="endwalker"] .forum-hero__image,
-  html[data-theme="endwalker"] .forum-subhero__image {
-    background-position: 56% center;
+  html[data-theme="endwalker"] {
+    --hero-position: 55% 56%;
   }
 }
