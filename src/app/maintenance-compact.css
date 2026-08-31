@@ -1,0 +1,240 @@
+/* Compact density for the standalone maintenance experience. */
+.maintenance-header {
+  min-height: 56px;
+  gap: .85rem;
+}
+
+.maintenance-brand {
+  gap: .55rem;
+  letter-spacing: .11em;
+}
+
+.maintenance-brand strong {
+  font-size: .84rem;
+}
+
+.maintenance-status {
+  gap: .48rem;
+  font-size: .59rem;
+  letter-spacing: .1em;
+}
+
+.maintenance-status i {
+  width: .42rem;
+  height: .42rem;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent) 9%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent-bright) 34%, transparent);
+}
+
+.maintenance-hero {
+  min-height: clamp(500px, 60vh, 620px);
+}
+
+.maintenance-hero__content {
+  width: min(860px, calc(100% - var(--page-gutter) - var(--page-gutter)));
+  padding-block: clamp(2.6rem, 5vw, 4rem) clamp(2.35rem, 4.5vw, 3.6rem);
+}
+
+.maintenance-hero__sigil {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1.1rem;
+  box-shadow:
+    0 0 0 7px color-mix(in srgb, var(--accent) 4%, transparent),
+    0 0 38px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.maintenance-hero__sigil::before,
+.maintenance-hero__sigil::after {
+  width: 86px;
+}
+
+.maintenance-hero__sigil::before {
+  right: calc(100% + 14px);
+}
+
+.maintenance-hero__sigil::after {
+  left: calc(100% + 14px);
+}
+
+.maintenance-hero__sigil span {
+  font-size: 1.4rem;
+}
+
+.maintenance-hero .eyebrow {
+  margin-bottom: .48rem;
+}
+
+.maintenance-hero h1 {
+  max-width: 760px;
+  margin-bottom: .9rem;
+  font-size: clamp(2.45rem, 5vw, 4.45rem);
+  line-height: .98;
+}
+
+.maintenance-hero__message {
+  max-width: 650px;
+  margin-bottom: 1.2rem;
+  font-size: clamp(.94rem, 1.35vw, 1.04rem);
+  line-height: 1.62;
+}
+
+.maintenance-hero__meta {
+  width: min(680px, 100%);
+  margin-bottom: 1.05rem;
+}
+
+.maintenance-hero__eta,
+.maintenance-hero__service {
+  min-height: 64px;
+  padding: .68rem .9rem;
+  gap: .62rem;
+}
+
+.maintenance-hero__note {
+  margin-top: .55rem;
+}
+
+.maintenance-log {
+  padding-block: clamp(2.8rem, 5vw, 4.15rem);
+}
+
+.maintenance-log__heading {
+  margin-bottom: clamp(1.45rem, 2.5vw, 2rem);
+}
+
+.maintenance-log__heading h2,
+.maintenance-games__heading h2 {
+  margin-bottom: .5rem;
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+}
+
+.maintenance-timeline__item {
+  min-height: 205px;
+  padding: 1.25rem;
+  gap: .8rem;
+}
+
+.maintenance-timeline__marker {
+  width: 36px;
+  height: 36px;
+  font-size: .7rem;
+}
+
+.maintenance-timeline__copy h3 {
+  margin: .3rem 0 .45rem;
+  font-size: clamp(1.18rem, 1.7vw, 1.48rem);
+}
+
+.maintenance-timeline__copy p {
+  font-size: .82rem;
+  line-height: 1.58;
+}
+
+.maintenance-games {
+  padding-block: clamp(2.65rem, 4.5vw, 3.8rem) clamp(3rem, 5vw, 4.4rem);
+}
+
+.maintenance-games__heading {
+  margin-bottom: 1.4rem;
+}
+
+.maintenance-game-card {
+  padding: clamp(1rem, 2vw, 1.3rem);
+}
+
+.maintenance-game-card > p {
+  min-height: 2.5rem;
+  margin-bottom: .5rem;
+}
+
+.memory-board,
+.light-board {
+  margin-block: .9rem;
+}
+
+.light-board {
+  height: 220px;
+}
+
+.maintenance-footer {
+  min-height: 64px;
+}
+
+@media (max-width: 900px) {
+  .maintenance-hero {
+    min-height: 560px;
+  }
+
+  .maintenance-timeline__item {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .maintenance-header {
+    min-height: 52px;
+  }
+
+  .maintenance-brand strong {
+    font-size: .78rem;
+  }
+
+  .maintenance-status {
+    font-size: .51rem;
+  }
+
+  .maintenance-hero {
+    min-height: 540px;
+  }
+
+  .maintenance-hero__content {
+    padding-block: 2.5rem 2.25rem;
+  }
+
+  .maintenance-hero__sigil {
+    width: 56px;
+    height: 56px;
+    margin-bottom: .95rem;
+  }
+
+  .maintenance-hero__sigil::before,
+  .maintenance-hero__sigil::after {
+    width: 42px;
+  }
+
+  .maintenance-hero h1 {
+    font-size: clamp(2.2rem, 11.5vw, 3.35rem);
+  }
+
+  .maintenance-hero__message {
+    margin-bottom: 1rem;
+    font-size: .9rem;
+    line-height: 1.55;
+  }
+
+  .maintenance-hero__eta,
+  .maintenance-hero__service {
+    min-height: 58px;
+    padding: .62rem .78rem;
+  }
+
+  .maintenance-log,
+  .maintenance-games {
+    padding-block: 2.6rem;
+  }
+
+  .maintenance-timeline__item {
+    padding: 1.1rem;
+  }
+
+  .light-board {
+    height: 205px;
+  }
+
+  .maintenance-footer {
+    min-height: 0;
+    padding-block: 1rem;
+  }
+}
