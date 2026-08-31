@@ -1,5 +1,6 @@
 "use server";
 
+import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -9,6 +10,9 @@ import { createClient } from "@/lib/supabase/server";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PUBLICATION_STATUSES = new Set(["draft", "published", "archived"]);
 const ARTICLE_KINDS = new Set(["lead", "column", "brief", "recipe", "quote", "article"]);
+const GAZETTE_COVER_BUCKET = "gazette-covers";
+const GAZETTE_COVER_MAX_BYTES = 4 * 1024 * 1024;
+const GAZETTE_COVER_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -31,13 +35,25 @@ function slugify(value: string) {
     .slice(0, 110);
 }
 
+function normalizeHttpUrl(value: string) {
+  const trimmed = value.trim().slice(0, 1200);
+  if (!trimmed) return "";
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString().slice(0, 1200) : "";
+  } catch {
+    return "";
+  }
+}
+
 function readGazetteFields(formData: FormData) {
   const title = String(formData.get("title") ?? "La Gazette d’Imetheran").trim().slice(0, 160) || "La Gazette d’Imetheran";
   const headline = String(formData.get("headline") ?? "").trim().slice(0, 220);
   const requestedSlug = slugify(String(formData.get("slug") ?? "").trim());
   const edition = String(formData.get("edition") ?? "").trim().slice(0, 180);
   const excerpt = String(formData.get("excerpt") ?? "").trim().slice(0, 8000);
-  const coverImage = String(formData.get("cover_image") ?? "").trim().slice(0, 1200);
+  const requestedCoverUrl = normalizeHttpUrl(String(formData.get("cover_url") ?? ""));
+  const existingCoverUrl = normalizeHttpUrl(String(formData.get("cover_image") ?? ""));
   const issueNumberRaw = Number.parseInt(String(formData.get("issue_number") ?? ""), 10);
   const highlights = String(formData.get("highlights") ?? "")
     .split(",")
@@ -52,10 +68,42 @@ function readGazetteFields(formData: FormData) {
     requestedSlug,
     edition,
     excerpt,
-    cover_image: coverImage,
+    cover_image: requestedCoverUrl || existingCoverUrl,
     requestedIssueNumber: Number.isFinite(issueNumberRaw) && issueNumberRaw >= 0 ? Math.min(issueNumberRaw, 9999) : null,
     highlights,
   };
+}
+
+function readCoverFile(formData: FormData) {
+  const value = formData.get("cover_file");
+  return value instanceof File && value.size > 0 ? value : null;
+}
+
+function isValidCoverFile(file: File) {
+  return file.size <= GAZETTE_COVER_MAX_BYTES && GAZETTE_COVER_MIME_TYPES.has(file.type);
+}
+
+async function uploadGazetteCover(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  gazetteId: string,
+  file: File,
+) {
+  const path = `${gazetteId}/cover`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const { error } = await supabase.storage.from(GAZETTE_COVER_BUCKET).upload(path, bytes, {
+    contentType: file.type,
+    cacheControl: "3600",
+    upsert: true,
+  });
+  if (error) return null;
+
+  const { data } = supabase.storage.from(GAZETTE_COVER_BUCKET).getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+async function removeGazetteCover(supabase: Awaited<ReturnType<typeof createClient>>, gazetteId: string) {
+  const { error } = await supabase.storage.from(GAZETTE_COVER_BUCKET).remove([`${gazetteId}/cover`]);
+  return !error;
 }
 
 async function gazetteSlug(supabase: Awaited<ReturnType<typeof createClient>>, id: string) {
@@ -73,7 +121,9 @@ function refreshGazette(slug?: string | null) {
 
 export async function createGazette(formData: FormData) {
   const fields = readGazetteFields(formData);
+  const coverFile = readCoverFile(formData);
   if (!fields.headline) redirect("/administration/gazettes/nouveau?erreur=titre");
+  if (coverFile && !isValidCoverFile(coverFile)) redirect("/administration/gazettes/nouveau?erreur=couverture");
 
   const { supabase, userId } = await requireAdmin();
   let issueNumber = fields.requestedIssueNumber;
@@ -106,6 +156,17 @@ export async function createGazette(formData: FormData) {
     .single();
 
   if (error || !data) redirect("/administration/gazettes/nouveau?erreur=enregistrement");
+
+  if (coverFile) {
+    const uploadedCover = await uploadGazetteCover(supabase, data.id, coverFile);
+    if (!uploadedCover) redirect(`/administration/gazettes/${data.id}?erreur=couverture`);
+    const { error: coverUpdateError } = await supabase
+      .from("gazettes")
+      .update({ cover_image: uploadedCover, updated_by: userId })
+      .eq("id", data.id);
+    if (coverUpdateError) redirect(`/administration/gazettes/${data.id}?erreur=couverture`);
+  }
+
   refreshGazette();
   redirect(`/administration/gazettes/${data.id}?message=cree`);
 }
@@ -114,12 +175,25 @@ export async function updateGazette(formData: FormData) {
   const gazetteId = String(formData.get("gazette_id") ?? "");
   if (!UUID_PATTERN.test(gazetteId)) redirect("/administration/gazettes?erreur=introuvable");
   const fields = readGazetteFields(formData);
+  const coverFile = readCoverFile(formData);
   if (!fields.headline) redirect(`/administration/gazettes/${gazetteId}?erreur=titre`);
+  if (coverFile && !isValidCoverFile(coverFile)) redirect(`/administration/gazettes/${gazetteId}?erreur=couverture`);
 
   const { supabase, userId } = await requireAdmin();
-  const { data: current } = await supabase.from("gazettes").select("slug, issue_number").eq("id", gazetteId).maybeSingle();
+  const { data: current } = await supabase.from("gazettes").select("slug, issue_number, cover_image").eq("id", gazetteId).maybeSingle();
   if (!current) redirect("/administration/gazettes?erreur=introuvable");
   const slug = fields.requestedSlug || slugify(`numero-${fields.requestedIssueNumber ?? current.issue_number}-${fields.headline}`) || current.slug;
+
+  let coverImage = fields.cover_image || current.cover_image || "";
+  if (coverFile) {
+    const uploadedCover = await uploadGazetteCover(supabase, gazetteId, coverFile);
+    if (!uploadedCover) redirect(`/administration/gazettes/${gazetteId}?erreur=couverture`);
+    coverImage = uploadedCover;
+  } else if (formData.get("remove_cover") === "on") {
+    const removed = await removeGazetteCover(supabase, gazetteId);
+    if (!removed) redirect(`/administration/gazettes/${gazetteId}?erreur=couverture`);
+    coverImage = "";
+  }
 
   const { error } = await supabase
     .from("gazettes")
@@ -130,7 +204,7 @@ export async function updateGazette(formData: FormData) {
       edition: fields.edition,
       issue_number: fields.requestedIssueNumber ?? current.issue_number,
       excerpt: fields.excerpt,
-      cover_image: fields.cover_image,
+      cover_image: coverImage,
       highlights: fields.highlights,
       updated_by: userId,
     })
