@@ -235,7 +235,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
         ) : null}
 
         {!restricted ? (
-          <ForumBoardTopics boardSlug={boardRow.slug} topics={topicItems} />
+          <ForumBoardTopics boardSlug={boardRow.slug} topics={topicItems} authenticated={Boolean(userId)} />
         ) : (
           <div className="forum-empty-board">
             <span aria-hidden="true">◇</span>
