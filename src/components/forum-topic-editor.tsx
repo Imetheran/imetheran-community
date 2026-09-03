@@ -71,6 +71,8 @@ export function ForumTopicEditor({
       <form className="forum-topic-editor__form" action={createForumTopic}>
         <input type="hidden" name="board_slug" value={boardSlug} />
 
+        {errorMessage ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{errorMessage}</div> : null}
+
         <div id="forum-topic-editor-compose" hidden={previewOpen}>
           <section className="forum-editor-panel">
             <div className="forum-editor-panel__heading">
@@ -131,7 +133,7 @@ export function ForumTopicEditor({
               </label> : <input type="hidden" name="rp_location" value="" />}
               <label>
                 <span>Tags</span>
-                <input name="tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder="Séparés par des virgules" />
+                <input name="tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder="Séparés par des virgules" maxLength={180} />
                 <small>Jusqu’à 5 tags.</small>
               </label>
             </div>
@@ -144,6 +146,7 @@ export function ForumTopicEditor({
               value={content}
               onChange={setContent}
               rows={14}
+              minLength={2}
               maxLength={50000}
               required
               previewMode="none"
@@ -155,11 +158,9 @@ export function ForumTopicEditor({
 
           <div className="forum-topic-editor__actions">
             <button className="button button--ghost" type="button" onClick={openPreview}>Prévisualiser le sujet</button>
-            <PublishButton />
+            <PublishButton disabled={!canPublish} />
           </div>
         </div>
-
-        {errorMessage ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{errorMessage}</div> : null}
 
         {previewOpen ? (
           <section
