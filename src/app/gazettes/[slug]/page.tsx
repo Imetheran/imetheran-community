@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { formatGazetteDate, getAppRole, splitGazetteBody, type GazetteArticleKind } from "@/lib/gazettes";
+import { formatGazetteDate, getAppRole, splitGazetteBody } from "@/lib/gazettes";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +34,38 @@ function StandardArticle({ article }: { article: GazetteArticleRow }) {
   );
 }
 
+function BriefArticle({ article }: { article: GazetteArticleRow }) {
+  return (
+    <section className="gazette-article gazette-article--brief">
+      {article.kicker ? <p className="gazette-article__kicker">{article.kicker}</p> : null}
+      <h3>{article.title}</h3>
+      {article.byline ? <p className="gazette-article__byline">Par {article.byline}</p> : null}
+      <ArticleBody article={article} />
+      {article.aside ? <div className="gazette-article__notice">{article.aside}</div> : null}
+    </section>
+  );
+}
+
+function RecipeArticle({ article }: { article: GazetteArticleRow }) {
+  return (
+    <section className="gazette-article gazette-article--recipe">
+      <div>{article.kicker ? <p className="gazette-article__kicker">{article.kicker}</p> : null}<h3>{article.title}</h3>{article.byline ? <p className="gazette-article__byline">Par {article.byline}</p> : null}</div>
+      <div>{article.aside ? <div className="gazette-article__recipe-box">{article.aside}</div> : null}<ArticleBody article={article} /></div>
+    </section>
+  );
+}
+
+function QuoteArticle({ article }: { article: GazetteArticleRow }) {
+  return (
+    <section className="gazette-article gazette-article--quote">
+      {article.kicker ? <p className="gazette-article__kicker">{article.kicker}</p> : null}
+      {article.aside ? <blockquote>{article.aside}</blockquote> : null}
+      <h3>{article.title}</h3>
+      <ArticleBody article={article} />
+    </section>
+  );
+}
+
 export default async function GazetteDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
@@ -57,12 +88,9 @@ export default async function GazetteDetailPage({ params }: { params: Promise<{ 
     .order("sort_order");
 
   const articles = (articleRows ?? []) as GazetteArticleRow[];
-  const lead = articles.find((article) => article.kind === "lead");
-  const column = articles.find((article) => article.kind === "column");
-  const brief = articles.find((article) => article.kind === "brief");
-  const recipe = articles.find((article) => article.kind === "recipe");
-  const quote = articles.find((article) => article.kind === "quote");
-  const regular = articles.filter((article) => article.kind === "article");
+  const lead = articles.find((article) => article.kind === "lead") ?? null;
+  const sidebarArticles = articles.filter((article) => article.id !== lead?.id && article.kind !== "recipe" && article.kind !== "quote");
+  const featureArticles = articles.filter((article) => article.id !== lead?.id && (article.kind === "recipe" || article.kind === "quote"));
   const highlights = (gazette.highlights ?? []) as string[];
 
   return (
@@ -77,7 +105,6 @@ export default async function GazetteDetailPage({ params }: { params: Promise<{ 
           <h1 id="gazette-page-title">Édition {String(gazette.issue_number).padStart(2, "0")}</h1>
           <p>{gazette.headline || gazette.title}</p>
           <div className="gazette-detail-actions">
-            <ThemeToggle />
             <Link className="button button--ghost button--small" href="/gazettes">Toutes les Gazettes</Link>
             {isAdmin ? <Link className="button button--ghost button--small" href={`/administration/gazettes/${gazette.id}`}>Modifier</Link> : null}
           </div>
@@ -117,37 +144,13 @@ export default async function GazetteDetailPage({ params }: { params: Promise<{ 
                   {lead.aside ? <blockquote>{lead.aside}</blockquote> : null}
                   <ArticleBody article={lead} columns />
                 </section>
-              ) : <div />}
+              ) : <div className="gazette-paper__lead-placeholder" aria-hidden="true" />}
 
               <aside className="gazette-paper__sidebar">
-                {column ? <StandardArticle article={column} /> : null}
-                {brief ? (
-                  <section className="gazette-article gazette-article--brief">
-                    {brief.kicker ? <p className="gazette-article__kicker">{brief.kicker}</p> : null}
-                    <h3>{brief.title}</h3>
-                    {brief.byline ? <p className="gazette-article__byline">Par {brief.byline}</p> : null}
-                    <ArticleBody article={brief} />
-                    {brief.aside ? <div className="gazette-article__notice">{brief.aside}</div> : null}
-                  </section>
-                ) : null}
-                {regular.map((article) => <StandardArticle article={article} key={article.id} />)}
+                {sidebarArticles.map((article) => article.kind === "brief" ? <BriefArticle article={article} key={article.id} /> : <StandardArticle article={article} key={article.id} />)}
               </aside>
 
-              {recipe ? (
-                <section className="gazette-article gazette-article--recipe">
-                  <div>{recipe.kicker ? <p className="gazette-article__kicker">{recipe.kicker}</p> : null}<h3>{recipe.title}</h3>{recipe.byline ? <p className="gazette-article__byline">Par {recipe.byline}</p> : null}</div>
-                  <div>{recipe.aside ? <div className="gazette-article__recipe-box">{recipe.aside}</div> : null}<ArticleBody article={recipe} /></div>
-                </section>
-              ) : null}
-
-              {quote ? (
-                <section className="gazette-article gazette-article--quote">
-                  {quote.kicker ? <p className="gazette-article__kicker">{quote.kicker}</p> : null}
-                  {quote.aside ? <blockquote>{quote.aside}</blockquote> : null}
-                  <h3>{quote.title}</h3>
-                  <ArticleBody article={quote} />
-                </section>
-              ) : null}
+              {featureArticles.map((article) => article.kind === "recipe" ? <RecipeArticle article={article} key={article.id} /> : <QuoteArticle article={article} key={article.id} />)}
             </div>
           ) : (
             <div className="gazette-issue-empty"><strong>Ce numéro ne contient encore aucun article.</strong><p>La rédaction peut compléter le sommaire depuis l’administration.</p></div>
