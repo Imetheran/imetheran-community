@@ -1,6 +1,16 @@
 import Link from "next/link";
 import { relationshipKinds, type RelationshipKind } from "@/content/relationship-content";
+import { signedCharacterPortraitMap } from "@/lib/character-portraits";
 import { createClient } from "@/lib/supabase/server";
+
+function initials(name: string) {
+  return String(name)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "IM";
+}
 
 export async function CharacterRelations({ characterId }: { characterId: string }) {
   const supabase = await createClient();
@@ -22,9 +32,11 @@ export async function CharacterRelations({ characterId }: { characterId: string 
       : relationship.source_character_id,
   )));
   const { data: counterparts } = counterpartIds.length
-    ? await supabase.from("characters").select("id, slug, name, epithet").in("id", counterpartIds)
-    : { data: [] as { id: string; slug: string; name: string; epithet: string }[] };
-  const counterpartMap = new Map((counterparts ?? []).map((character) => [character.id, character]));
+    ? await supabase.from("characters").select("id, slug, name, epithet, portrait_path").in("id", counterpartIds)
+    : { data: [] as { id: string; slug: string; name: string; epithet: string; portrait_path: string | null }[] };
+  const visibleCounterparts = counterparts ?? [];
+  const counterpartMap = new Map(visibleCounterparts.map((character) => [character.id, character]));
+  const portraitMap = await signedCharacterPortraitMap(supabase, visibleCounterparts);
 
   if (!rows.length) {
     return <p className="character-profile-section__empty">Aucune relation publique validée pour le moment.</p>;
@@ -38,10 +50,18 @@ export async function CharacterRelations({ characterId }: { characterId: string 
         if (!counterpart) return null;
         const kind = relationship.kind as RelationshipKind;
         const intensity = Math.min(3, Math.max(1, Number(relationship.intensity) || 1));
+        const portrait = portraitMap.get(counterpart.id) ?? null;
         return (
           <Link className={`character-relation character-relation--${kind} character-relation-live`} href={`/personnages/${counterpart.slug}`} key={relationship.id}>
-            <div className="character-relation__avatar" aria-hidden="true">{String(counterpart.name).split(/\s+/).slice(0, 2).map((part: string) => part[0]?.toUpperCase()).join("")}</div>
-            <div><small>{relationshipKinds[kind]?.label ?? kind} · {"●".repeat(intensity)}{"○".repeat(3 - intensity)}</small><h3>{counterpart.name}</h3><p>{relationship.label}</p>{relationship.description ? <span>{relationship.description}</span> : null}</div>
+            <div className="character-relation__avatar" aria-hidden="true">
+              {portrait ? <img src={portrait} alt="" /> : initials(counterpart.name)}
+            </div>
+            <div>
+              <small>{relationshipKinds[kind]?.label ?? kind} · {"●".repeat(intensity)}{"○".repeat(3 - intensity)}</small>
+              <h3>{counterpart.name}</h3>
+              <p>{relationship.label}</p>
+              {relationship.description ? <span>{relationship.description}</span> : null}
+            </div>
           </Link>
         );
       })}
