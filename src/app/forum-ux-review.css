@@ -156,6 +156,44 @@
     min-height: 44px;
     padding: .5rem .6rem;
   }
+
+  /* Keep formatting tools on one tactile strip instead of stacking a very tall toolbar. */
+  .bbcode-editor__toolbar {
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bbcode-editor__group,
+  .bbcode-editor__group--controls {
+    width: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    padding-right: .45rem;
+    border-right: 1px solid var(--border);
+  }
+
+  .bbcode-editor__toolbar button,
+  .bbcode-editor__toolbar select,
+  .bbcode-editor__toolbar input[type="color"] {
+    min-height: 44px;
+  }
+
+  .bbcode-editor__toolbar button {
+    min-width: 44px;
+  }
+
+  .bbcode-editor__preview-toggle {
+    flex: 0 0 auto;
+    margin-left: 0;
+  }
+
+  .bbcode-editor textarea {
+    min-height: 260px;
+  }
 }
 
 @media (max-width: 560px) {
