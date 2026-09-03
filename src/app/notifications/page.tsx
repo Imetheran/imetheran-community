@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { NotificationCountSync } from "@/components/notification-count-sync";
 import { SiteHeader } from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
-import { deleteNotification, markAllNotificationsRead, openNotification } from "./actions";
+import {
+  deleteNotification,
+  markAllNotificationsRead,
+  markNotificationRead,
+  openNotification,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +41,21 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Europe/Paris",
   }).format(new Date(value));
+}
+
+function actionLabel(type: string) {
+  if (type === "relationship_request" || type === "relationship_revision") return "Examiner";
+  if (type === "forum_reply") return "Voir la réponse";
+  if (type === "announcement") return "Lire";
+  return "Ouvrir";
 }
 
 export default async function NotificationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string; erreur?: string }>;
+  searchParams: Promise<{ message?: string; erreur?: string; filtre?: string }>;
 }) {
   const query = await searchParams;
   const supabase = await createClient();
@@ -61,10 +75,15 @@ export default async function NotificationsPage({
 
   const notifications = (data ?? []) as NotificationRow[];
   const unreadCount = notifications.filter((notification) => !notification.read_at).length;
+  const showUnreadOnly = query.filtre === "non-lues";
+  const visibleNotifications = showUnreadOnly
+    ? notifications.filter((notification) => !notification.read_at)
+    : notifications;
 
   return (
     <main className="site-shell notifications-page">
       <SiteHeader />
+      <NotificationCountSync count={unreadCount} />
 
       <section className="tools-hero">
         <div className="content-frame tools-hero__layout">
@@ -81,12 +100,13 @@ export default async function NotificationsPage({
       </section>
 
       <section className="content-frame tools-workspace">
+        {query.message === "lu" ? <div className="tools-notice" role="status">Notification marquée comme lue.</div> : null}
         {query.message === "lus" ? <div className="tools-notice" role="status">Toutes les notifications ont été marquées comme lues.</div> : null}
         {query.message === "supprimee" ? <div className="tools-notice" role="status">Notification supprimée.</div> : null}
         {query.erreur ? <div className="tools-notice tools-notice--error" role="alert">L’action demandée n’a pas pu être enregistrée.</div> : null}
         {error ? <div className="tools-notice tools-notice--error" role="alert">Les notifications n’ont pas pu être chargées.</div> : null}
 
-        <header className="tools-section-heading">
+        <header className="tools-section-heading notification-heading">
           <div>
             <p className="eyebrow">Activité récente</p>
             <h2>Votre fil personnel</h2>
@@ -98,15 +118,25 @@ export default async function NotificationsPage({
           ) : null}
         </header>
 
-        {notifications.length ? (
+        <nav className="notification-filters" aria-label="Filtrer les notifications">
+          <Link className={!showUnreadOnly ? "is-current" : ""} href="/notifications">
+            Toutes <span>{notifications.length}</span>
+          </Link>
+          <Link className={showUnreadOnly ? "is-current" : ""} href="/notifications?filtre=non-lues">
+            Non lues <span>{unreadCount}</span>
+          </Link>
+        </nav>
+
+        {visibleNotifications.length ? (
           <div className="notification-list">
-            {notifications.map((notification) => (
+            {visibleNotifications.map((notification) => (
               <article className={`notification-card${notification.read_at ? "" : " notification-card--unread"}`} key={notification.id}>
                 <div className="notification-card__marker" aria-hidden="true">{notification.read_at ? "○" : "●"}</div>
                 <div className="notification-card__content">
                   <div className="notification-card__meta">
                     <span>{typeLabels[notification.type] ?? "Imetheran"}</span>
                     <time dateTime={notification.created_at}>{formatDate(notification.created_at)}</time>
+                    {!notification.read_at ? <strong>Nouvelle</strong> : null}
                   </div>
                   <h3>{notification.title}</h3>
                   <p>{notification.body}</p>
@@ -114,8 +144,14 @@ export default async function NotificationsPage({
                 <div className="notification-card__actions">
                   <form action={openNotification}>
                     <input type="hidden" name="notification_id" value={notification.id} />
-                    <button className="button button--primary button--small" type="submit">Ouvrir</button>
+                    <button className="button button--primary button--small" type="submit">{actionLabel(notification.type)}</button>
                   </form>
+                  {!notification.read_at ? (
+                    <form action={markNotificationRead}>
+                      <input type="hidden" name="notification_id" value={notification.id} />
+                      <button className="notification-read" type="submit">Marquer comme lue</button>
+                    </form>
+                  ) : null}
                   <form action={deleteNotification}>
                     <input type="hidden" name="notification_id" value={notification.id} />
                     <button className="notification-delete" type="submit" aria-label={`Supprimer : ${notification.title}`}>Supprimer</button>
@@ -127,10 +163,12 @@ export default async function NotificationsPage({
         ) : (
           <div className="tools-empty">
             <span aria-hidden="true">✦</span>
-            <h3>Aucune notification pour le moment</h3>
-            <p>Suivez un sujet du forum ou créez des relations entre personnages : les événements qui vous concernent apparaîtront ici.</p>
+            <h3>{showUnreadOnly ? "Tout est à jour" : "Aucune notification pour le moment"}</h3>
+            <p>{showUnreadOnly
+              ? "Vous n’avez aucune notification non lue. Le fil complet reste disponible à tout moment."
+              : "Suivez un sujet du forum ou créez des relations entre personnages : les événements qui vous concernent apparaîtront ici."}</p>
             <div className="tools-empty__actions">
-              <Link className="button button--primary" href="/forum">Parcourir le forum</Link>
+              {showUnreadOnly ? <Link className="button button--primary" href="/notifications">Voir tout le fil</Link> : <Link className="button button--primary" href="/forum">Parcourir le forum</Link>}
               <Link className="button button--ghost" href="/liens">Voir les liens</Link>
             </div>
           </div>
