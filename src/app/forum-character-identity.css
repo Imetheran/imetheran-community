@@ -1,0 +1,95 @@
+/* RP posts: promote the selected character to the primary forum identity. */
+.forum-post__author[data-character-identity="true"] {
+  background:
+    radial-gradient(circle at 50% 8%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 42%),
+    var(--surface-soft);
+}
+
+.forum-post__avatar--character {
+  width: 82px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-raised) 88%, var(--accent) 12%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+}
+
+.forum-post__avatar--character img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.forum-post__identity-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.15;
+  text-decoration: none;
+  text-overflow: ellipsis;
+}
+
+.forum-post__identity-name:hover,
+.forum-post__identity-name:focus-visible {
+  color: var(--accent-bright);
+}
+
+.forum-post__identity-name:focus-visible {
+  outline: 1px solid var(--accent-bright);
+  outline-offset: 3px;
+}
+
+.forum-post__player {
+  margin-top: .28rem;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .5rem;
+  line-height: 1.35;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.forum-post__author[data-character-identity="true"] .forum-post__starter {
+  margin-top: .55rem;
+}
+
+@media (max-width: 780px) {
+  .forum-post__avatar--character {
+    width: 50px;
+    border-radius: 13px;
+  }
+
+  .forum-post__identity-name {
+    flex: 0 1 auto;
+    font-size: .96rem;
+  }
+
+  .forum-post__player {
+    margin: 0 0 0 auto;
+    text-align: right;
+  }
+
+  .forum-post__author[data-character-identity="true"] .forum-post__starter {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .forum-post__avatar--character {
+    width: 46px;
+  }
+
+  .forum-post__identity-name {
+    max-width: calc(100% - 58px);
+  }
+
+  .forum-post__player {
+    flex: 1 0 100%;
+    margin: -.15rem 0 0 58px;
+    text-align: left;
+  }
+}
