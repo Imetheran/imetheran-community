@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
+import { readSiteRuntimeSettings } from "@/lib/site-runtime";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imetheran-community.vercel.app";
 
-export default function robots(): MetadataRoute.Robots {
-  const maintenanceEnabled = process.env.MAINTENANCE_MODE?.toLowerCase() === "true";
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const { maintenanceEnabled } = await readSiteRuntimeSettings();
 
   return {
     rules: maintenanceEnabled
