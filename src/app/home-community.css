@@ -1,0 +1,112 @@
+/* Live community homepage refinements */
+#decouvrir {
+  scroll-margin-top: 1rem;
+}
+
+.compact-status--home {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compact-status--home > div {
+  min-width: 0;
+}
+
+.home-community-notice h3 {
+  text-wrap: balance;
+}
+
+.home-community-notice p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.home-forum-section-grid {
+  align-items: stretch;
+}
+
+.home-forum-section {
+  min-height: 230px;
+}
+
+.home-forum-section .forum-category__content {
+  height: 100%;
+}
+
+.home-forum-section .forum-category__content > span:not(.forum-category__arrow) {
+  line-height: 1.55;
+}
+
+.home-forum-section .forum-category__content em {
+  margin-top: auto;
+  padding-top: .85rem;
+  color: var(--accent-bright);
+  font-family: var(--font-ui);
+  font-size: .61rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.home-section--characters .character-card__portrait {
+  overflow: hidden;
+}
+
+.home-section--characters .character-card__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-character-empty {
+  margin-top: 1.2rem;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 16rem),
+    var(--surface);
+}
+
+.home-character-empty > div {
+  max-width: 700px;
+}
+
+.home-character-empty strong {
+  display: block;
+  margin: .2rem 0 .45rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  font-weight: 500;
+}
+
+.home-character-empty p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .compact-status--home {
+    grid-template-columns: 1fr;
+  }
+
+  .home-forum-section {
+    min-height: 0;
+  }
+
+  .home-character-empty {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .home-character-empty .button {
+    width: 100%;
+  }
+}
