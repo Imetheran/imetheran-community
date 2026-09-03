@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { NOTIFICATION_COUNT_EVENT } from "@/components/notification-count-sync";
 import { createClient } from "@/lib/supabase/client";
 
 export function AuthNav() {
@@ -39,11 +40,19 @@ export function AuthNav() {
     });
 
     const onFocus = () => void refreshUnread();
+    const onCount = (event: Event) => {
+      const detail = (event as CustomEvent<{ count?: unknown }>).detail;
+      const nextCount = Number(detail?.count);
+      if (Number.isFinite(nextCount) && nextCount >= 0) setUnread(Math.floor(nextCount));
+    };
+
     window.addEventListener("focus", onFocus);
+    window.addEventListener(NOTIFICATION_COUNT_EVENT, onCount);
 
     return () => {
       active = false;
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener(NOTIFICATION_COUNT_EVENT, onCount);
       listener.subscription.unsubscribe();
     };
   }, []);
