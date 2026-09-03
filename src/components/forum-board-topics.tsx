@@ -28,11 +28,32 @@ type Sort = "activity" | "replies" | "views";
 
 const pageSize = 20;
 
-export function ForumBoardTopics({ boardSlug, topics }: { boardSlug: string; topics: ForumTopicListItem[] }) {
+export function ForumBoardTopics({
+  boardSlug,
+  topics,
+  authenticated,
+}: {
+  boardSlug: string;
+  topics: ForumTopicListItem[];
+  authenticated: boolean;
+}) {
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("activity");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+
+  const filterOptions = authenticated
+    ? ([
+        ["all", "Tous"],
+        ["unread", "Non lus"],
+        ["open", "Ouverts"],
+        ["finished", "Terminés"],
+      ] as const)
+    : ([
+        ["all", "Tous"],
+        ["open", "Ouverts"],
+        ["finished", "Terminés"],
+      ] as const);
 
   const filteredTopics = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("fr");
@@ -72,12 +93,7 @@ export function ForumBoardTopics({ boardSlug, topics }: { boardSlug: string; top
     <div className="forum-topic-browser">
       <div className="forum-topic-browser__controls" role="group" aria-label="Filtrer et trier les sujets">
         <div className="forum-topic-browser__filters" role="group" aria-label="État des sujets">
-          {([
-            ["all", "Tous"],
-            ["unread", "Non lus"],
-            ["open", "Ouverts"],
-            ["finished", "Terminés"],
-          ] as const).map(([value, label]) => (
+          {filterOptions.map(([value, label]) => (
             <button
               className={filter === value ? "is-active" : ""}
               key={value}
@@ -184,6 +200,11 @@ function TopicRow({ boardSlug, topic }: { boardSlug: string; topic: ForumTopicLi
         </div>
         <p>{topic.excerpt}</p>
         <div className="forum-topic-row__tags">{topic.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+        <div className="forum-topic-row__mobile-meta">
+          <span>{topic.replies} réponse{topic.replies > 1 ? "s" : ""}</span>
+          <span>Dernier : {topic.lastAuthor.name}</span>
+          <span>{topic.lastActivity}</span>
+        </div>
       </div>
       <div className="forum-topic-row__author">
         <span>{topic.author.initials}</span>
