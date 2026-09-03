@@ -148,7 +148,7 @@ export function ForumReplyEditor({
             <button className="button button--ghost button--small" type="button" onClick={() => setPreviewOpen(true)}>
               Prévisualiser le message
             </button>
-            <ReplyButton />
+            <ReplyButton disabled={!canPublish} />
           </div>
         </div>
       </div>
