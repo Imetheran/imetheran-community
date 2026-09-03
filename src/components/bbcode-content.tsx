@@ -214,13 +214,21 @@ function renderNodes(nodes: BbcodeNode[], mediaMap: ForumMediaRenderMap, path = 
         }
         return (
           <span className="bbcode-image" key={key}>
-            <Image
-              src={media.url}
-              alt={alt}
-              width={media.width}
-              height={media.height}
-              sizes="(max-width: 760px) 100vw, 900px"
-            />
+            <a
+              className="bbcode-image__link"
+              href={media.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Ouvrir l’image « ${alt} » en taille réelle`}
+            >
+              <Image
+                src={media.url}
+                alt={alt}
+                width={media.width}
+                height={media.height}
+                sizes="(max-width: 760px) 100vw, 900px"
+              />
+            </a>
           </span>
         );
       }
