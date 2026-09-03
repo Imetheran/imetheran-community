@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { reportForumContent } from "@/app/forum/report-actions";
 import styles from "./forum-report-control.module.css";
@@ -25,8 +27,12 @@ export function ForumReportControl({
   authenticated: boolean;
   loginHref: string;
 }) {
+  const exactLoginHref = postId
+    ? `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}#${postId}`)}`
+    : loginHref;
+
   if (!authenticated) {
-    return <Link className={styles.loginLink} href={loginHref}>Signaler</Link>;
+    return <Link className={styles.loginLink} href={exactLoginHref}>Signaler</Link>;
   }
 
   return (
@@ -57,7 +63,19 @@ export function ForumReportControl({
 
         <div className={styles.footer}>
           <small>Le signalement est visible uniquement par l’équipe.</small>
-          <button className="button button--primary button--small" type="submit">Envoyer</button>
+          <div className={styles.actions}>
+            <button
+              className="button button--ghost button--small"
+              type="button"
+              onClick={(event) => {
+                const details = event.currentTarget.closest("details");
+                if (details) details.open = false;
+              }}
+            >
+              Annuler
+            </button>
+            <button className="button button--primary button--small" type="submit">Envoyer</button>
+          </div>
         </div>
       </form>
     </details>
