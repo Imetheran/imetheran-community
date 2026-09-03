@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { saveCharacter } from "@/app/personnages/actions";
 
@@ -79,13 +79,26 @@ export function CharacterEditor({
     return [0, 1, 2].map((index) => existing[index] ?? emptyHooks[index]);
   });
   const [portraitName, setPortraitName] = useState("");
+  const [portraitPreviewUrl, setPortraitPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!portraitPreviewUrl) return;
+    return () => URL.revokeObjectURL(portraitPreviewUrl);
+  }, [portraitPreviewUrl]);
 
   const parsedTraits = useMemo(() => traits.split(",").map((trait) => trait.trim()).filter(Boolean).slice(0, 8), [traits]);
   const initials = getInitials(displayName);
   const title = mode === "create" ? "Créer mon personnage" : `Modifier ${initialCharacter?.name ?? "mon personnage"}`;
+  const portraitUrl = portraitPreviewUrl ?? initialCharacter?.portraitUrl ?? null;
 
   function updateHook(index: number, field: keyof EditableHook, value: string) {
     setHookList((current) => current.map((hook, hookIndex) => hookIndex === index ? { ...hook, [field]: value } : hook));
+  }
+
+  function handlePortraitChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setPortraitName(file?.name ?? "");
+    setPortraitPreviewUrl(file ? URL.createObjectURL(file) : null);
   }
 
   return (
@@ -136,10 +149,10 @@ export function CharacterEditor({
           <EditorSection number="02" kicker="Portrait & tonalité" title="Donner un visage à la fiche">
             <div className="character-editor-media-row">
               <label className="character-editor-upload">
-                <input name="portrait" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setPortraitName(event.target.files?.[0]?.name ?? "")} />
+                <input name="portrait" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePortraitChange} />
                 <span className="character-editor-upload__mark">{initials}</span>
                 <strong>{portraitName || (initialCharacter?.portraitUrl ? "Remplacer le portrait" : "Importer un portrait")}</strong>
-                <small>PNG, JPG ou WebP · 4 Mo maximum · Supabase Storage</small>
+                <small>PNG, JPG ou WebP · 4 Mo maximum · aperçu avant enregistrement</small>
               </label>
               <div className="character-editor-media-copy">
                 <Field label="Citation"><input name="quote" maxLength={300} value={quote} onChange={(event) => setQuote(event.target.value)} placeholder="Une phrase qui résume le personnage" /></Field>
@@ -191,7 +204,7 @@ export function CharacterEditor({
           <div className="character-editor-preview__sticky">
             <div className="character-editor-preview__label">Aperçu en direct</div>
             <div className="character-editor-preview__portrait">
-              {initialCharacter?.portraitUrl ? <img className="character-live-portrait" src={initialCharacter.portraitUrl} alt="" /> : <span>{initials}</span>}
+              {portraitUrl ? <img className="character-live-portrait" src={portraitUrl} alt="Aperçu du portrait sélectionné" /> : <span>{initials}</span>}
               <small>{portraitName || (initialCharacter?.portraitUrl ? "Portrait actuel" : "Portrait")}</small>
             </div>
             <div className="character-editor-preview__identity">
