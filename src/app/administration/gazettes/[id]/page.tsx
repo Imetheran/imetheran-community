@@ -48,9 +48,19 @@ export default async function EditGazettePage({ params, searchParams }: { params
   const publicationStatus = gazette.publication_status as GazettePublicationStatus;
   const message = messageLabel(query.message);
   const error = errorLabel(query.erreur);
-  const highlights = ((gazette.highlights ?? []) as string[]).join(", ");
+  const highlightItems = (gazette.highlights ?? []) as string[];
+  const highlights = highlightItems.join(", ");
   const coverImage = gazette.cover_image ?? "";
   const coverIsStored = coverImage.includes("/storage/v1/object/public/gazette-covers/");
+  const writtenArticles = articles.filter((article) => (article.body ?? "").trim().length > 0).length;
+  const leadArticles = articles.filter((article) => article.kind === "lead").length;
+  const readiness = [
+    { label: "Une et résumé", ready: Boolean(gazette.headline.trim() && (gazette.excerpt ?? "").trim()), detail: "obligatoire" },
+    { label: "Couverture", ready: Boolean(coverImage), detail: "recommandée" },
+    { label: "Articles rédigés", ready: writtenArticles > 0, detail: `${writtenArticles}/${articles.length}` },
+    { label: "Article principal", ready: leadArticles > 0, detail: leadArticles ? `${leadArticles} bloc${leadArticles > 1 ? "s" : ""}` : "absent" },
+    { label: "Sommaire", ready: highlightItems.length > 0, detail: `${highlightItems.length} rubrique${highlightItems.length > 1 ? "s" : ""}` },
+  ];
 
   return (
     <main className="site-shell admin-page admin-gazettes-page">
@@ -66,6 +76,14 @@ export default async function EditGazettePage({ params, searchParams }: { params
         {message ? <div className="admin-notice"><strong>{message}</strong></div> : null}
         {error ? <div className="admin-alert" role="alert"><strong>{error}</strong></div> : null}
         {gazetteResult.error || articlesResult.error ? <div className="admin-alert" role="alert">Certaines données n’ont pas pu être chargées depuis Supabase.</div> : null}
+
+        <section className="admin-panel admin-editorial-check-panel">
+          <header className="admin-panel__head"><div><p className="eyebrow">Contrôle éditorial</p><h2>Avant de publier</h2></div><span className="admin-panel__status">{writtenArticles}/{articles.length} articles rédigés</span></header>
+          <div className="admin-editorial-readiness" aria-label="État de préparation éditoriale">
+            {readiness.map((item) => <div className={item.ready ? "is-ready" : "is-missing"} key={item.label}><span aria-hidden="true">{item.ready ? "✓" : "○"}</span><strong>{item.label}</strong><small>{item.detail}</small></div>)}
+          </div>
+          <p className="admin-gazette-publication-note">Le titre de une et le résumé sont les seuls prérequis techniques. Les autres indicateurs évitent de publier un numéro encore visiblement incomplet.</p>
+        </section>
 
         <div className="admin-gazette-layout">
           <section className="admin-panel admin-chronicle-editor-panel">
