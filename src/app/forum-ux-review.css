@@ -1,0 +1,118 @@
+/* Forum ergonomic review: browsing, mobile context and composer flow */
+
+/* The legacy composer sidebar no longer exists: let the editor use the full content width. */
+.forum-topic-editor {
+  display: block;
+}
+
+#forum-topic-editor-compose {
+  display: grid;
+  gap: .9rem;
+}
+
+.forum-topic-row__main > p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.forum-topic-row__mobile-meta {
+  display: none;
+}
+
+.forum-pagination > button.is-current {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface-raised));
+  color: var(--accent-bright);
+}
+
+.forum-pagination > button:not(:disabled) {
+  cursor: pointer;
+}
+
+.forum-topic-browser__filters button,
+.forum-pagination > button {
+  min-height: 38px;
+}
+
+.forum-reply-box__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 780px) {
+  /* Keep useful recency information when desktop statistics are collapsed. */
+  .forum-board__last {
+    display: block;
+    grid-column: 2 / -1;
+    margin-top: -.35rem;
+  }
+
+  .forum-board__last small,
+  .forum-board__last span {
+    display: none;
+  }
+
+  .forum-board__last strong {
+    display: block;
+    color: var(--muted);
+    font-size: .66rem;
+    font-weight: 500;
+    white-space: normal;
+  }
+
+  .forum-topic-row__mobile-meta {
+    margin-top: .55rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .7rem;
+    color: var(--muted);
+    font-family: var(--font-ui);
+    font-size: .56rem;
+  }
+
+  .forum-topic-row__mobile-meta span:first-child {
+    color: var(--accent-bright);
+  }
+
+  .forum-topic-browser__filters button,
+  .forum-pagination > button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .forum-reply-box__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .forum-board__last {
+    grid-column: 2;
+  }
+
+  .forum-topic-browser__filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .forum-topic-browser__filters button {
+    width: 100%;
+    padding-inline: .45rem;
+  }
+
+  .forum-reply-box__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .forum-reply-box__actions .button {
+    width: 100%;
+  }
+}
