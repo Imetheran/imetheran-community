@@ -20,6 +20,7 @@ function notice(message?: string, error?: string) {
   if (error === "publication") return { kind: "error", text: "Ajoutez au minimum un titre et un synopsis avant publication." };
   if (error === "participant") return { kind: "error", text: "Le participant n’a pas pu être ajouté. Vérifiez le libellé et les doublons." };
   if (error === "chapitre") return { kind: "error", text: "L’acte n’a pas pu être enregistré." };
+  if (error === "couverture") return { kind: "error", text: "La couverture n’a pas pu être enregistrée. Utilisez un JPG, PNG ou WebP de 4 Mo maximum." };
   if (error) return { kind: "error", text: "La modification n’a pas pu être enregistrée." };
   const messages: Record<string, string> = {
     cree: "Le brouillon est créé. Vous pouvez maintenant ajouter les actes et les participants.",
@@ -74,6 +75,17 @@ export default async function EditChroniclePage({
   const publicationStatus = chronicle.publication_status as ChroniclePublicationStatus;
   const narrativeStatus = chronicle.narrative_status as ChronicleNarrativeStatus;
   const pageNotice = notice(query.message, query.erreur);
+  const coverImage = chronicle.cover_image ?? "";
+  const coverIsStored = coverImage.includes("/storage/v1/object/public/chronicle-covers/");
+  const documentedChapters = chapters.filter((chapter) => (chapter.summary ?? "").trim() || (chapter.body ?? "").trim()).length;
+  const linkedChapters = chapters.filter((chapter) => chapter.forum_topic_id).length;
+  const readiness = [
+    { label: "Titre et synopsis", ready: Boolean(chronicle.title.trim() && chronicle.synopsis.trim()), detail: "obligatoire" },
+    { label: "Couverture", ready: Boolean(coverImage), detail: "recommandée" },
+    { label: "Actes documentés", ready: documentedChapters > 0, detail: `${documentedChapters}/${chapters.length}` },
+    { label: "Participants", ready: participants.length > 0, detail: String(participants.length) },
+    { label: "Liens vers le forum", ready: linkedChapters > 0, detail: `${linkedChapters}/${chapters.length}` },
+  ];
 
   return (
     <main className="site-shell admin-page admin-chronicles-page">
@@ -81,7 +93,7 @@ export default async function EditChroniclePage({
       <section className="admin-hero">
         <div className="content-frame admin-hero__layout">
           <div><p className="eyebrow">CMS · Chroniques</p><h1>{chronicle.title}</h1><p>{chronicle.subtitle || "Dossier narratif sans sous-titre."}</p></div>
-          <div className="admin-hero__side"><span className="admin-role-badge">{chroniclePublicationLabels[publicationStatus]} · {chronicleNarrativeLabels[narrativeStatus]}</span><Link className="button button--ghost button--small" href={`/chroniques/${chronicle.slug}`}>Prévisualiser</Link><Link className="button button--ghost button--small" href="/administration/chroniques">← Liste</Link></div>
+          <div className="admin-hero__side"><span className="admin-role-badge">{chroniclePublicationLabels[publicationStatus]} · {chronicleNarrativeLabels[narrativeStatus]}</span><Link className="button button--ghost button--small" href={`/chroniques/${chronicle.slug}`}>{publicationStatus === "published" ? "Voir le public" : "Prévisualiser"}</Link><Link className="button button--ghost button--small" href="/administration/chroniques">← Liste</Link></div>
         </div>
       </section>
 
@@ -90,19 +102,23 @@ export default async function EditChroniclePage({
 
         <section className="admin-panel admin-chronicle-publish-panel">
           <header className="admin-panel__head"><div><p className="eyebrow">Publication</p><h2>État du dossier</h2></div>{chronicle.featured ? <span className="admin-panel__status">À la une</span> : null}</header>
+          <div className="admin-editorial-readiness" aria-label="État de préparation éditoriale">
+            {readiness.map((item) => <div className={item.ready ? "is-ready" : "is-missing"} key={item.label}><span aria-hidden="true">{item.ready ? "✓" : "○"}</span><strong>{item.label}</strong><small>{item.detail}</small></div>)}
+          </div>
           <div className="admin-chronicle-publish-actions">
             {publicationStatus !== "published" ? <form action={setChroniclePublication}><input type="hidden" name="chronicle_id" value={id} /><input type="hidden" name="publication_status" value="published" /><button className="button button--primary button--small" type="submit">Publier</button></form> : null}
             {publicationStatus !== "draft" ? <form action={setChroniclePublication}><input type="hidden" name="chronicle_id" value={id} /><input type="hidden" name="publication_status" value="draft" /><button className="button button--ghost button--small" type="submit">Repasser en brouillon</button></form> : null}
             {publicationStatus !== "archived" ? <form action={setChroniclePublication}><input type="hidden" name="chronicle_id" value={id} /><input type="hidden" name="publication_status" value="archived" /><button className="button button--ghost button--small" type="submit">Archiver</button></form> : null}
             {publicationStatus === "published" && !chronicle.featured ? <form action={featureChronicle}><input type="hidden" name="chronicle_id" value={id} /><button className="button button--ghost button--small" type="submit">Mettre à la une</button></form> : null}
           </div>
-          <p className="admin-chronicle-publish-note">Un brouillon ou une archive est invisible pour les visiteurs. La mise à la une est unique parmi les chroniques publiées.</p>
+          <p className="admin-chronicle-publish-note">Seuls le titre et le synopsis bloquent techniquement la publication. Les autres indicateurs servent de contrôle éditorial avant mise en ligne.</p>
         </section>
 
         <section className="admin-panel admin-chronicle-editor-panel">
           <header className="admin-panel__head"><div><p className="eyebrow">Dossier</p><h2>Informations publiques</h2></div><span className="admin-panel__status">{chronicle.slug}</span></header>
-          <form className="admin-chronicle-form" action={updateChronicle}>
+          <form className="admin-chronicle-form" action={updateChronicle} encType="multipart/form-data">
             <input type="hidden" name="chronicle_id" value={id} />
+            <input type="hidden" name="cover_image" value={coverImage} />
             <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Titre *</span><input name="title" maxLength={160} required defaultValue={chronicle.title} /></label>
             <label className="admin-chronicle-field"><span>Slug</span><input name="slug" maxLength={110} defaultValue={chronicle.slug} /></label>
             <label className="admin-chronicle-field"><span>Statut narratif</span><select name="narrative_status" defaultValue={chronicle.narrative_status}><option value="upcoming">À venir</option><option value="open">Ouverte</option><option value="closed">Terminée</option></select></label>
@@ -113,7 +129,21 @@ export default async function EditChroniclePage({
             <label className="admin-chronicle-field"><span>Lieu</span><input name="location" maxLength={200} defaultValue={chronicle.location} /></label>
             <label className="admin-chronicle-field"><span>Organisation</span><input name="organizer" maxLength={160} defaultValue={chronicle.organizer} /></label>
             <label className="admin-chronicle-field"><span>Tags</span><input name="tags" defaultValue={(chronicle.tags ?? []).join(", ")} /></label>
-            <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Image de couverture officielle FFXIV</span><input name="cover_image" type="url" maxLength={1200} defaultValue={chronicle.cover_image} /><small>Conservez uniquement des visuels officiels Final Fantasy XIV.</small></label>
+
+            <div className="admin-gazette-cover-field admin-editorial-cover-field">
+              <div className="admin-gazette-cover-field__heading">
+                <div><span>Image de couverture</span><small>{coverImage ? (coverIsStored ? "Stockée dans Imetheran" : "Image externe") : "Aucune couverture personnalisée"}</small></div>
+                {coverImage ? <a href={coverImage} target="_blank" rel="noopener noreferrer">Ouvrir l’image ↗</a> : null}
+              </div>
+              {coverImage ? <div className="admin-gazette-cover-preview"><img src={coverImage} alt="Aperçu de la couverture actuelle" /></div> : <div className="admin-gazette-cover-preview admin-gazette-cover-preview--empty"><span>✦</span><strong>Aucune image de couverture</strong><small>Le visuel du thème actif sera utilisé sur la page publique.</small></div>}
+              <div className="admin-gazette-cover-controls">
+                <label><span>Importer / remplacer</span><input name="cover_file" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG ou WebP · 4 Mo maximum.</small></label>
+                <label><span>URL externe · facultatif</span><input name="cover_url" type="url" maxLength={1200} defaultValue={coverIsStored ? "" : coverImage} placeholder="https://…" /><small>Utilisée uniquement si aucun fichier n’est importé.</small></label>
+              </div>
+              {coverImage ? <label className="admin-gazette-cover-remove"><input name="remove_cover" type="checkbox" /><span>Retirer la couverture actuelle au prochain enregistrement</span></label> : null}
+              <p>Utilisez uniquement une image que vous êtes autorisé à publier.</p>
+            </div>
+
             <div className="admin-chronicle-form__actions"><button className="button button--primary" type="submit">Enregistrer le dossier</button></div>
           </form>
         </section>
