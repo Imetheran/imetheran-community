@@ -21,6 +21,11 @@ function safeInternalHref(value: string) {
   return value.slice(0, 800);
 }
 
+function revalidateMemberNotifications() {
+  revalidatePath("/notifications");
+  revalidatePath("/compte");
+}
+
 export async function openNotification(formData: FormData) {
   const notificationId = String(formData.get("notification_id") ?? "").trim();
   if (!UUID_PATTERN.test(notificationId)) redirect("/notifications?erreur=notification");
@@ -35,14 +40,33 @@ export async function openNotification(formData: FormData) {
 
   if (error || !notification) redirect("/notifications?erreur=notification");
 
-  await supabase
+  const { error: updateError } = await supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
     .eq("id", notificationId)
     .eq("user_id", userId);
 
-  revalidatePath("/notifications");
+  if (updateError) redirect("/notifications?erreur=lecture");
+
+  revalidateMemberNotifications();
   redirect(safeInternalHref(String(notification.href ?? "/notifications")));
+}
+
+export async function markNotificationRead(formData: FormData) {
+  const notificationId = String(formData.get("notification_id") ?? "").trim();
+  if (!UUID_PATTERN.test(notificationId)) redirect("/notifications?erreur=notification");
+
+  const { supabase, userId } = await requireUser();
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("id", notificationId)
+    .eq("user_id", userId)
+    .is("read_at", null);
+
+  if (error) redirect("/notifications?erreur=lecture");
+  revalidateMemberNotifications();
+  redirect("/notifications?message=lu");
 }
 
 export async function markAllNotificationsRead() {
@@ -54,7 +78,7 @@ export async function markAllNotificationsRead() {
     .is("read_at", null);
 
   if (error) redirect("/notifications?erreur=lecture");
-  revalidatePath("/notifications");
+  revalidateMemberNotifications();
   redirect("/notifications?message=lus");
 }
 
@@ -70,6 +94,6 @@ export async function deleteNotification(formData: FormData) {
     .eq("user_id", userId);
 
   if (error) redirect("/notifications?erreur=suppression");
-  revalidatePath("/notifications");
+  revalidateMemberNotifications();
   redirect("/notifications?message=supprimee");
 }
