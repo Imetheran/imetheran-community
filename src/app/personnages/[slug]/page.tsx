@@ -30,6 +30,14 @@ function statusLabel(value: string) {
   return "Publiée";
 }
 
+function formatActivity(value: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Paris",
+  }).format(new Date(value));
+}
+
 function messageLabel(value?: string) {
   if (value === "publie") return "La fiche est publiée et enregistrée.";
   if (value === "brouillon") return "Le brouillon est enregistré.";
@@ -74,13 +82,20 @@ export default async function CharacterProfilePage({
 
   const { data: characterPosts } = await supabase
     .from("forum_posts")
-    .select("topic_id, created_at")
+    .select("id, topic_id, created_at")
     .eq("character_id", character.id)
     .eq("is_hidden", false)
     .order("created_at", { ascending: false })
     .limit(30);
 
-  const orderedTopicIds = Array.from(new Set((characterPosts ?? []).map((post) => post.topic_id))).slice(0, 8);
+  const latestPostByTopic = new Map<string, { id: string; created_at: string }>();
+  for (const post of characterPosts ?? []) {
+    if (!latestPostByTopic.has(post.topic_id)) {
+      latestPostByTopic.set(post.topic_id, { id: post.id, created_at: post.created_at });
+    }
+  }
+
+  const orderedTopicIds = Array.from(latestPostByTopic.keys()).slice(0, 8);
   const topicsResult = orderedTopicIds.length
     ? await supabase.from("forum_topics").select("id, board_id, title, slug, status, last_activity_at").in("id", orderedTopicIds)
     : { data: [] as { id: string; board_id: string; title: string; slug: string; status: string; last_activity_at: string }[] };
@@ -93,10 +108,11 @@ export default async function CharacterProfilePage({
   const boardMap = new Map((boardsResult.data ?? []).map((board) => [board.id, board]));
   const activities = orderedTopicIds.flatMap((topicId) => {
     const topic = topicMap.get(topicId);
-    if (!topic) return [];
+    const latestPost = latestPostByTopic.get(topicId);
+    if (!topic || !latestPost) return [];
     const board = boardMap.get(topic.board_id);
     if (!board) return [];
-    return [{ ...topic, board }];
+    return [{ ...topic, board, postId: latestPost.id, characterActivityAt: latestPost.created_at }];
   });
   const savedMessage = messageLabel(query.message);
 
@@ -123,8 +139,8 @@ export default async function CharacterProfilePage({
             </div>
             <div className="character-profile-identity">
               <div className="character-profile-identity__meta">
-                <span className="status-pill">{statusLabel(character.status)}</span>
-                <span>{visibilityLabel(character.visibility)}</span>
+                {(isOwner || canModerate || character.status !== "published") ? <span className="status-pill">{statusLabel(character.status)}</span> : null}
+                {(isOwner || canModerate || character.visibility !== "public") ? <span>{visibilityLabel(character.visibility)}</span> : null}
                 {character.is_featured ? <span>Mis en avant</span> : null}
                 {character.is_moderation_hidden ? <span>Masqué par l’équipe</span> : null}
               </div>
@@ -137,6 +153,15 @@ export default async function CharacterProfilePage({
           </div>
         </div>
       </section>
+
+      <nav className="character-profile-nav" aria-label={`Parcourir la fiche de ${character.name}`}>
+        <div className="content-frame character-profile-nav__inner">
+          <a href="#histoire">Histoire</a>
+          <a href="#accroches">Accroches</a>
+          <a href="#relations">Relations</a>
+          <a href="#activite">Activité RP</a>
+        </div>
+      </nav>
 
       <section className="character-profile content-frame" aria-label={`Fiche de ${character.name}`}>
         <aside className="character-profile__sidebar">
@@ -159,15 +184,15 @@ export default async function CharacterProfilePage({
           </section>
 
           <section className="character-info-card">
-            <p className="character-info-card__label">Propriétaire</p>
+            <p className="character-info-card__label">Joué par</p>
             <p className="character-info-card__small">{ownerProfile?.display_name ?? "Membre Imetheran"}</p>
-            <p className="character-info-card__small">Visibilité : {visibilityLabel(character.visibility)}.</p>
+            {(isOwner || canModerate || character.visibility !== "public") ? <p className="character-info-card__small">Visibilité : {visibilityLabel(character.visibility)}.</p> : null}
             {character.is_moderation_hidden && (isOwner || canModerate) ? <p className="character-live-warning">{character.moderation_note || "Cette fiche a été masquée par l’équipe."}</p> : null}
           </section>
         </aside>
 
         <article className="character-profile__main">
-          <section className="character-profile-section character-profile-section--biography">
+          <section className="character-profile-section character-profile-section--biography" id="histoire">
             <p className="panel__kicker">Histoire</p>
             <h2>Parcours</h2>
             {biography.length > 0 ? (
@@ -175,27 +200,34 @@ export default async function CharacterProfilePage({
             ) : <p className="character-profile-section__empty">Aucune biographie renseignée pour le moment.</p>}
           </section>
 
-          <section className="character-profile-section">
+          <section className="character-profile-section" id="accroches">
             <div className="character-profile-section__heading"><div><p className="panel__kicker">Rencontres possibles</p><h2>Accroches RP</h2></div>{hooks.length > 0 ? <span className="status-pill status-pill--quiet">Ouvert au jeu</span> : null}</div>
             {hooks.length > 0 ? (
               <div className="character-hooks">{hooks.map((hook, index) => <article className="character-hook" key={`${hook.title}-${index}`}><span>{String(index + 1).padStart(2, "0")}</span><h3>{hook.title || "Accroche"}</h3><p>{hook.text}</p></article>)}</div>
             ) : <p className="character-profile-section__empty">Aucune accroche RP renseignée.</p>}
           </section>
 
-          <section className="character-profile-section">
+          <section className="character-profile-section" id="relations">
             <div className="character-profile-section__heading"><div><p className="panel__kicker">Sociogramme</p><h2>Relations</h2></div><Link className="text-link" href="/liens">Voir les liens <span aria-hidden="true">→</span></Link></div>
             <CharacterRelations characterId={character.id} />
           </section>
 
-          <section className="character-profile-section">
-            <p className="panel__kicker">Traces communautaires</p>
-            <h2>Activité RP</h2>
+          <section className="character-profile-section" id="activite">
+            <div className="character-profile-section__heading">
+              <div><p className="panel__kicker">Traces communautaires</p><h2>Activité RP</h2></div>
+              {activities.length > 0 ? <span className="status-pill status-pill--quiet">{activities.length} scène{activities.length > 1 ? "s" : ""}</span> : null}
+            </div>
             {activities.length > 0 ? (
               <div className="character-activity">
                 {activities.map((activity, index) => (
-                  <Link className="character-live-activity-link" href={`/forum/${activity.board.slug}/sujet/${activity.slug}`} key={activity.id}>
+                  <Link className="character-live-activity-link" href={`/forum/${activity.board.slug}/sujet/${activity.slug}#${activity.postId}`} key={activity.id}>
                     <span>{String(index + 1).padStart(2, "0")}</span>
-                    <div><small>Forum · {activity.board.title}</small><h3>{activity.title}</h3><p>{activity.status === "open" ? "Sujet en cours" : activity.status === "finished" ? "Sujet terminé" : "Sujet archivé"}</p></div>
+                    <div>
+                      <small>Forum · {activity.board.title}</small>
+                      <h3>{activity.title}</h3>
+                      <p>{activity.status === "open" ? "Sujet en cours" : activity.status === "finished" ? "Sujet terminé" : "Sujet archivé"}</p>
+                      <time dateTime={activity.characterActivityAt}>Dernière intervention du personnage · {formatActivity(activity.characterActivityAt)}</time>
+                    </div>
                   </Link>
                 ))}
               </div>
