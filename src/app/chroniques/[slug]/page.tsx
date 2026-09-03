@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/server";
 import {
   chronicleChapterLabels,
@@ -22,11 +21,13 @@ export default async function ChronicleDetailPage({ params }: { params: Promise<
   const role = getAppRole(claimsData?.claims?.app_metadata);
   const isAdmin = role === "admin";
 
-  const { data: chronicle, error } = await supabase
+  let chronicleQuery = supabase
     .from("chronicles")
     .select("id, slug, title, subtitle, synopsis, hook, narrative_status, publication_status, featured, cover_image, started_at, location, organizer, tags, published_at")
-    .eq("slug", slug)
-    .maybeSingle();
+    .eq("slug", slug);
+  if (!isAdmin) chronicleQuery = chronicleQuery.eq("publication_status", "published");
+
+  const { data: chronicle, error } = await chronicleQuery.maybeSingle();
   if (error || !chronicle) notFound();
 
   const [chaptersResult, participantsResult] = await Promise.all([
@@ -87,7 +88,6 @@ export default async function ChronicleDetailPage({ params }: { params: Promise<
           <p className="chronicle-hero__synopsis">{chronicle.synopsis}</p>
           <div className="chronicle-hero__tags">{((chronicle.tags ?? []) as string[]).map((tag: string) => <span key={tag}>{tag}</span>)}</div>
           <div className="chronicle-detail-actions">
-            <ThemeToggle />
             <Link className="button button--ghost button--small" href="/chroniques">Toutes les chroniques</Link>
             {isAdmin ? <Link className="button button--ghost button--small" href={`/administration/chroniques/${chronicle.id}`}>Modifier</Link> : null}
           </div>
