@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +107,6 @@ export default async function ForumPage() {
             scènes rôleplay, campagnes saisonnières et discussions autour de Final Fantasy XIV.
           </p>
           <div className="forum-hero__actions">
-            <ThemeToggle />
             <Link className="button button--ghost" href="/personnages">Voir les personnages</Link>
           </div>
         </div>
@@ -147,7 +145,7 @@ export default async function ForumPage() {
           {sections.map((section, sectionIndex) => {
             const style = presentation[section.slug] ?? { kind: "community" as const, eyebrow: "Forum" };
             return (
-              <section className={`forum-section forum-section--${style.kind}`} key={section.id}>
+              <section id={section.slug} className={`forum-section forum-section--${style.kind}`} key={section.id}>
                 <header className="forum-section__header">
                   <div className="forum-section__identity">
                     <span className="forum-section__number">{String(sectionIndex + 1).padStart(2, "0")}</span>
