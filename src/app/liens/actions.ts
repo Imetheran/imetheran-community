@@ -23,6 +23,8 @@ function refreshLinks() {
   revalidatePath("/liens");
   revalidatePath("/personnages");
   revalidatePath("/personnages/[slug]", "page");
+  revalidatePath("/compte");
+  revalidatePath("/notifications");
   revalidatePath("/administration/liens");
   revalidatePath("/administration");
 }
