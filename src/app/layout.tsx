@@ -3,6 +3,7 @@ import { GlobalThemeSwitcher } from "@/components/theme-toggle";
 import "./globals.css";
 import "./content-hub.css";
 import "./home-live.css";
+import "./home-community.css";
 import "./image-quality.css";
 import "./gazette-issue.css";
 import "./chronicle-hub.css";
