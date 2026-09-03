@@ -9,13 +9,18 @@ export function ForumQuoteButton({
   authorName: string;
   content: string;
 }) {
-  const quote = forumQuoteBbcode(authorName, content);
-
   return (
     <button
       type="button"
-      aria-label={`Citer le message de ${authorName}`}
-      onClick={() => {
+      aria-label="Citer ce message"
+      onClick={(event) => {
+        const post = event.currentTarget.closest<HTMLElement>(".forum-post");
+        const characterName = post
+          ?.querySelector<HTMLElement>(".forum-post__identity-name")
+          ?.textContent
+          ?.trim();
+        const quote = forumQuoteBbcode(characterName || authorName, content);
+
         window.dispatchEvent(new CustomEvent(FORUM_QUOTE_EVENT, { detail: { quote } }));
         requestAnimationFrame(() => {
           document.getElementById("repondre")?.scrollIntoView({ behavior: "smooth", block: "start" });
