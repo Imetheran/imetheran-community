@@ -41,12 +41,14 @@ function graphPositions(characters: SociogramCharacter[]) {
   }
 
   characters.forEach((character, index) => {
-    const outer = index < 8;
-    const ringIndex = outer ? index : index - 8;
-    const ringTotal = outer ? Math.min(total, 8) : Math.max(1, total - 8);
-    const angle = -Math.PI / 2 + (Math.PI * 2 * ringIndex) / ringTotal;
-    const radiusX = outer ? 34 : 19;
-    const radiusY = outer ? 35 : 19;
+    const ring = Math.floor(index / 8);
+    const ringIndex = index % 8;
+    const ringStart = ring * 8;
+    const ringTotal = Math.min(8, total - ringStart);
+    const radiusX = Math.max(14, 36 - ring * 10);
+    const radiusY = Math.max(14, 36 - ring * 10);
+    const angleOffset = ring % 2 === 0 ? -Math.PI / 2 : -Math.PI / 2 + Math.PI / Math.max(4, ringTotal);
+    const angle = angleOffset + (Math.PI * 2 * ringIndex) / ringTotal;
     positions.set(character.id, {
       x: 50 + Math.cos(angle) * radiusX,
       y: 50 + Math.sin(angle) * radiusY,
@@ -69,7 +71,12 @@ export function Sociogram({
   const [selectedId, setSelectedId] = useState(characters[0]?.id ?? "");
   const [selectedRelationId, setSelectedRelationId] = useState<string | null>(relationships[0]?.id ?? null);
   const [filter, setFilter] = useState<FilterKind>("all");
-  const positions = useMemo(() => graphPositions(characters), [characters]);
+  const [focusMode, setFocusMode] = useState(characters.length > 12);
+
+  const availableKinds = useMemo(() => {
+    const used = new Set(relationships.map((relationship) => relationship.kind));
+    return (Object.entries(relationshipKinds) as Array<[RelationshipKind, { label: string; shortLabel: string }]>).filter(([kind]) => used.has(kind));
+  }, [relationships]);
 
   if (characters.length === 0) {
     return (
@@ -80,23 +87,53 @@ export function Sociogram({
   }
 
   const selectedCharacter = characters.find((character) => character.id === selectedId) ?? characters[0];
-  const selectedRelation = relationships.find((relationship) => relationship.id === selectedRelationId) ?? null;
-  const visibleRelationships = relationships.filter((relationship) => filter === "all" || relationship.kind === filter);
-  const characterRelations = relationships.filter((relationship) => relationship.sourceCharacterId === selectedCharacter.id || relationship.targetCharacterId === selectedCharacter.id);
+  const filteredRelationships = relationships.filter((relationship) => filter === "all" || relationship.kind === filter);
+  const characterRelations = filteredRelationships.filter((relationship) => relationship.sourceCharacterId === selectedCharacter.id || relationship.targetCharacterId === selectedCharacter.id);
+  const visibleRelationships = focusMode ? characterRelations : filteredRelationships;
+  const visibleCharacterIds = new Set<string>();
+  if (focusMode) {
+    visibleCharacterIds.add(selectedCharacter.id);
+    visibleRelationships.forEach((relationship) => {
+      visibleCharacterIds.add(relationship.sourceCharacterId);
+      visibleCharacterIds.add(relationship.targetCharacterId);
+    });
+  }
+  const visibleCharacters = focusMode ? characters.filter((character) => visibleCharacterIds.has(character.id)) : characters;
+  const positions = graphPositions(visibleCharacters);
+  const selectedRelation = visibleRelationships.find((relationship) => relationship.id === selectedRelationId) ?? characterRelations[0] ?? null;
+
+  function selectCharacter(characterId: string) {
+    setSelectedId(characterId);
+    const firstRelation = filteredRelationships.find((relationship) => relationship.sourceCharacterId === characterId || relationship.targetCharacterId === characterId);
+    setSelectedRelationId(firstRelation?.id ?? null);
+  }
 
   return (
     <div className="sociogram-workspace">
       <div className="sociogram-toolbar">
-        <div>
+        <div className="sociogram-toolbar__filters">
           <span className="sociogram-toolbar__label">Afficher</span>
           <div className="sociogram-filters" role="group" aria-label="Filtrer les relations">
-            <button className={filter === "all" ? "is-active" : ""} type="button" onClick={() => setFilter("all")}>Toutes</button>
-            {(Object.entries(relationshipKinds) as Array<[RelationshipKind, { label: string; shortLabel: string }]>).map(([kind, meta]) => (
-              <button className={filter === kind ? "is-active" : ""} type="button" key={kind} onClick={() => setFilter(kind)}>{meta.shortLabel}</button>
+            <button className={filter === "all" ? "is-active" : ""} aria-pressed={filter === "all"} type="button" onClick={() => setFilter("all")}>Toutes</button>
+            {availableKinds.map(([kind, meta]) => (
+              <button className={filter === kind ? "is-active" : ""} aria-pressed={filter === kind} type="button" key={kind} onClick={() => setFilter(kind)}>{meta.shortLabel}</button>
             ))}
           </div>
         </div>
-        <div className="sociogram-toolbar__meta"><span><strong>{characters.length}</strong> personnages</span><span><strong>{relationships.length}</strong> relations</span></div>
+
+        <div className="sociogram-toolbar__navigation">
+          <label>
+            <span>Personnage</span>
+            <select value={selectedCharacter.id} onChange={(event) => selectCharacter(event.target.value)}>
+              {characters.map((character) => <option value={character.id} key={character.id}>{character.displayName}</option>)}
+            </select>
+          </label>
+          <button className={`sociogram-focus-toggle${focusMode ? " is-active" : ""}`} type="button" aria-pressed={focusMode} onClick={() => setFocusMode((current) => !current)}>
+            {focusMode ? "Autour du personnage" : "Réseau entier"}
+          </button>
+        </div>
+
+        <div className="sociogram-toolbar__meta"><span><strong>{visibleCharacters.length}</strong> affiché{visibleCharacters.length > 1 ? "s" : ""}</span><span><strong>{visibleRelationships.length}</strong> lien{visibleRelationships.length > 1 ? "s" : ""}</span></div>
       </div>
 
       <div className="sociogram-layout">
@@ -107,7 +144,7 @@ export function Sociogram({
               const source = positions.get(relationship.sourceCharacterId);
               const target = positions.get(relationship.targetCharacterId);
               if (!source || !target) return null;
-              const focused = selectedRelationId === relationship.id || relationship.sourceCharacterId === selectedCharacter.id || relationship.targetCharacterId === selectedCharacter.id;
+              const focused = selectedRelation?.id === relationship.id || relationship.sourceCharacterId === selectedCharacter.id || relationship.targetCharacterId === selectedCharacter.id;
               return <line key={relationship.id} x1={source.x} y1={source.y} x2={target.x} y2={target.y} className={`sociogram-line sociogram-line--${relationship.kind}${focused ? " is-focused" : ""}`} vectorEffect="non-scaling-stroke" />;
             })}
           </svg>
@@ -119,26 +156,23 @@ export function Sociogram({
             const x = (source.x + target.x) / 2;
             const y = (source.y + target.y) / 2;
             return (
-              <button className={`sociogram-edge-label sociogram-edge-label--${relationship.kind}${selectedRelationId === relationship.id ? " is-selected" : ""}`} style={{ left: `${x}%`, top: `${y}%` }} type="button" key={relationship.id} onClick={() => { setSelectedRelationId(relationship.id); setSelectedId(relationship.sourceCharacterId); }}>
+              <button className={`sociogram-edge-label sociogram-edge-label--${relationship.kind}${selectedRelation?.id === relationship.id ? " is-selected" : ""}`} style={{ left: `${x}%`, top: `${y}%` }} type="button" key={relationship.id} onClick={() => { setSelectedRelationId(relationship.id); setSelectedId(relationship.sourceCharacterId); }}>
                 {relationshipKinds[relationship.kind].shortLabel}
               </button>
             );
           })}
 
-          {characters.map((character) => {
+          {visibleCharacters.map((character) => {
             const position = positions.get(character.id) ?? { x: 50, y: 50 };
-            const connected = relationships.some((relationship) => relationship.sourceCharacterId === character.id || relationship.targetCharacterId === character.id);
+            const connected = visibleRelationships.some((relationship) => relationship.sourceCharacterId === character.id || relationship.targetCharacterId === character.id);
             return (
-              <button key={character.id} className={`sociogram-node${selectedCharacter.id === character.id ? " is-selected" : ""}${connected ? " is-connected" : ""}`} style={{ left: `${position.x}%`, top: `${position.y}%` }} type="button" onClick={() => {
-                setSelectedId(character.id);
-                setSelectedRelationId(relationships.find((relationship) => relationship.sourceCharacterId === character.id || relationship.targetCharacterId === character.id)?.id ?? null);
-              }}>
+              <button key={character.id} className={`sociogram-node${selectedCharacter.id === character.id ? " is-selected" : ""}${connected ? " is-connected" : ""}`} style={{ left: `${position.x}%`, top: `${position.y}%` }} type="button" onClick={() => selectCharacter(character.id)}>
                 <span className="sociogram-node__portrait" aria-hidden="true">{character.portraitUrl ? <img src={character.portraitUrl} alt="" /> : character.initials}</span>
                 <span className="sociogram-node__copy"><small>{character.people || "Personnage"}</small><strong>{character.displayName}</strong><span>{character.occupation || "Occupation non renseignée"}</span></span>
               </button>
             );
           })}
-          <div className="sociogram-canvas__hint">Seules les relations approuvées par les deux propriétaires apparaissent ici.</div>
+          <div className="sociogram-canvas__hint">{focusMode ? "Vue centrée sur le personnage sélectionné." : "Activez « Réseau entier » pour alterner avec une vue centrée."}</div>
         </section>
 
         <aside className="sociogram-inspector" aria-live="polite">
@@ -149,18 +183,18 @@ export function Sociogram({
           </section>
 
           <section className="sociogram-inspector__relations">
-            <div className="sociogram-inspector__heading"><p className="panel__kicker">Relations validées</p><span>{characterRelations.length}</span></div>
+            <div className="sociogram-inspector__heading"><p className="panel__kicker">Relations visibles</p><span>{characterRelations.length}</span></div>
             <div className="sociogram-relation-list">
               {characterRelations.length ? characterRelations.map((relationship) => {
                 const counterpart = characters.find((character) => character.id === otherCharacterId(relationship, selectedCharacter.id));
                 if (!counterpart) return null;
                 return (
-                  <button type="button" className={`sociogram-relation-item sociogram-relation-item--${relationship.kind}${selectedRelationId === relationship.id ? " is-active" : ""}`} key={relationship.id} onClick={() => setSelectedRelationId(relationship.id)}>
-                    <span className="sociogram-relation-item__avatar">{counterpart.initials}</span>
+                  <button type="button" className={`sociogram-relation-item sociogram-relation-item--${relationship.kind}${selectedRelation?.id === relationship.id ? " is-active" : ""}`} key={relationship.id} onClick={() => setSelectedRelationId(relationship.id)}>
+                    <span className="sociogram-relation-item__avatar" aria-hidden="true">{counterpart.portraitUrl ? <img src={counterpart.portraitUrl} alt="" /> : counterpart.initials}</span>
                     <span><small>{relationshipKinds[relationship.kind].label}</small><strong>{counterpart.displayName}</strong><span>{relationship.label}</span></span>
                   </button>
                 );
-              }) : <p className="sociogram-live-empty-copy">Aucune relation publique validée.</p>}
+              }) : <p className="sociogram-live-empty-copy">Aucune relation correspondant à ce filtre.</p>}
             </div>
           </section>
 
@@ -174,9 +208,11 @@ export function Sociogram({
         </aside>
       </div>
 
-      <div className="sociogram-legend" aria-label="Légende des types de relations">
-        {(Object.entries(relationshipKinds) as Array<[RelationshipKind, { label: string; shortLabel: string }]>).map(([kind, meta]) => <span key={kind}><i className={`sociogram-legend__mark sociogram-legend__mark--${kind}`} />{meta.label}</span>)}
-      </div>
+      {availableKinds.length ? (
+        <div className="sociogram-legend" aria-label="Légende des types de relations">
+          {availableKinds.map(([kind, meta]) => <span key={kind}><i className={`sociogram-legend__mark sociogram-legend__mark--${kind}`} />{meta.label}</span>)}
+        </div>
+      ) : null}
     </div>
   );
 }
