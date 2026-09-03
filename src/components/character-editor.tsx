@@ -80,6 +80,7 @@ export function CharacterEditor({
   });
   const [portraitName, setPortraitName] = useState("");
   const [portraitPreviewUrl, setPortraitPreviewUrl] = useState<string | null>(null);
+  const [removePortrait, setRemovePortrait] = useState(false);
 
   useEffect(() => {
     if (!portraitPreviewUrl) return;
@@ -89,7 +90,12 @@ export function CharacterEditor({
   const parsedTraits = useMemo(() => traits.split(",").map((trait) => trait.trim()).filter(Boolean).slice(0, 8), [traits]);
   const initials = getInitials(displayName);
   const title = mode === "create" ? "Créer mon personnage" : `Modifier ${initialCharacter?.name ?? "mon personnage"}`;
-  const portraitUrl = portraitPreviewUrl ?? initialCharacter?.portraitUrl ?? null;
+  const portraitUrl = portraitPreviewUrl ?? (removePortrait ? null : initialCharacter?.portraitUrl ?? null);
+  const publishVisibility = visibility === "public"
+    ? "la fiche apparaîtra immédiatement dans le répertoire public."
+    : visibility === "unlisted"
+      ? "la fiche sera publiée mais accessible uniquement par son lien direct."
+      : "la fiche sera enregistrée comme publiée mais restera visible uniquement par vous et l’équipe.";
 
   function updateHook(index: number, field: keyof EditableHook, value: string) {
     setHookList((current) => current.map((hook, hookIndex) => hookIndex === index ? { ...hook, [field]: value } : hook));
@@ -99,6 +105,7 @@ export function CharacterEditor({
     const file = event.target.files?.[0] ?? null;
     setPortraitName(file?.name ?? "");
     setPortraitPreviewUrl(file ? URL.createObjectURL(file) : null);
+    if (file) setRemovePortrait(false);
   }
 
   return (
@@ -148,12 +155,31 @@ export function CharacterEditor({
 
           <EditorSection number="02" kicker="Portrait & tonalité" title="Donner un visage à la fiche">
             <div className="character-editor-media-row">
-              <label className="character-editor-upload">
-                <input name="portrait" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePortraitChange} />
-                <span className="character-editor-upload__mark">{initials}</span>
-                <strong>{portraitName || (initialCharacter?.portraitUrl ? "Remplacer le portrait" : "Importer un portrait")}</strong>
-                <small>PNG, JPG ou WebP · 4 Mo maximum · aperçu avant enregistrement</small>
-              </label>
+              <div className="character-editor-upload-column">
+                <label className="character-editor-upload">
+                  <input name="portrait" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePortraitChange} />
+                  <span className="character-editor-upload__mark">{initials}</span>
+                  <strong>{portraitName || (initialCharacter?.portraitUrl && !removePortrait ? "Remplacer le portrait" : "Importer un portrait")}</strong>
+                  <small>PNG, JPG ou WebP · 4 Mo maximum · aperçu avant enregistrement</small>
+                </label>
+                {initialCharacter?.portraitUrl ? (
+                  <label className="character-editor-remove-portrait">
+                    <input
+                      name="remove_portrait"
+                      type="checkbox"
+                      checked={removePortrait}
+                      onChange={(event) => {
+                        setRemovePortrait(event.target.checked);
+                        if (event.target.checked) {
+                          setPortraitName("");
+                          setPortraitPreviewUrl(null);
+                        }
+                      }}
+                    />
+                    <span>Retirer le portrait actuel lors de l’enregistrement</span>
+                  </label>
+                ) : null}
+              </div>
               <div className="character-editor-media-copy">
                 <Field label="Citation"><input name="quote" maxLength={300} value={quote} onChange={(event) => setQuote(event.target.value)} placeholder="Une phrase qui résume le personnage" /></Field>
                 <Field label="Traits" help="Séparez les traits par des virgules, 8 maximum."><input name="traits" value={traits} onChange={(event) => setTraits(event.target.value)} placeholder="Curieuse, pragmatique, observatrice" /></Field>
@@ -192,6 +218,7 @@ export function CharacterEditor({
                 </label>
               ))}
             </div>
+            <p className="character-editor-publish-note"><strong>Si vous publiez maintenant :</strong> {publishVisibility}</p>
             <div className="character-live-actions">
               <SubmitButton intent="draft" ghost>{initialCharacter?.status === "published" ? "Repasser en brouillon" : "Enregistrer le brouillon"}</SubmitButton>
               <SubmitButton intent="publish">{initialCharacter?.status === "published" ? "Enregistrer et publier" : "Publier la fiche"}</SubmitButton>
@@ -205,7 +232,7 @@ export function CharacterEditor({
             <div className="character-editor-preview__label">Aperçu en direct</div>
             <div className="character-editor-preview__portrait">
               {portraitUrl ? <img className="character-live-portrait" src={portraitUrl} alt="Aperçu du portrait sélectionné" /> : <span>{initials}</span>}
-              <small>{portraitName || (initialCharacter?.portraitUrl ? "Portrait actuel" : "Portrait")}</small>
+              <small>{portraitName || (initialCharacter?.portraitUrl && !removePortrait ? "Portrait actuel" : "Aucun portrait")}</small>
             </div>
             <div className="character-editor-preview__identity">
               <small>{people || "Peuple"} · {world || "Monde"}</small>
