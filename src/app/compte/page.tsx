@@ -102,16 +102,16 @@ export default async function ComptePage({
     },
     {
       label: "Charte et cadre RP",
-      detail: "Les repères communs sont accessibles à tout moment dans les Guides.",
-      done: false,
+      detail: "Consultez les repères communs quand vous en avez besoin ; cette étape n’est pas suivie comme une obligation.",
+      done: null,
       href: "/guides/charte",
-      action: "Lire",
+      action: "Consulter",
     },
     {
       label: "Présentation forum",
       detail: hasPresentation ? "Vous avez déjà ouvert un sujet de présentation." : "Présentez-vous quand vous vous sentez prêt à rejoindre les échanges.",
       done: hasPresentation,
-      href: "/forum/presentations",
+      href: hasPresentation ? "/forum/presentations" : "/forum/presentations/nouveau",
       action: hasPresentation ? "Voir" : "Se présenter",
     },
     {
@@ -168,8 +168,10 @@ export default async function ComptePage({
             </header>
             <div className="account-onboarding__steps">
               {onboardingSteps.map((step, index) => (
-                <article className={step.done ? "is-done" : ""} key={step.label}>
-                  <span className="account-onboarding__marker" aria-hidden="true">{step.done ? "✓" : String(index + 1).padStart(2, "0")}</span>
+                <article className={step.done === true ? "is-done" : ""} key={step.label}>
+                  <span className="account-onboarding__marker" aria-hidden="true">
+                    {step.done === true ? "✓" : step.done === null ? "◇" : String(index + 1).padStart(2, "0")}
+                  </span>
                   <div>
                     <strong>{step.label}</strong>
                     <p>{step.detail}</p>
