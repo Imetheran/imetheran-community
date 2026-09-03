@@ -19,8 +19,7 @@ export function ForumThreadActions({
   canModerate = false,
   canParticipateInReplies,
   replyRequiresLogin,
-  followLoginHref,
-  replyLoginHref,
+  loginHref,
 }: {
   topicId: string;
   boardSlug: string;
@@ -33,8 +32,7 @@ export function ForumThreadActions({
   canModerate?: boolean;
   canParticipateInReplies: boolean;
   replyRequiresLogin: boolean;
-  followLoginHref: string;
-  replyLoginHref: string;
+  loginHref: string;
 }) {
   const router = useRouter();
   const [following, setFollowing] = useState(initialFollowing);
@@ -43,6 +41,7 @@ export function ForumThreadActions({
   const [currentStatus, setCurrentStatus] = useState(status);
   const [notice, setNotice] = useState("");
   const [pending, startTransition] = useTransition();
+  const followLoginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}`)}`;
 
   function toggleFollow() {
     if (!authenticated || pending) return;
@@ -98,7 +97,7 @@ export function ForumThreadActions({
         {showReplyButton ? (
           <a className="button button--primary button--small" href="#repondre">Répondre</a>
         ) : showReplyLogin ? (
-          <a className="button button--primary button--small" href={replyLoginHref}>Se connecter pour répondre</a>
+          <a className="button button--primary button--small" href={loginHref}>Se connecter pour répondre</a>
         ) : null}
       </div>
 
