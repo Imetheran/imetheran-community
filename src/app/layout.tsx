@@ -44,6 +44,7 @@ import "./shadowbringers-artwork.css";
 import "./endwalker-artwork.css";
 import "./final-polish.css";
 import "./forum-ux-review.css";
+import "./forum-character-identity.css";
 import "./accessibility.css";
 import "./global-theme-selector.css";
 
