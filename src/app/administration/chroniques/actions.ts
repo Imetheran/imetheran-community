@@ -1,5 +1,6 @@
 "use server";
 
+import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -10,6 +11,9 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 const NARRATIVE_STATUSES = new Set(["upcoming", "open", "closed"]);
 const CHAPTER_STATUSES = new Set(["completed", "active", "upcoming"]);
 const PUBLICATION_STATUSES = new Set(["draft", "published", "archived"]);
+const CHRONICLE_COVER_BUCKET = "chronicle-covers";
+const CHRONICLE_COVER_MAX_BYTES = 4 * 1024 * 1024;
+const CHRONICLE_COVER_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -32,6 +36,17 @@ function slugify(value: string) {
     .slice(0, 110);
 }
 
+function normalizeHttpUrl(value: string) {
+  const trimmed = value.trim().slice(0, 1200);
+  if (!trimmed) return "";
+  try {
+    const url = new URL(trimmed);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString().slice(0, 1200) : "";
+  } catch {
+    return "";
+  }
+}
+
 function readChronicleFields(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim().slice(0, 160);
   const requestedSlug = slugify(String(formData.get("slug") ?? "").trim());
@@ -40,7 +55,8 @@ function readChronicleFields(formData: FormData) {
   const hook = String(formData.get("hook") ?? "").trim().slice(0, 5000);
   const location = String(formData.get("location") ?? "").trim().slice(0, 200);
   const organizer = String(formData.get("organizer") ?? "").trim().slice(0, 160);
-  const coverImage = String(formData.get("cover_image") ?? "").trim().slice(0, 1200);
+  const requestedCoverUrl = normalizeHttpUrl(String(formData.get("cover_url") ?? ""));
+  const existingCoverUrl = normalizeHttpUrl(String(formData.get("cover_image") ?? ""));
   const startedAtRaw = String(formData.get("started_at") ?? "").trim();
   const narrativeStatusRaw = String(formData.get("narrative_status") ?? "upcoming");
   const tags = String(formData.get("tags") ?? "")
@@ -58,11 +74,43 @@ function readChronicleFields(formData: FormData) {
     hook,
     location,
     organizer,
-    cover_image: coverImage,
+    cover_image: requestedCoverUrl || existingCoverUrl,
     started_at: /^\d{4}-\d{2}-\d{2}$/.test(startedAtRaw) ? startedAtRaw : null,
     narrative_status: NARRATIVE_STATUSES.has(narrativeStatusRaw) ? narrativeStatusRaw : "upcoming",
     tags,
   };
+}
+
+function readCoverFile(formData: FormData) {
+  const value = formData.get("cover_file");
+  return value instanceof File && value.size > 0 ? value : null;
+}
+
+function isValidCoverFile(file: File) {
+  return file.size <= CHRONICLE_COVER_MAX_BYTES && CHRONICLE_COVER_MIME_TYPES.has(file.type);
+}
+
+async function uploadChronicleCover(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  chronicleId: string,
+  file: File,
+) {
+  const path = `${chronicleId}/cover`;
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const { error } = await supabase.storage.from(CHRONICLE_COVER_BUCKET).upload(path, bytes, {
+    contentType: file.type,
+    cacheControl: "3600",
+    upsert: true,
+  });
+  if (error) return null;
+
+  const { data } = supabase.storage.from(CHRONICLE_COVER_BUCKET).getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+async function removeChronicleCover(supabase: Awaited<ReturnType<typeof createClient>>, chronicleId: string) {
+  const { error } = await supabase.storage.from(CHRONICLE_COVER_BUCKET).remove([`${chronicleId}/cover`]);
+  return !error;
 }
 
 async function chronicleSlug(supabase: Awaited<ReturnType<typeof createClient>>, id: string) {
@@ -80,7 +128,9 @@ function refreshChronicle(slug?: string | null) {
 
 export async function createChronicle(formData: FormData) {
   const fields = readChronicleFields(formData);
+  const coverFile = readCoverFile(formData);
   if (!fields.title) redirect("/administration/chroniques/nouveau?erreur=titre");
+  if (coverFile && !isValidCoverFile(coverFile)) redirect("/administration/chroniques/nouveau?erreur=couverture");
 
   const { supabase, userId } = await requireAdmin();
   let slug = fields.requestedSlug || slugify(fields.title) || `chronique-${randomUUID().slice(0, 8)}`;
@@ -109,6 +159,17 @@ export async function createChronicle(formData: FormData) {
     .select("id")
     .single();
   if (error || !data) redirect("/administration/chroniques/nouveau?erreur=enregistrement");
+
+  if (coverFile) {
+    const uploadedCover = await uploadChronicleCover(supabase, data.id, coverFile);
+    if (!uploadedCover) redirect(`/administration/chroniques/${data.id}?erreur=couverture`);
+    const { error: coverUpdateError } = await supabase
+      .from("chronicles")
+      .update({ cover_image: uploadedCover, updated_by: userId })
+      .eq("id", data.id);
+    if (coverUpdateError) redirect(`/administration/chroniques/${data.id}?erreur=couverture`);
+  }
+
   refreshChronicle();
   redirect(`/administration/chroniques/${data.id}?message=cree`);
 }
@@ -117,11 +178,26 @@ export async function updateChronicle(formData: FormData) {
   const chronicleId = String(formData.get("chronicle_id") ?? "");
   if (!UUID_PATTERN.test(chronicleId)) redirect("/administration/chroniques?erreur=introuvable");
   const fields = readChronicleFields(formData);
+  const coverFile = readCoverFile(formData);
   if (!fields.title) redirect(`/administration/chroniques/${chronicleId}?erreur=titre`);
+  if (coverFile && !isValidCoverFile(coverFile)) redirect(`/administration/chroniques/${chronicleId}?erreur=couverture`);
 
   const { supabase, userId } = await requireAdmin();
-  const beforeSlug = await chronicleSlug(supabase, chronicleId);
-  const slug = fields.requestedSlug || slugify(fields.title) || beforeSlug;
+  const { data: current } = await supabase.from("chronicles").select("slug, cover_image").eq("id", chronicleId).maybeSingle();
+  if (!current) redirect("/administration/chroniques?erreur=introuvable");
+  const slug = fields.requestedSlug || slugify(fields.title) || current.slug;
+
+  let coverImage = fields.cover_image || current.cover_image || "";
+  if (coverFile) {
+    const uploadedCover = await uploadChronicleCover(supabase, chronicleId, coverFile);
+    if (!uploadedCover) redirect(`/administration/chroniques/${chronicleId}?erreur=couverture`);
+    coverImage = uploadedCover;
+  } else if (formData.get("remove_cover") === "on") {
+    const removed = await removeChronicleCover(supabase, chronicleId);
+    if (!removed) redirect(`/administration/chroniques/${chronicleId}?erreur=couverture`);
+    coverImage = "";
+  }
+
   const { error } = await supabase
     .from("chronicles")
     .update({
@@ -131,7 +207,7 @@ export async function updateChronicle(formData: FormData) {
       synopsis: fields.synopsis,
       hook: fields.hook,
       narrative_status: fields.narrative_status,
-      cover_image: fields.cover_image,
+      cover_image: coverImage,
       started_at: fields.started_at,
       location: fields.location,
       organizer: fields.organizer,
@@ -140,7 +216,7 @@ export async function updateChronicle(formData: FormData) {
     })
     .eq("id", chronicleId);
   if (error) redirect(`/administration/chroniques/${chronicleId}?erreur=enregistrement`);
-  refreshChronicle(beforeSlug);
+  refreshChronicle(current.slug);
   refreshChronicle(slug);
   redirect(`/administration/chroniques/${chronicleId}?message=enregistre`);
 }
@@ -151,16 +227,17 @@ export async function setChroniclePublication(formData: FormData) {
   if (!UUID_PATTERN.test(chronicleId) || !PUBLICATION_STATUSES.has(status)) redirect("/administration/chroniques?erreur=donnees");
 
   const { supabase, userId } = await requireAdmin();
-  const { data: chronicle } = await supabase.from("chronicles").select("slug, title, synopsis").eq("id", chronicleId).maybeSingle();
+  const { data: chronicle } = await supabase.from("chronicles").select("slug, title, synopsis, published_at").eq("id", chronicleId).maybeSingle();
   if (!chronicle) redirect("/administration/chroniques?erreur=introuvable");
   if (status === "published" && (!chronicle.title.trim() || !chronicle.synopsis.trim())) {
     redirect(`/administration/chroniques/${chronicleId}?erreur=publication`);
   }
 
-  const { error } = await supabase
-    .from("chronicles")
-    .update({ publication_status: status, featured: status === "published" ? undefined : false, updated_by: userId })
-    .eq("id", chronicleId);
+  const payload: Record<string, unknown> = { publication_status: status, updated_by: userId };
+  if (status === "published" && !chronicle.published_at) payload.published_at = new Date().toISOString();
+  if (status !== "published") payload.featured = false;
+
+  const { error } = await supabase.from("chronicles").update(payload).eq("id", chronicleId);
   if (error) redirect(`/administration/chroniques/${chronicleId}?erreur=enregistrement`);
   refreshChronicle(chronicle.slug);
   redirect(`/administration/chroniques/${chronicleId}?message=${status}`);
@@ -172,6 +249,9 @@ export async function featureChronicle(formData: FormData) {
   const { supabase, userId } = await requireAdmin();
   const { data: chronicle } = await supabase.from("chronicles").select("slug, publication_status").eq("id", chronicleId).maybeSingle();
   if (!chronicle || chronicle.publication_status !== "published") redirect(`/administration/chroniques/${chronicleId}?erreur=publication`);
+
+  const { error: clearError } = await supabase.from("chronicles").update({ featured: false, updated_by: userId }).neq("id", chronicleId).eq("featured", true);
+  if (clearError) redirect(`/administration/chroniques/${chronicleId}?erreur=enregistrement`);
   const { error } = await supabase.from("chronicles").update({ featured: true, updated_by: userId }).eq("id", chronicleId);
   if (error) redirect(`/administration/chroniques/${chronicleId}?erreur=enregistrement`);
   refreshChronicle(chronicle.slug);
