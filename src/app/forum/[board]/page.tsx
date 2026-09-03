@@ -169,7 +169,8 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
       : boardRow.topic_creation === "closed"
         ? "Publication fermée"
         : null;
-  const loginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardRow.slug}/nouveau`)}`;
+  const participateLoginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardRow.slug}/nouveau`)}`;
+  const readLoginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardRow.slug}`)}`;
 
   return (
     <main className="site-shell forum-board-page">
@@ -206,7 +207,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
           {mayCreate ? (
             <Link className="button button--primary button--small" href={`/forum/${boardRow.slug}/nouveau`}>Nouveau sujet</Link>
           ) : !userId && boardRow.topic_creation === "members" ? (
-            <Link className="button button--primary button--small" href={loginHref}>Se connecter pour participer</Link>
+            <Link className="button button--primary button--small" href={participateLoginHref}>Se connecter pour participer</Link>
           ) : (
             <span className="status-pill status-pill--quiet">{creationRestriction ?? "Publication indisponible"}</span>
           )}
@@ -242,7 +243,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
               <p className="eyebrow">Accès membre</p>
               <h2>Connectez-vous pour découvrir les sujets</h2>
               <p>Les discussions de cet espace sont réservées aux membres de la communauté.</p>
-              <Link className="button button--ghost button--small" href={loginHref}>Connexion / inscription</Link>
+              <Link className="button button--ghost button--small" href={readLoginHref}>Connexion / inscription</Link>
             </div>
           </div>
         )}
