@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { moderateForumTopic, setTopicFollow } from "@/app/forum/actions";
+import { createClient } from "@/lib/supabase/client";
 
 type TopicStatus = "open" | "finished" | "archived" | string;
 type ModerationAction = "pin" | "unpin" | "lock" | "unlock" | "finish" | "archive" | "reopen";
+
+const trackedTopicViews = new Set<string>();
 
 export function ForumThreadActions({
   topicId,
@@ -42,6 +45,50 @@ export function ForumThreadActions({
   const [notice, setNotice] = useState("");
   const [pending, startTransition] = useTransition();
   const followLoginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}`)}`;
+
+  useEffect(() => {
+    const storageKey = `imetheran:forum:view:${topicId}`;
+    if (trackedTopicViews.has(topicId)) return;
+
+    try {
+      if (window.sessionStorage.getItem(storageKey)) {
+        trackedTopicViews.add(topicId);
+        return;
+      }
+      window.sessionStorage.setItem(storageKey, "pending");
+    } catch {
+      // The in-memory set still prevents duplicate calls during this page lifetime.
+    }
+
+    trackedTopicViews.add(topicId);
+    let active = true;
+
+    async function trackView() {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("increment_forum_topic_view", {
+        p_topic_id: topicId,
+      });
+
+      if (error || data === null) {
+        trackedTopicViews.delete(topicId);
+        try {
+          window.sessionStorage.removeItem(storageKey);
+        } catch {}
+        return;
+      }
+
+      try {
+        window.sessionStorage.setItem(storageKey, "counted");
+      } catch {}
+
+      if (active) router.refresh();
+    }
+
+    void trackView();
+    return () => {
+      active = false;
+    };
+  }, [router, topicId]);
 
   function toggleFollow() {
     if (!authenticated || pending) return;
