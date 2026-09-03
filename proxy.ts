@@ -3,10 +3,11 @@ import { readSiteRuntimeSettings } from "@/lib/site-runtime";
 import { updateSession } from "@/lib/supabase/proxy";
 
 const maintenanceAllowedPrefixes = ["/administration", "/auth"];
+const maintenancePublicRoutes = new Set(["/maintenance", "/robots.txt", "/sitemap.xml"]);
 
 function isMaintenanceAllowed(pathname: string) {
   return (
-    pathname === "/maintenance" ||
+    maintenancePublicRoutes.has(pathname) ||
     pathname === "/connexion" ||
     pathname === "/compte/mot-de-passe" ||
     maintenanceAllowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
@@ -16,8 +17,8 @@ function isMaintenanceAllowed(pathname: string) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Keep the maintenance page autonomous so it still renders if Supabase is unavailable.
-  if (pathname === "/maintenance") {
+  // Keep the public maintenance/SEO routes autonomous so they remain available even if Supabase is unavailable.
+  if (maintenancePublicRoutes.has(pathname)) {
     return NextResponse.next({ request });
   }
 
