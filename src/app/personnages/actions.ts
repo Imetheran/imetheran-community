@@ -98,13 +98,15 @@ export async function saveCharacter(formData: FormData) {
   const intentValue = String(formData.get("intent") ?? "draft");
   const intent = INTENTS.has(intentValue) ? intentValue : "draft";
   const status = intent === "publish" ? "published" : intent === "archive" && editing ? "archived" : "draft";
+  const removePortrait = editing && formData.get("remove_portrait") === "on";
 
   if (!name || shortSummary.length > 600 || biography.length > 30000) {
     redirect(`${returnTo}?erreur=champs`);
   }
 
   const portrait = formData.get("portrait");
-  if (portrait instanceof File && portrait.size > 0) {
+  const hasNewPortrait = portrait instanceof File && portrait.size > 0;
+  if (hasNewPortrait) {
     if (!IMAGE_TYPES.has(portrait.type) || portrait.size > MAX_PORTRAIT_SIZE) {
       redirect(`${returnTo}?erreur=portrait`);
     }
@@ -168,7 +170,7 @@ export async function saveCharacter(formData: FormData) {
     saved = data;
   }
 
-  if (portrait instanceof File && portrait.size > 0) {
+  if (hasNewPortrait) {
     const portraitPath = `${userId}/${saved.id}/portrait`;
     const { error: uploadError } = await supabase.storage
       .from("character-portraits")
@@ -186,6 +188,26 @@ export async function saveCharacter(formData: FormData) {
     const { error: portraitUpdateError } = await supabase
       .from("characters")
       .update({ portrait_path: portraitPath })
+      .eq("id", saved.id)
+      .eq("owner_id", userId);
+
+    if (portraitUpdateError) {
+      refreshCharacterPaths(saved.slug);
+      redirect(`/personnages/${saved.slug}/modifier?erreur=portrait`);
+    }
+  } else if (removePortrait && saved.portrait_path) {
+    const { error: removeError } = await supabase.storage
+      .from("character-portraits")
+      .remove([saved.portrait_path]);
+
+    if (removeError) {
+      refreshCharacterPaths(saved.slug);
+      redirect(`/personnages/${saved.slug}/modifier?erreur=portrait`);
+    }
+
+    const { error: portraitUpdateError } = await supabase
+      .from("characters")
+      .update({ portrait_path: null })
       .eq("id", saved.id)
       .eq("owner_id", userId);
 
