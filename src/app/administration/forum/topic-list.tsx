@@ -9,12 +9,7 @@ import styles from "./forum-admin.module.css";
 
 export function TopicList({ topics, maps, returnTo, canDelete }: { topics: TopicRow[]; maps: ForumMaps; returnTo: string; canDelete: boolean }) {
   return (
-    <section className={styles.panel} aria-labelledby="topics-title">
-      <header className={styles.panelHead}>
-        <div><p className="eyebrow">Gestion</p><h2 id="topics-title">Sujets</h2></div>
-        <span>{topics.length} affiché{topics.length > 1 ? "s" : ""}</span>
-      </header>
-
+    <section className={styles.panel} aria-label="Sujets">
       <div className={styles.rows}>
         {topics.length ? topics.map((topic) => {
           const board = maps.boardMap.get(topic.board_id);
@@ -32,7 +27,8 @@ export function TopicList({ topics, maps, returnTo, canDelete }: { topics: Topic
                   {topic.is_locked ? <span>Verrouillé</span> : null}
                 </div>
                 <Link href={href}><strong>{topic.title}</strong></Link>
-                <small>{board?.title ?? "Forum"} · {author} · {topic.post_count} message{topic.post_count > 1 ? "s" : ""} · {formatDate(topic.last_activity_at)}</small>
+                <small>{board?.title ?? "Forum"} · {author} · {topic.post_count} message{topic.post_count > 1 ? "s" : ""}</small>
+                <time dateTime={topic.last_activity_at}>Dernière activité · {formatDate(topic.last_activity_at)}</time>
               </div>
 
               <div className={styles.rowActions}>
@@ -62,8 +58,8 @@ export function TopicList({ topics, maps, returnTo, canDelete }: { topics: Topic
                 </div>
 
                 {canDelete ? (
-                  <div className={styles.actionGroup}>
-                    <small>Suppression définitive</small>
+                  <div className={`${styles.actionGroup} ${styles.dangerGroup}`}>
+                    <small>Zone destructive</small>
                     <form action={deleteForumTopicFromAdmin}>
                       <input type="hidden" name="topic_id" value={topic.id} />
                       <input type="hidden" name="return_to" value={returnTo} />
@@ -78,7 +74,7 @@ export function TopicList({ topics, maps, returnTo, canDelete }: { topics: Topic
               </div>
             </article>
           );
-        }) : <div className={styles.empty}><strong>Aucun sujet ne correspond aux filtres.</strong></div>}
+        }) : <div className={styles.empty}><strong>Aucun sujet ne correspond aux filtres.</strong><p>Modifiez la recherche ou réinitialisez les filtres.</p></div>}
       </div>
     </section>
   );
