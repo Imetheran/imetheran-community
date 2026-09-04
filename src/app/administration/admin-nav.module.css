@@ -15,20 +15,21 @@
   overscroll-behavior-inline: contain;
   scrollbar-width: none;
   border: 1px solid var(--border-strong);
-  background: color-mix(in srgb, var(--surface) 95%, transparent);
-  box-shadow: 0 12px 32px var(--shadow);
-  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--shadow) 78%, transparent);
+  backdrop-filter: blur(14px);
 }
 
 .nav::-webkit-scrollbar { display: none; }
 
 .nav a {
+  position: relative;
   flex: 0 0 auto;
-  min-height: 36px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: .46rem .66rem;
+  padding: .46rem .7rem;
   border: 1px solid transparent;
   color: var(--muted);
   font-family: var(--font-ui);
@@ -53,6 +54,12 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-bright) 28%, transparent);
 }
 
+@media (max-width: 900px) {
+  .nav {
+    max-width: calc(100vw - 1.5rem);
+  }
+}
+
 @media (max-width: 620px) {
   .nav {
     left: .65rem;
@@ -69,4 +76,8 @@
     min-height: 42px;
     padding-inline: .72rem;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav a { transition: none; }
 }
