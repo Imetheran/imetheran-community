@@ -2,7 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "../confirm-delete-button";
+import destructiveStyles from "../destructive-actions.module.css";
 import { changeMemberRole, reactivateMember, suspendMember } from "./actions";
+import { deleteMember } from "./delete-action";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +35,20 @@ type ModerationEvent = {
   created_at: string;
 };
 
+type Search = {
+  message?: string;
+  erreur?: string;
+  q?: string;
+  role?: string;
+  statut?: string;
+};
+
 const successMessages: Record<string, string> = {
   role: "Le rôle du membre a été mis à jour. Le nouveau rôle sera pleinement visible après renouvellement de sa session.",
   suspendu: "La participation du membre est suspendue. Il peut toujours se connecter et lire, mais ne peut plus publier.",
   reactive: "La participation du membre est de nouveau active.",
+  supprime: "Le membre a été supprimé définitivement. Ses anciens sujets et messages restent visibles sous l’identité « Compte supprimé ».",
+  "supprime-stockage": "Le compte et ses données ont été supprimés, mais au moins un fichier stocké n’a pas pu être nettoyé automatiquement.",
 };
 
 const errorMessages: Record<string, string> = {
@@ -43,9 +56,12 @@ const errorMessages: Record<string, string> = {
   suspension: "Indiquez un motif de suspension entre 3 et 500 caractères.",
   "dernier-admin": "Impossible de retirer le rôle du dernier administrateur.",
   "auto-suspension": "Un administrateur ne peut pas suspendre sa propre participation.",
+  "auto-suppression-compte": "Vous ne pouvez pas supprimer votre propre compte depuis l’administration.",
+  "dernier-admin-suppression": "Impossible de supprimer le dernier compte administrateur.",
   "membre-introuvable": "Ce membre n’existe plus.",
   droits: "Votre session n’a plus les droits administrateur. Reconnectez-vous.",
   enregistrement: "L’opération n’a pas pu être enregistrée. Réessayez dans un instant.",
+  suppression: "Le membre n’a pas pu être supprimé. Aucune donnée n’a été effacée.",
 };
 
 function getRole(appMetadata: unknown) {
@@ -82,11 +98,7 @@ function eventLabel(event: ModerationEvent) {
   return "Rôle modifié";
 }
 
-export default async function AdministrationMembersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ message?: string; erreur?: string }>;
-}) {
+export default async function AdministrationMembersPage({ searchParams }: { searchParams: Promise<Search> }) {
   const query = await searchParams;
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
@@ -96,9 +108,7 @@ export default async function AdministrationMembersPage({
     redirect("/connexion?message=connexion-requise&retour=%2Fadministration%2Fmembres");
   }
 
-  if (getRole(claims.app_metadata) !== "admin") {
-    redirect("/compte");
-  }
+  if (getRole(claims.app_metadata) !== "admin") redirect("/compte");
 
   const [membersResult, eventsResult] = await Promise.all([
     supabase.rpc("admin_list_members"),
@@ -118,6 +128,17 @@ export default async function AdministrationMembersPage({
   const loadError = membersResult.error || eventsResult.error;
   const success = query.message ? successMessages[query.message] : null;
   const error = query.erreur ? errorMessages[query.erreur] ?? "Une erreur est survenue." : null;
+  const search = String(query.q ?? "").trim().slice(0, 120);
+  const roleFilter = String(query.role ?? "").trim();
+  const statusFilter = String(query.statut ?? "").trim();
+  const needle = search.toLocaleLowerCase("fr");
+  const filteredMembers = members.filter((member) => {
+    const effectiveSuspended = isEffectiveSuspension(member);
+    const matchesSearch = !needle || `${member.display_name} ${member.username ?? ""} ${member.email ?? ""}`.toLocaleLowerCase("fr").includes(needle);
+    const matchesRole = !roleFilter || member.member_role === roleFilter;
+    const matchesStatus = !statusFilter || (statusFilter === "suspended" ? effectiveSuspended : !effectiveSuspended);
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   return (
     <main className="site-shell admin-page admin-members-page">
@@ -129,7 +150,7 @@ export default async function AdministrationMembersPage({
             <p className="eyebrow">Administration · Communauté</p>
             <h1>Gestion des membres</h1>
             <p>
-              Rôles, état de participation et historique de modération. Une suspension bloque les publications
+              Rôles, état de participation, recherche rapide et historique de modération. Une suspension bloque les publications
               communautaires sans empêcher la connexion ni la lecture du site.
             </p>
           </div>
@@ -141,8 +162,8 @@ export default async function AdministrationMembersPage({
       </section>
 
       <section className="content-frame admin-workspace admin-members-workspace">
-        {success ? <div className="admin-members-message admin-members-message--success">{success}</div> : null}
-        {error ? <div className="admin-members-message admin-members-message--error">{error}</div> : null}
+        {success ? <div className="admin-members-message admin-members-message--success" role="status">{success}</div> : null}
+        {error ? <div className="admin-members-message admin-members-message--error" role="alert">{error}</div> : null}
         {loadError ? (
           <div className="admin-alert" role="alert">
             <strong>Le registre membres n’a pas pu être chargé complètement.</strong>
@@ -164,17 +185,49 @@ export default async function AdministrationMembersPage({
                 <p className="eyebrow">Registre</p>
                 <h2 id="members-registry-title">Comptes membres</h2>
               </div>
-              <span className="admin-panel__status">{members.length} compte{members.length > 1 ? "s" : ""}</span>
+              <span className="admin-panel__status">{filteredMembers.length} / {members.length}</span>
             </header>
+
+            <form className="admin-cms-filters" method="get">
+              <label>
+                <span>Recherche</span>
+                <input name="q" type="search" defaultValue={search} placeholder="Pseudo, identifiant ou e-mail…" />
+              </label>
+              <label>
+                <span>Rôle</span>
+                <select name="role" defaultValue={roleFilter}>
+                  <option value="">Tous</option>
+                  <option value="member">Membres</option>
+                  <option value="moderator">Modérateurs</option>
+                  <option value="admin">Administrateurs</option>
+                </select>
+              </label>
+              <label>
+                <span>Participation</span>
+                <select name="statut" defaultValue={statusFilter}>
+                  <option value="">Tous</option>
+                  <option value="active">Actifs</option>
+                  <option value="suspended">Suspendus</option>
+                </select>
+              </label>
+              <button className="button button--ghost button--small" type="submit">Filtrer</button>
+              {(search || roleFilter || statusFilter) ? <Link className="text-link" href="/administration/membres">Réinitialiser</Link> : null}
+            </form>
 
             {members.length === 0 ? (
               <div className="admin-empty-state">
                 <strong>Aucun membre chargé.</strong>
                 <p>Les nouveaux comptes apparaîtront ici automatiquement après inscription.</p>
               </div>
+            ) : filteredMembers.length === 0 ? (
+              <div className="admin-empty-state">
+                <strong>Aucun membre ne correspond aux filtres.</strong>
+                <p>Élargissez la recherche ou réinitialisez les critères.</p>
+                <Link className="text-link" href="/administration/membres">Réinitialiser les filtres →</Link>
+              </div>
             ) : (
               <div className="admin-member-cards">
-                {members.map((member) => {
+                {filteredMembers.map((member) => {
                   const effectiveSuspended = isEffectiveSuspension(member);
                   const expiredSuspension = member.participation_status === "suspended" && !effectiveSuspended;
                   const isSelf = member.user_id === claims.sub;
@@ -268,6 +321,29 @@ export default async function AdministrationMembersPage({
                               </select>
                             </label>
                             <button className="button button--ghost button--small" type="submit">Suspendre la participation</button>
+                          </form>
+                        )}
+                      </div>
+
+                      <div className={destructiveStyles.memberDanger}>
+                        <div className={destructiveStyles.memberDangerText}>
+                          <strong>Suppression définitive</strong>
+                          <small>
+                            Le compte Auth, le profil, les personnages, relations, notifications et fichiers personnels seront effacés. Les anciens sujets et messages restent anonymisés.
+                          </small>
+                        </div>
+                        {isSelf ? (
+                          <button className={`button button--ghost button--small ${destructiveStyles.dangerButton}`} type="button" disabled>
+                            Votre compte
+                          </button>
+                        ) : (
+                          <form action={deleteMember}>
+                            <input type="hidden" name="user_id" value={member.user_id} />
+                            <ConfirmDeleteButton
+                              className={`button button--ghost button--small ${destructiveStyles.dangerButton}`}
+                              label="Supprimer le membre"
+                              confirmMessage={`Supprimer définitivement le compte de « ${member.display_name} » ? Son compte, ses personnages, relations, notifications et fichiers personnels seront effacés. Ses anciens sujets et messages resteront visibles sous « Compte supprimé ». Cette action est irréversible.`}
+                            />
                           </form>
                         )}
                       </div>
