@@ -32,7 +32,7 @@ async function requireAdmin() {
 
 function mapDeleteError(error: { message?: string } | null) {
   const message = error?.message ?? "";
-  if (message.includes("cannot_delete_self")) return "auto-suppression";
+  if (message.includes("cannot_delete_self")) return "auto-suppression-compte";
   if (message.includes("cannot_delete_last_admin")) return "dernier-admin-suppression";
   if (message.includes("member_not_found")) return "membre-introuvable";
   if (message.includes("admin_required")) return "droits";
@@ -73,7 +73,7 @@ export async function deleteMember(formData: FormData) {
   if (!UUID_PATTERN.test(memberId)) redirect("/administration/membres?erreur=donnees");
 
   const { supabase, userId } = await requireAdmin();
-  if (memberId === userId) redirect("/administration/membres?erreur=auto-suppression");
+  if (memberId === userId) redirect("/administration/membres?erreur=auto-suppression-compte");
 
   const { data, error } = await supabase.rpc("admin_delete_member", { p_user_id: memberId });
   if (error) redirect(`/administration/membres?erreur=${mapDeleteError(error)}`);
