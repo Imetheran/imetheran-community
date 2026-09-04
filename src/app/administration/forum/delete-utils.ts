@@ -13,6 +13,17 @@ function chunks<T>(values: T[], size: number) {
   return result;
 }
 
+export async function topicIdsForBoardIds(supabase: SupabaseClient, boardIds: string[]) {
+  const topicIds: string[] = [];
+  for (const batch of chunks(boardIds, 150)) {
+    if (!batch.length) continue;
+    const { data, error } = await supabase.from("forum_topics").select("id").in("board_id", batch);
+    if (error) return { topicIds: [], error };
+    for (const row of data ?? []) topicIds.push(row.id);
+  }
+  return { topicIds, error: null };
+}
+
 export async function postIdsForTopicIds(supabase: SupabaseClient, topicIds: string[]) {
   const postIds: string[] = [];
   for (const batch of chunks(topicIds, 150)) {
