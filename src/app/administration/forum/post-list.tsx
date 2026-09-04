@@ -9,12 +9,7 @@ import styles from "./forum-admin.module.css";
 
 export function PostList({ posts, maps, returnTo, canDelete }: { posts: PostRow[]; maps: ForumMaps; returnTo: string; canDelete: boolean }) {
   return (
-    <section className={styles.panel} aria-labelledby="posts-title">
-      <header className={styles.panelHead}>
-        <div><p className="eyebrow">Contenu</p><h2 id="posts-title">Messages</h2></div>
-        <span>{posts.length} affiché{posts.length > 1 ? "s" : ""}</span>
-      </header>
-
+    <section className={styles.panel} aria-label="Messages">
       <div className={styles.rows}>
         {posts.length ? posts.map((post) => {
           const topic = maps.topicMap.get(post.topic_id);
@@ -26,10 +21,11 @@ export function PostList({ posts, maps, returnTo, canDelete }: { posts: PostRow[
           return (
             <article className={`${styles.row} ${post.is_hidden ? styles.rowHidden : ""}`} key={post.id}>
               <div className={styles.rowMain}>
-                <div className={styles.badges}><span>{post.is_hidden ? "Masqué" : "Visible"}</span></div>
+                <div className={styles.badges}><span>{post.is_hidden ? "Masqué" : "Visible"}</span>{post.edited_at ? <span>Modifié</span> : null}</div>
                 <Link href={href}><strong>{topic?.title ?? "Sujet indisponible"}</strong></Link>
                 <p className={styles.excerpt}>{post.content.slice(0, 360)}{post.content.length > 360 ? "…" : ""}</p>
-                <small>{author} · {formatDate(post.created_at)}{post.hidden_at ? ` · masqué ${formatDate(post.hidden_at)}` : ""}</small>
+                <small>{author} · {board?.title ?? "Forum"}</small>
+                <time dateTime={post.created_at}>Publié · {formatDate(post.created_at)}{post.hidden_at ? ` · masqué ${formatDate(post.hidden_at)}` : ""}</time>
               </div>
 
               <div className={styles.rowActions}>
@@ -44,10 +40,10 @@ export function PostList({ posts, maps, returnTo, canDelete }: { posts: PostRow[
                 </div>
 
                 {canDelete ? (
-                  <div className={styles.actionGroup}>
-                    <small>Suppression définitive</small>
+                  <div className={`${styles.actionGroup} ${styles.dangerGroup}`}>
+                    <small>Zone destructive</small>
                     {isLastPost ? (
-                      <span>Dernier message du sujet : supprimez le sujet entier depuis l’onglet Sujets.</span>
+                      <span className={styles.actionHint}>Dernier message : supprimez le sujet depuis l’onglet Sujets.</span>
                     ) : (
                       <form action={deleteForumPostFromAdmin}>
                         <input type="hidden" name="post_id" value={post.id} />
@@ -64,7 +60,7 @@ export function PostList({ posts, maps, returnTo, canDelete }: { posts: PostRow[
               </div>
             </article>
           );
-        }) : <div className={styles.empty}><strong>Aucun message ne correspond aux filtres.</strong></div>}
+        }) : <div className={styles.empty}><strong>Aucun message ne correspond aux filtres.</strong><p>Modifiez la recherche ou réinitialisez les filtres.</p></div>}
       </div>
     </section>
   );
