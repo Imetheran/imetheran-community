@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
+import { AdminBreadcrumbs } from "../../admin-breadcrumbs";
 import { ConfirmDeleteButton } from "../../confirm-delete-button";
 import destructiveStyles from "../../destructive-actions.module.css";
 import { createForumBoard, createForumSection, updateForumBoard, updateForumSection } from "./actions";
@@ -126,13 +127,14 @@ export default async function ForumStructurePage({ searchParams }: { searchParam
       <section className="admin-hero">
         <div className="content-frame admin-hero__layout">
           <div>
+            <AdminBreadcrumbs items={[{ label: "Forum", href: "/administration/forum" }, { label: "Structure" }]} />
             <p className="eyebrow">Administration · Forum</p>
             <h1>Structure & permissions</h1>
-            <p>Organisez les catégories et forums, ajustez les droits, archivez ce qui doit rester consultable ou supprimez définitivement ce qui doit disparaître.</p>
+            <p>Visualisez d’abord l’arborescence. Ouvrez uniquement la catégorie ou le forum que vous souhaitez modifier.</p>
           </div>
           <div className="admin-hero__side">
             <span className="admin-role-badge"><span aria-hidden="true">✦</span> {canEdit ? "Administrateur" : "Modérateur · lecture seule"}</span>
-            <Link className="button button--ghost button--small" href="/administration/forum">Centre de modération</Link>
+            <Link className="button button--ghost button--small" href="/administration/forum">Modération</Link>
             <Link className="button button--ghost button--small" href="/forum">Voir le forum</Link>
           </div>
         </div>
@@ -150,19 +152,19 @@ export default async function ForumStructurePage({ searchParams }: { searchParam
           <article><span>Lecture seule</span><strong>{closedBoards}</strong></article>
         </div>
 
-        <section className={styles.policyGuide} aria-labelledby="policy-guide-title">
-          <div><p className="eyebrow">Permissions réelles</p><h2 id="policy-guide-title">Ce que contrôlent les réglages</h2></div>
+        <details className={styles.policyGuide}>
+          <summary><div><p className="eyebrow">Aide</p><strong>Comprendre les permissions</strong></div><span>Afficher le guide</span></summary>
           <div className={styles.policyGrid}>
             <article><strong>Lecture invités</strong><p>Les visiteurs voient les sujets et messages de la catégorie sans compte.</p></article>
-            <article><strong>Membres uniquement</strong><p>La structure reste visible, mais le contenu est protégé par RLS jusqu’à la connexion.</p></article>
+            <article><strong>Membres uniquement</strong><p>La structure reste visible, mais le contenu est protégé jusqu’à la connexion.</p></article>
             <article><strong>Équipe uniquement</strong><p>Admins et modérateurs peuvent créer ou répondre selon le réglage du forum.</p></article>
-            <article><strong>Fermé</strong><p>Aucune nouvelle création ou réponse, y compris pour l’équipe. Idéal pour un espace en lecture seule.</p></article>
+            <article><strong>Fermé</strong><p>Aucune nouvelle création ou réponse, y compris pour l’équipe. Idéal pour la lecture seule.</p></article>
           </div>
-        </section>
+        </details>
 
         {canEdit ? (
           <details className={styles.createSection}>
-            <summary>Créer une nouvelle catégorie</summary>
+            <summary>+ Créer une nouvelle catégorie</summary>
             <form action={createForumSection} className={styles.formGrid}>
               <label className={styles.wide}><span>Nom</span><input name="title" minLength={2} maxLength={100} required placeholder="Nouvelle campagne" /></label>
               <label className={styles.wide}><span>Description</span><textarea name="subtitle" rows={3} maxLength={600} placeholder="À quoi sert cette catégorie ?" /></label>
@@ -172,6 +174,11 @@ export default async function ForumStructurePage({ searchParams }: { searchParam
             </form>
           </details>
         ) : null}
+
+        <div className={styles.treeHeading}>
+          <div><p className="eyebrow">Arborescence</p><h2>{sections.length} catégorie{sections.length > 1 ? "s" : ""}</h2></div>
+          <span>Les réglages restent fermés tant que vous ne les ouvrez pas.</span>
+        </div>
 
         <div className={styles.sectionList}>
           {sections.map((section) => {
@@ -188,73 +195,90 @@ export default async function ForumStructurePage({ searchParams }: { searchParam
                     <div className={styles.badges}>
                       <span>{section.mode === "rp" ? "RP" : "Hors-RP"}</span>
                       <span>{accessLabel(section.access_scope)}</span>
-                      <span>{sectionStats.topics} sujet{sectionStats.topics > 1 ? "s" : ""} · {sectionStats.posts} message{sectionStats.posts > 1 ? "s" : ""}</span>
                       {!section.is_active ? <span>Archivée</span> : null}
                     </div>
                     <h2>{section.title}</h2>
                     <p>{section.subtitle || "Aucune description."}</p>
+                    <div className={styles.sectionFacts}><span><strong>{sectionBoards.length}</strong> forums</span><span><strong>{sectionStats.topics}</strong> sujets</span><span><strong>{sectionStats.posts}</strong> messages</span><span>Position {section.sort_order}</span></div>
                   </div>
-                  <code>{section.slug}</code>
+                  <div className={styles.headerTools}><code>{section.slug}</code>{canEdit ? <span>Réglages disponibles ↓</span> : null}</div>
                 </header>
 
                 {canEdit ? (
-                  <form action={updateForumSection} className={styles.formGrid}>
-                    <input type="hidden" name="section_id" value={section.id} />
-                    <label className={styles.wide}><span>Nom</span><input name="title" defaultValue={section.title} minLength={2} maxLength={100} required /></label>
-                    <label className={styles.wide}><span>Description</span><textarea name="subtitle" defaultValue={section.subtitle} rows={3} maxLength={600} /></label>
-                    <label><span>Nature</span><select name="mode" defaultValue={section.mode}><option value="rp">Rôleplay</option><option value="non-rp">Hors-RP</option></select></label>
-                    <label><span>Lecture</span><select name="access_scope" defaultValue={section.access_scope}><option value="members">Membres uniquement</option><option value="guest-read">Lecture invités</option></select></label>
-                    <label><span>Position</span><input name="sort_order" type="number" min={0} max={9999} defaultValue={section.sort_order} required /></label>
-                    <label><span>État</span><select name="status" defaultValue={section.is_active ? "active" : "archived"}><option value="active">Active</option><option value="archived">Archivée</option></select></label>
-                    <div className={styles.formAction}><button className="button button--ghost button--small" type="submit">Enregistrer la catégorie</button></div>
-                  </form>
+                  <details className={styles.sectionEditor}>
+                    <summary>Modifier la catégorie</summary>
+                    <form action={updateForumSection} className={styles.formGrid}>
+                      <input type="hidden" name="section_id" value={section.id} />
+                      <label className={styles.wide}><span>Nom</span><input name="title" defaultValue={section.title} minLength={2} maxLength={100} required /></label>
+                      <label className={styles.wide}><span>Description</span><textarea name="subtitle" defaultValue={section.subtitle} rows={3} maxLength={600} /></label>
+                      <label><span>Nature</span><select name="mode" defaultValue={section.mode}><option value="rp">Rôleplay</option><option value="non-rp">Hors-RP</option></select></label>
+                      <label><span>Lecture</span><select name="access_scope" defaultValue={section.access_scope}><option value="members">Membres uniquement</option><option value="guest-read">Lecture invités</option></select></label>
+                      <label><span>Position</span><input name="sort_order" type="number" min={0} max={9999} defaultValue={section.sort_order} required /></label>
+                      <label><span>État</span><select name="status" defaultValue={section.is_active ? "active" : "archived"}><option value="active">Active</option><option value="archived">Archivée</option></select></label>
+                      <div className={styles.formAction}><button className="button button--primary button--small" type="submit">Enregistrer la catégorie</button></div>
+                    </form>
+                    <div className={destructiveStyles.memberDanger}>
+                      <div className={destructiveStyles.memberDangerText}>
+                        <strong>Supprimer définitivement la catégorie</strong>
+                        <small>Supprime les {sectionBoards.length} forum{sectionBoards.length > 1 ? "s" : ""}, {sectionStats.topics} sujet{sectionStats.topics > 1 ? "s" : ""}, {sectionStats.posts} message{sectionStats.posts > 1 ? "s" : ""} et leurs médias. Archivez-la plutôt si son historique doit être conservé.</small>
+                      </div>
+                      <form action={deleteForumSection}>
+                        <input type="hidden" name="section_id" value={section.id} />
+                        <ConfirmDeleteButton className={`button button--small ${destructiveStyles.dangerButton}`} label="Supprimer la catégorie" confirmMessage={`Supprimer définitivement la catégorie « ${section.title} » ?\n\nSes ${sectionBoards.length} forum${sectionBoards.length > 1 ? "s" : ""}, ${sectionStats.topics} sujet${sectionStats.topics > 1 ? "s" : ""} et ${sectionStats.posts} message${sectionStats.posts > 1 ? "s" : ""} seront supprimés de la base avec leurs données liées et médias. Les actes de chronique liés conserveront leur contenu mais perdront leur lien forum. Cette action est irréversible.`} />
+                      </form>
+                    </div>
+                  </details>
                 ) : (
-                  <div className={styles.readOnlySummary}><span>Position {section.sort_order}</span><span>{sectionBoards.length} forum{sectionBoards.length > 1 ? "s" : ""}</span></div>
+                  <div className={styles.readOnlySummary}><span>Lecture seule</span><span>{sectionBoards.length} forum{sectionBoards.length > 1 ? "s" : ""}</span></div>
                 )}
 
                 <div className={styles.boardArea}>
-                  <div className={styles.boardHeading}><div><p className="eyebrow">Forums</p><h3>{sectionBoards.length} espace{sectionBoards.length > 1 ? "s" : ""}</h3></div>{canEdit ? <span>Les URL existantes restent stables : le slug n’est pas modifiable après création.</span> : null}</div>
+                  <div className={styles.boardHeading}><div><p className="eyebrow">Forums</p><h3>{sectionBoards.length} espace{sectionBoards.length > 1 ? "s" : ""}</h3></div>{canEdit ? <span>Ouvrez un forum pour modifier ses permissions ou son emplacement.</span> : null}</div>
 
                   <div className={styles.boardList}>
                     {sectionBoards.map((board) => {
                       const stats = boardStats.get(board.id) ?? { topics: 0, posts: 0 };
                       return (
                         <article className={`${styles.boardCard}${board.is_active ? "" : ` ${styles.archived}`}`} key={board.id}>
-                          <header><div><div className={styles.badges}><span>{policyLabel(board.topic_creation)} · sujets</span><span>{policyLabel(board.reply_policy)} · réponses</span><span>{stats.topics} sujet{stats.topics > 1 ? "s" : ""} · {stats.posts} message{stats.posts > 1 ? "s" : ""}</span>{!board.is_active ? <span>Archivé</span> : null}</div><h4>{board.title}</h4><p>{board.description || "Aucune description."}</p></div><code>{board.slug}</code></header>
+                          <header>
+                            <div>
+                              <div className={styles.badges}><span>{policyLabel(board.topic_creation)} · sujets</span><span>{policyLabel(board.reply_policy)} · réponses</span>{!board.is_active ? <span>Archivé</span> : null}</div>
+                              <h4>{board.title}</h4>
+                              <p>{board.description || "Aucune description."}</p>
+                              <div className={styles.boardFacts}><span>{stats.topics} sujet{stats.topics > 1 ? "s" : ""}</span><span>{stats.posts} message{stats.posts > 1 ? "s" : ""}</span><span>Position {board.sort_order}</span></div>
+                            </div>
+                            <div className={styles.headerTools}><Link className="text-link" href={`/forum/${board.slug}`}>Ouvrir ↗</Link><code>{board.slug}</code></div>
+                          </header>
 
                           {canEdit ? (
-                            <form action={updateForumBoard} className={styles.formGrid}>
-                              <input type="hidden" name="board_id" value={board.id} />
-                              <label className={styles.wide}><span>Nom</span><input name="title" defaultValue={board.title} minLength={2} maxLength={100} required /></label>
-                              <label className={styles.wide}><span>Description</span><textarea name="description" defaultValue={board.description} rows={3} maxLength={1200} /></label>
-                              <label><span>Catégorie</span><select name="section_id" defaultValue={board.section_id}>{sections.map((option) => <option value={option.id} key={option.id}>{option.title}{option.is_active ? "" : " · archivée"}</option>)}</select></label>
-                              <label><span>Badge</span><input name="badge" defaultValue={board.badge ?? ""} maxLength={60} placeholder="Optionnel" /></label>
-                              <label><span>Créer un sujet</span><select name="topic_creation" defaultValue={board.topic_creation}><option value="members">Tous les membres</option><option value="staff">Équipe uniquement</option><option value="closed">Fermé</option></select></label>
-                              <label><span>Répondre</span><select name="reply_policy" defaultValue={board.reply_policy}><option value="members">Tous les membres</option><option value="staff">Équipe uniquement</option><option value="closed">Fermé</option></select></label>
-                              <label><span>Position</span><input name="sort_order" type="number" min={0} max={9999} defaultValue={board.sort_order} required /></label>
-                              <label><span>État</span><select name="status" defaultValue={board.is_active ? "active" : "archived"}><option value="active">Actif</option><option value="archived">Archivé</option></select></label>
-                              <div className={styles.formAction}><button className="button button--ghost button--small" type="submit">Enregistrer le forum</button><Link className="text-link" href={`/forum/${board.slug}`}>Ouvrir →</Link></div>
-                            </form>
+                            <details className={styles.boardEditor}>
+                              <summary>Modifier le forum</summary>
+                              <form action={updateForumBoard} className={styles.formGrid}>
+                                <input type="hidden" name="board_id" value={board.id} />
+                                <label className={styles.wide}><span>Nom</span><input name="title" defaultValue={board.title} minLength={2} maxLength={100} required /></label>
+                                <label className={styles.wide}><span>Description</span><textarea name="description" defaultValue={board.description} rows={3} maxLength={1200} /></label>
+                                <label><span>Catégorie</span><select name="section_id" defaultValue={board.section_id}>{sections.map((option) => <option value={option.id} key={option.id}>{option.title}{option.is_active ? "" : " · archivée"}</option>)}</select></label>
+                                <label><span>Badge</span><input name="badge" defaultValue={board.badge ?? ""} maxLength={60} placeholder="Optionnel" /></label>
+                                <label><span>Créer un sujet</span><select name="topic_creation" defaultValue={board.topic_creation}><option value="members">Tous les membres</option><option value="staff">Équipe uniquement</option><option value="closed">Fermé</option></select></label>
+                                <label><span>Répondre</span><select name="reply_policy" defaultValue={board.reply_policy}><option value="members">Tous les membres</option><option value="staff">Équipe uniquement</option><option value="closed">Fermé</option></select></label>
+                                <label><span>Position</span><input name="sort_order" type="number" min={0} max={9999} defaultValue={board.sort_order} required /></label>
+                                <label><span>État</span><select name="status" defaultValue={board.is_active ? "active" : "archived"}><option value="active">Actif</option><option value="archived">Archivé</option></select></label>
+                                <div className={styles.formAction}><button className="button button--primary button--small" type="submit">Enregistrer le forum</button></div>
+                              </form>
+                              <div className={destructiveStyles.memberDanger}>
+                                <div className={destructiveStyles.memberDangerText}>
+                                  <strong>Supprimer définitivement ce forum</strong>
+                                  <small>{stats.topics} sujet{stats.topics > 1 ? "s" : ""} et {stats.posts} message{stats.posts > 1 ? "s" : ""} seront supprimés avec leurs données et médias.</small>
+                                </div>
+                                <form action={deleteForumBoard}>
+                                  <input type="hidden" name="board_id" value={board.id} />
+                                  <ConfirmDeleteButton className={`button button--small ${destructiveStyles.dangerButton}`} label="Supprimer le forum" confirmMessage={`Supprimer définitivement le forum « ${board.title} » ?\n\n${stats.topics} sujet${stats.topics > 1 ? "s" : ""} et ${stats.posts} message${stats.posts > 1 ? "s" : ""} seront supprimés de la base avec leurs données liées et médias. Les actes de chronique éventuellement liés à ces sujets conserveront leur contenu mais perdront leur lien forum. Cette action est irréversible.`} />
+                                </form>
+                              </div>
+                            </details>
                           ) : (
                             <div className={styles.readOnlySummary}><span>Position {board.sort_order}</span><Link className="text-link" href={`/forum/${board.slug}`}>Ouvrir le forum →</Link></div>
                           )}
-
-                          {canEdit ? (
-                            <div className={destructiveStyles.memberDanger}>
-                              <div className={destructiveStyles.memberDangerText}>
-                                <strong>Supprimer définitivement ce forum</strong>
-                                <small>{stats.topics} sujet{stats.topics > 1 ? "s" : ""} et {stats.posts} message{stats.posts > 1 ? "s" : ""} seront supprimés avec leurs signalements, suivis, lectures et médias joints.</small>
-                              </div>
-                              <form action={deleteForumBoard}>
-                                <input type="hidden" name="board_id" value={board.id} />
-                                <ConfirmDeleteButton
-                                  className={`button button--small ${destructiveStyles.dangerButton}`}
-                                  label="Supprimer le forum"
-                                  confirmMessage={`Supprimer définitivement le forum « ${board.title} » ?\n\n${stats.topics} sujet${stats.topics > 1 ? "s" : ""} et ${stats.posts} message${stats.posts > 1 ? "s" : ""} seront supprimés de la base avec leurs données liées et médias. Les actes de chronique éventuellement liés à ces sujets conserveront leur contenu mais perdront leur lien forum. Cette action est irréversible.`}
-                                />
-                              </form>
-                            </div>
-                          ) : null}
                         </article>
                       );
                     })}
@@ -262,7 +286,7 @@ export default async function ForumStructurePage({ searchParams }: { searchParam
 
                   {canEdit ? (
                     <details className={styles.createBoard}>
-                      <summary>Ajouter un forum à « {section.title} »</summary>
+                      <summary>+ Ajouter un forum à « {section.title} »</summary>
                       <form action={createForumBoard} className={styles.formGrid}>
                         <input type="hidden" name="section_id" value={section.id} />
                         <label className={styles.wide}><span>Nom</span><input name="title" minLength={2} maxLength={100} required placeholder="Nom du forum" /></label>
@@ -275,23 +299,6 @@ export default async function ForumStructurePage({ searchParams }: { searchParam
                     </details>
                   ) : null}
                 </div>
-
-                {canEdit ? (
-                  <div className={destructiveStyles.memberDanger}>
-                    <div className={destructiveStyles.memberDangerText}>
-                      <strong>Supprimer définitivement la catégorie</strong>
-                      <small>Supprime les {sectionBoards.length} forum{sectionBoards.length > 1 ? "s" : ""}, {sectionStats.topics} sujet{sectionStats.topics > 1 ? "s" : ""}, {sectionStats.posts} message{sectionStats.posts > 1 ? "s" : ""} et leurs médias. Utilisez plutôt « Archivée » si le contenu doit rester consultable dans l’administration.</small>
-                    </div>
-                    <form action={deleteForumSection}>
-                      <input type="hidden" name="section_id" value={section.id} />
-                      <ConfirmDeleteButton
-                        className={`button button--small ${destructiveStyles.dangerButton}`}
-                        label="Supprimer la catégorie"
-                        confirmMessage={`Supprimer définitivement la catégorie « ${section.title} » ?\n\nSes ${sectionBoards.length} forum${sectionBoards.length > 1 ? "s" : ""}, ${sectionStats.topics} sujet${sectionStats.topics > 1 ? "s" : ""} et ${sectionStats.posts} message${sectionStats.posts > 1 ? "s" : ""} seront supprimés de la base avec leurs données liées et médias. Les actes de chronique liés conserveront leur contenu mais perdront leur lien forum. Cette action est irréversible.`}
-                      />
-                    </form>
-                  </div>
-                ) : null}
               </article>
             );
           })}
