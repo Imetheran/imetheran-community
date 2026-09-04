@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import styles from "./admin-nav.module.css";
+import { AdminNav } from "./admin-nav";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -22,19 +21,7 @@ export default async function AdministrationLayout({ children }: { children: Rea
   return (
     <>
       {children}
-      {isAdmin || isModerator ? (
-        <nav className={styles.nav} aria-label="Navigation administration">
-          {isAdmin ? <Link href="/administration">Tableau de bord</Link> : null}
-          <Link href="/administration/forum">{isModerator ? "Modération forum" : "Forum"}</Link>
-          {isAdmin ? <Link href="/administration/forum/structure">Structure</Link> : null}
-          {isAdmin ? <Link href="/administration/membres">Membres</Link> : null}
-          {isAdmin ? <Link href="/administration/personnages">Personnages</Link> : null}
-          {isAdmin ? <Link href="/administration/liens">Liens</Link> : null}
-          {isAdmin ? <Link href="/administration/chroniques">Chroniques</Link> : null}
-          {isAdmin ? <Link href="/administration/gazettes">Gazettes</Link> : null}
-          <Link href="/forum">Retour au site</Link>
-        </nav>
-      ) : null}
+      {isAdmin || isModerator ? <AdminNav isAdmin={isAdmin} isModerator={isModerator} /> : null}
     </>
   );
 }
