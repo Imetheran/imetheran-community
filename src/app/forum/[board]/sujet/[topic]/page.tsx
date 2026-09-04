@@ -125,7 +125,13 @@ export default async function ForumTopicPage({
 
   const postRows = posts ?? [];
   const postCount = postRows.length;
-  const authorIds = Array.from(new Set(postRows.map((post) => post.author_id)));
+  const authorIds = Array.from(
+    new Set(
+      postRows
+        .map((post) => post.author_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0),
+    ),
+  );
   const characterIds = Array.from(
     new Set(
       [topic.character_id, ...postRows.map((post) => post.character_id)]
@@ -347,7 +353,7 @@ export default async function ForumTopicPage({
 
         <div className="forum-posts">
           {postRows.map((post, index) => {
-            const authorName = profileMap.get(post.author_id) ?? "Membre";
+            const authorName = post.author_id ? profileMap.get(post.author_id) ?? "Membre" : "Compte supprimé";
             const character = post.character_id ? characterMap.get(post.character_id) : null;
             const isOwnPost = Boolean(userId && post.author_id === userId);
             const canEditOwnPost = isOwnPost && repliesOpen && participation.canParticipate;
@@ -362,7 +368,7 @@ export default async function ForumTopicPage({
                 <aside className="forum-post__author">
                   <div className="forum-post__avatar" aria-hidden="true">{initials(authorName)}</div>
                   <strong>{authorName}</strong>
-                  <span className="forum-post__role">Membre</span>
+                  <span className="forum-post__role">{post.author_id ? "Membre" : "Ancien membre"}</span>
                   {index === 0 ? <span className="forum-post__starter">Auteur du sujet</span> : null}
                   {character ? (
                     <Link className="forum-post__character" href={`/personnages/${character.slug}`}>
