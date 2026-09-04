@@ -1,4 +1,6 @@
 /* Administration cleanup layer */
+.admin-page { padding-bottom: 5.5rem; }
+
 .admin-hero--clean .admin-hero__layout {
   min-height: 220px;
   padding-block: clamp(1.7rem, 4vw, 2.8rem);
@@ -117,6 +119,13 @@
   outline: none;
 }
 
+.admin-site-control__button:focus-visible,
+.admin-quick-actions > a:focus-visible,
+.admin-topic-row:focus-visible,
+.admin-content-grid--clean > a:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-bright) 30%, transparent);
+}
+
 .admin-site-control > small {
   color: color-mix(in srgb, var(--muted) 78%, transparent);
   font-size: .52rem;
@@ -152,6 +161,8 @@
   border: 0 !important;
   background: var(--surface);
 }
+.admin-metric { transition: background-color .16s ease; }
+.admin-metric:hover { background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
 .admin-metric strong { font-size: 2rem; }
 
 .admin-quick-actions {
@@ -159,6 +170,10 @@
   margin-block: .8rem 1rem;
 }
 .admin-quick-actions > a { min-height: 72px; }
+.admin-quick-actions > a:first-child {
+  border-color: color-mix(in srgb, var(--accent-bright) 34%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-soft));
+}
 
 .admin-panel__head { min-height: 72px; }
 .admin-panel__head-actions {
@@ -195,6 +210,7 @@
 }
 
 @media (max-width: 760px) {
+  .admin-page { padding-bottom: 6rem; }
   .admin-feedback { align-items: flex-start; flex-direction: column; gap: .15rem; }
   .admin-panel__head-actions { justify-content: flex-start; }
   .admin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
