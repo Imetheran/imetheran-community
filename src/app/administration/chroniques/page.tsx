@@ -3,10 +3,23 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { chronicleNarrativeLabels, chroniclePublicationLabels, formatChronicleDate, getAppRole, type ChronicleNarrativeStatus, type ChroniclePublicationStatus } from "@/lib/chronicles";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "../confirm-delete-button";
+import destructiveStyles from "../destructive-actions.module.css";
+import { deleteChronicle } from "./delete-action";
 
 export const dynamic = "force-dynamic";
 
-type Search = { q?: string; statut?: string; narration?: string };
+type Search = { q?: string; statut?: string; narration?: string; message?: string; erreur?: string };
+
+const successMessages: Record<string, string> = {
+  supprimee: "La chronique a été supprimée définitivement, avec ses actes, participants et sa couverture stockée.",
+};
+
+const errorMessages: Record<string, string> = {
+  introuvable: "Cette chronique n’existe plus.",
+  suppression: "La chronique n’a pas pu être supprimée. Réessayez dans un instant.",
+  "suppression-couverture": "La couverture stockée n’a pas pu être supprimée. La chronique a été conservée pour éviter de laisser un fichier orphelin.",
+};
 
 export default async function AdminChroniclesPage({ searchParams }: { searchParams: Promise<Search> }) {
   const query = await searchParams;
@@ -38,6 +51,8 @@ export default async function AdminChroniclesPage({ searchParams }: { searchPara
     (!narrative || row.narrative_status === narrative) &&
     (!needle || `${row.title} ${row.subtitle ?? ""} ${row.slug}`.toLocaleLowerCase("fr").includes(needle))
   );
+  const success = query.message ? successMessages[query.message] : null;
+  const error = query.erreur ? errorMessages[query.erreur] ?? "Une erreur est survenue." : null;
 
   return (
     <main className="site-shell admin-page admin-chronicles-page">
@@ -50,6 +65,8 @@ export default async function AdminChroniclesPage({ searchParams }: { searchPara
       </section>
 
       <section className="content-frame admin-workspace">
+        {success ? <div className="admin-members-message admin-members-message--success" role="status">{success}</div> : null}
+        {error ? <div className="admin-members-message admin-members-message--error" role="alert">{error}</div> : null}
         {chroniclesResult.error ? <div className="admin-alert" role="alert">Les chroniques n’ont pas pu être chargées depuis Supabase.</div> : null}
         <div className="admin-metrics" aria-label="Indicateurs Chroniques">
           <article className="admin-metric"><span>01</span><div><strong>{rows.length}</strong><small>Total</small></div></article>
@@ -74,13 +91,23 @@ export default async function AdminChroniclesPage({ searchParams }: { searchPara
                 const narrativeStatus = chronicle.narrative_status as ChronicleNarrativeStatus;
                 const publicationStatus = chronicle.publication_status as ChroniclePublicationStatus;
                 return (
-                  <Link className="admin-chronicle-row" href={`/administration/chroniques/${chronicle.id}`} key={chronicle.id}>
-                    <div className="admin-chronicle-row__badges"><span>{chroniclePublicationLabels[publicationStatus]}</span><span>{chronicleNarrativeLabels[narrativeStatus]}</span>{chronicle.featured ? <span>À la une</span> : null}</div>
-                    <div className="admin-chronicle-row__main"><strong>{chronicle.title}</strong><small>{chronicle.subtitle || chronicle.slug}</small></div>
-                    <div className="admin-chronicle-row__stats"><span><strong>{chapterCount.get(chronicle.id) ?? 0}</strong> actes</span><span><strong>{participantCount.get(chronicle.id) ?? 0}</strong> participants</span></div>
-                    <time dateTime={chronicle.updated_at}>{formatChronicleDate(chronicle.updated_at)}</time>
-                    <span aria-hidden="true">→</span>
-                  </Link>
+                  <div className={destructiveStyles.rowWithAction} key={chronicle.id}>
+                    <Link className="admin-chronicle-row" href={`/administration/chroniques/${chronicle.id}`}>
+                      <div className="admin-chronicle-row__badges"><span>{chroniclePublicationLabels[publicationStatus]}</span><span>{chronicleNarrativeLabels[narrativeStatus]}</span>{chronicle.featured ? <span>À la une</span> : null}</div>
+                      <div className="admin-chronicle-row__main"><strong>{chronicle.title}</strong><small>{chronicle.subtitle || chronicle.slug}</small></div>
+                      <div className="admin-chronicle-row__stats"><span><strong>{chapterCount.get(chronicle.id) ?? 0}</strong> actes</span><span><strong>{participantCount.get(chronicle.id) ?? 0}</strong> participants</span></div>
+                      <time dateTime={chronicle.updated_at}>{formatChronicleDate(chronicle.updated_at)}</time>
+                      <span aria-hidden="true">→</span>
+                    </Link>
+                    <form action={deleteChronicle} className={destructiveStyles.deleteForm}>
+                      <input type="hidden" name="chronicle_id" value={chronicle.id} />
+                      <ConfirmDeleteButton
+                        className={`button button--ghost button--small ${destructiveStyles.dangerButton}`}
+                        label="Supprimer"
+                        confirmMessage={`Supprimer définitivement « ${chronicle.title} » ? Ses actes, participants et sa couverture stockée seront également effacés. Cette action est irréversible.`}
+                      />
+                    </form>
+                  </div>
                 );
               })}
             </div>
