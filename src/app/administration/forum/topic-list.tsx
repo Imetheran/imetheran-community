@@ -18,6 +18,7 @@ export function TopicList({ topics, maps, returnTo }: { topics: TopicRow[]; maps
           const section = sectionOf(board);
           const href = board ? `/forum/${board.slug}/sujet/${topic.slug}` : "/forum";
           const destinations = maps.boards.filter((candidate) => candidate.is_active && sectionOf(candidate)?.mode === section?.mode);
+          const author = topic.author_id ? maps.profileMap.get(topic.author_id) ?? "Membre" : "Compte supprimé";
 
           return (
             <article className={styles.row} key={topic.id}>
@@ -28,28 +29,34 @@ export function TopicList({ topics, maps, returnTo }: { topics: TopicRow[]; maps
                   {topic.is_locked ? <span>Verrouillé</span> : null}
                 </div>
                 <Link href={href}><strong>{topic.title}</strong></Link>
-                <small>{board?.title ?? "Forum"} · {maps.profileMap.get(topic.author_id) ?? "Membre"} · {topic.post_count} message{topic.post_count > 1 ? "s" : ""} · {formatDate(topic.last_activity_at)}</small>
+                <small>{board?.title ?? "Forum"} · {author} · {topic.post_count} message{topic.post_count > 1 ? "s" : ""} · {formatDate(topic.last_activity_at)}</small>
               </div>
 
               <div className={styles.rowActions}>
-                <form action={moderateTopicFromAdmin}>
-                  <input type="hidden" name="topic_id" value={topic.id} />
-                  <input type="hidden" name="return_to" value={returnTo} />
-                  <button name="action" value={topic.is_pinned ? "unpin" : "pin"} type="submit">{topic.is_pinned ? "Désépingler" : "Épingler"}</button>
-                  <button name="action" value={topic.is_locked ? "unlock" : "lock"} type="submit">{topic.is_locked ? "Déverrouiller" : "Verrouiller"}</button>
-                  {topic.status === "open" ? (
-                    <><button name="action" value="finish" type="submit">Terminer</button><button name="action" value="archive" type="submit">Archiver</button></>
-                  ) : <button name="action" value="reopen" type="submit">Rouvrir</button>}
-                </form>
+                <div className={styles.actionGroup}>
+                  <small>État du sujet</small>
+                  <form action={moderateTopicFromAdmin}>
+                    <input type="hidden" name="topic_id" value={topic.id} />
+                    <input type="hidden" name="return_to" value={returnTo} />
+                    <button name="action" value={topic.is_pinned ? "unpin" : "pin"} type="submit">{topic.is_pinned ? "Désépingler" : "Épingler"}</button>
+                    <button name="action" value={topic.is_locked ? "unlock" : "lock"} type="submit">{topic.is_locked ? "Déverrouiller" : "Verrouiller"}</button>
+                    {topic.status === "open" ? (
+                      <><button name="action" value="finish" type="submit">Terminer</button><button name="action" value="archive" type="submit">Archiver</button></>
+                    ) : <button name="action" value="reopen" type="submit">Rouvrir</button>}
+                  </form>
+                </div>
 
-                <form action={moveTopicFromAdmin}>
-                  <input type="hidden" name="topic_id" value={topic.id} />
-                  <input type="hidden" name="return_to" value={returnTo} />
-                  <select name="board_id" defaultValue={topic.board_id} aria-label="Déplacer vers un forum">
-                    {destinations.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.title}</option>)}
-                  </select>
-                  <button type="submit">Déplacer</button>
-                </form>
+                <div className={styles.actionGroup}>
+                  <small>Déplacement</small>
+                  <form action={moveTopicFromAdmin}>
+                    <input type="hidden" name="topic_id" value={topic.id} />
+                    <input type="hidden" name="return_to" value={returnTo} />
+                    <select name="board_id" defaultValue={topic.board_id} aria-label="Déplacer vers un forum">
+                      {destinations.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.title}</option>)}
+                    </select>
+                    <button type="submit">Déplacer</button>
+                  </form>
+                </div>
               </div>
             </article>
           );
