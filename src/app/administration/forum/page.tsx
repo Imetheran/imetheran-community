@@ -23,6 +23,18 @@ function searchPlaceholder(view: ViewName) {
   return "Action, sujet ou membre…";
 }
 
+function moderationError(value: string) {
+  if (value === "deplacement") return "Le sujet n’a pas pu être déplacé. Vérifiez la compatibilité RP du forum cible.";
+  if (value === "admin-requis") return "La suppression définitive est réservée aux administrateurs.";
+  if (value === "dernier-message") return "Ce message est le dernier du sujet. Supprimez le sujet entier depuis l’onglet Sujets.";
+  if (value === "message-introuvable") return "Ce message n’existe plus.";
+  if (value === "sujet-introuvable") return "Ce sujet n’existe plus.";
+  if (value === "suppression-media") return "Les médias liés n’ont pas pu être préparés pour la suppression. Le contenu a été conservé.";
+  if (value === "suppression-message") return "Le message n’a pas pu être supprimé définitivement.";
+  if (value === "suppression-sujet") return "Le sujet n’a pas pu être supprimé définitivement.";
+  return "L’action de modération n’a pas pu être enregistrée.";
+}
+
 export default async function ForumAdministrationPage({ searchParams }: { searchParams: Promise<Search> }) {
   const query = await searchParams;
   const supabase = await createClient();
@@ -35,6 +47,7 @@ export default async function ForumAdministrationPage({ searchParams }: { search
 
   const role = roleFromMetadata(claims.app_metadata);
   if (role !== "admin" && role !== "moderator") redirect("/compte");
+  const canDelete = role === "admin";
 
   const rawView = query.vue ?? "reports";
   const view: ViewName = ["reports", "topics", "posts", "history"].includes(rawView) ? rawView as ViewName : "reports";
@@ -101,7 +114,17 @@ export default async function ForumAdministrationPage({ searchParams }: { search
   const maps: ForumMaps = { boards, boardMap, topicMap, postMap, profileMap };
   const returnTo = buildReturnTo(view, statusFilter, validBoard, search);
   const loadError = boardsResult.error || topicsResult.error || postsResult.error || reportsResult.error || eventsResult.error;
-  const successMessage: Record<string, string> = { sujet: "Modération du sujet enregistrée.", deplace: "Sujet déplacé.", masque: "Message masqué aux membres.", restaure: "Message restauré.", signalement: "Signalement mis à jour." };
+  const successMessage: Record<string, string> = {
+    sujet: "Modération du sujet enregistrée.",
+    deplace: "Sujet déplacé.",
+    masque: "Message masqué aux membres.",
+    restaure: "Message restauré.",
+    signalement: "Signalement mis à jour.",
+    "message-supprime": "Le message et ses données liées ont été supprimés définitivement.",
+    "message-supprime-stockage": "Le message a été supprimé. Une partie du nettoyage des médias stockés doit être vérifiée.",
+    "sujet-supprime": "Le sujet, ses messages et ses données liées ont été supprimés définitivement.",
+    "sujet-supprime-stockage": "Le sujet a été supprimé. Une partie du nettoyage des médias stockés doit être vérifiée.",
+  };
   const attentionCount = (openReports.count ?? 0) + (reviewReports.count ?? 0);
   const resultCount = view === "reports" ? filteredReports.length : view === "topics" ? filteredTopics.length : view === "posts" ? filteredPosts.length : filteredEvents.length;
 
@@ -110,7 +133,7 @@ export default async function ForumAdministrationPage({ searchParams }: { search
       <SiteHeader />
       <section className="admin-hero">
         <div className="content-frame admin-hero__layout">
-          <div><p className="eyebrow">Administration · Forum</p><h1>Centre de modération</h1><p>Traitez les signalements, gérez les sujets et masquez un message sans détruire l’historique.</p></div>
+          <div><p className="eyebrow">Administration · Forum</p><h1>Centre de modération</h1><p>Traitez les signalements, gérez les sujets et messages, et utilisez la suppression définitive uniquement lorsque le contenu doit réellement disparaître.</p></div>
           <div className="admin-hero__side">
             <span className="admin-role-badge"><span aria-hidden="true">✦</span> {role === "admin" ? "Administrateur" : "Modérateur"}</span>
             {role === "admin" ? <Link className="button button--ghost button--small" href="/administration/forum/structure">Structure du forum</Link> : null}
@@ -122,7 +145,7 @@ export default async function ForumAdministrationPage({ searchParams }: { search
       <section className={`content-frame admin-workspace ${styles.workspace}`}>
         {loadError ? <div className="admin-alert" role="alert"><strong>Données partielles</strong><span>Une partie du centre n’a pas pu être chargée.</span></div> : null}
         {query.message && successMessage[query.message] ? <div className={styles.notice} role="status">{successMessage[query.message]}</div> : null}
-        {query.erreur ? <div className={`${styles.notice} ${styles.noticeError}`} role="alert">{query.erreur === "deplacement" ? "Le sujet n’a pas pu être déplacé. Vérifiez la compatibilité RP du forum cible." : "L’action de modération n’a pas pu être enregistrée."}</div> : null}
+        {query.erreur ? <div className={`${styles.notice} ${styles.noticeError}`} role="alert">{moderationError(query.erreur)}</div> : null}
 
         <div className={styles.metrics}>
           <article><span>Signalements ouverts</span><strong>{openReports.count ?? 0}</strong></article>
@@ -157,8 +180,8 @@ export default async function ForumAdministrationPage({ searchParams }: { search
         <div className={styles.resultSummary}><strong>{resultCount}</strong><span>élément{resultCount > 1 ? "s" : ""} dans cette vue</span>{search || validBoard || statusFilter ? <small>Filtres actifs</small> : null}</div>
 
         {view === "reports" ? <ReportList reports={filteredReports} maps={maps} returnTo={returnTo} /> : null}
-        {view === "topics" ? <TopicList topics={filteredTopics} maps={maps} returnTo={returnTo} /> : null}
-        {view === "posts" ? <PostList posts={filteredPosts} maps={maps} returnTo={returnTo} /> : null}
+        {view === "topics" ? <TopicList topics={filteredTopics} maps={maps} returnTo={returnTo} canDelete={canDelete} /> : null}
+        {view === "posts" ? <PostList posts={filteredPosts} maps={maps} returnTo={returnTo} canDelete={canDelete} /> : null}
         {view === "history" ? <HistoryList events={filteredEvents} maps={maps} /> : null}
 
         <p className={styles.limitNote}>Le centre charge les contenus récents par lots ; la pagination sera utile seulement lorsque le volume réel l’exigera.</p>
