@@ -16,6 +16,29 @@ type Search = { vue?: string; statut?: string; forum?: string; q?: string; messa
 
 const reportPriority: Record<string, number> = { open: 0, in_review: 1, resolved: 2, dismissed: 3 };
 
+const VIEW_COPY: Record<ViewName, { eyebrow: string; title: string; description: string }> = {
+  reports: {
+    eyebrow: "File de modération",
+    title: "Signalements",
+    description: "Traitez d’abord ce qui demande une décision : contenu signalé, prise en charge et résolution interne.",
+  },
+  topics: {
+    eyebrow: "Gestion éditoriale",
+    title: "Sujets",
+    description: "Pilotez l’état des discussions, leur emplacement et, en dernier recours, leur suppression définitive.",
+  },
+  posts: {
+    eyebrow: "Contenu publié",
+    title: "Messages",
+    description: "Retrouvez rapidement un message, masquez-le sans le détruire ou supprimez-le définitivement si nécessaire.",
+  },
+  history: {
+    eyebrow: "Traçabilité",
+    title: "Journal de modération",
+    description: "Consultez les actions récentes de l’équipe et retrouvez leur contexte sans mélanger l’audit aux outils d’action.",
+  },
+};
+
 function searchPlaceholder(view: ViewName) {
   if (view === "reports") return "Sujet, motif, membre…";
   if (view === "topics") return "Titre ou auteur…";
@@ -127,16 +150,17 @@ export default async function ForumAdministrationPage({ searchParams }: { search
   };
   const attentionCount = (openReports.count ?? 0) + (reviewReports.count ?? 0);
   const resultCount = view === "reports" ? filteredReports.length : view === "topics" ? filteredTopics.length : view === "posts" ? filteredPosts.length : filteredEvents.length;
+  const viewCopy = VIEW_COPY[view];
 
   return (
     <main className="site-shell admin-page">
       <SiteHeader />
       <section className="admin-hero">
         <div className="content-frame admin-hero__layout">
-          <div><p className="eyebrow">Administration · Forum</p><h1>Centre de modération</h1><p>Traitez les signalements, gérez les sujets et messages, et utilisez la suppression définitive uniquement lorsque le contenu doit réellement disparaître.</p></div>
+          <div><p className="eyebrow">Administration · Forum</p><h1>Forum</h1><p>Pilotez la modération, les discussions et la structure du forum depuis un espace unique, sans mélanger les actions courantes aux suppressions définitives.</p></div>
           <div className="admin-hero__side">
             <span className="admin-role-badge"><span aria-hidden="true">✦</span> {role === "admin" ? "Administrateur" : "Modérateur"}</span>
-            {role === "admin" ? <Link className="button button--ghost button--small" href="/administration/forum/structure">Structure du forum</Link> : null}
+            {role === "admin" ? <Link className="button button--ghost button--small" href="/administration/forum/structure">Structure & permissions</Link> : null}
             <Link className="button button--ghost button--small" href="/forum">Voir le forum</Link>
           </div>
         </div>
@@ -147,44 +171,63 @@ export default async function ForumAdministrationPage({ searchParams }: { search
         {query.message && successMessage[query.message] ? <div className={styles.notice} role="status">{successMessage[query.message]}</div> : null}
         {query.erreur ? <div className={`${styles.notice} ${styles.noticeError}`} role="alert">{moderationError(query.erreur)}</div> : null}
 
-        <div className={styles.metrics}>
-          <article><span>Signalements ouverts</span><strong>{openReports.count ?? 0}</strong></article>
-          <article><span>En cours</span><strong>{reviewReports.count ?? 0}</strong></article>
-          <article><span>Messages masqués</span><strong>{hiddenPosts.count ?? 0}</strong></article>
-          <article><span>Sujets</span><strong>{topicsCount.count ?? 0}</strong></article>
+        <div className={styles.overview}>
+          <div className={styles.metrics} aria-label="Indicateurs du forum">
+            <article><span>Signalements ouverts</span><strong>{openReports.count ?? 0}</strong><small>À examiner</small></article>
+            <article><span>En cours</span><strong>{reviewReports.count ?? 0}</strong><small>Pris en charge</small></article>
+            <article><span>Messages masqués</span><strong>{hiddenPosts.count ?? 0}</strong><small>Non visibles</small></article>
+            <article><span>Sujets</span><strong>{topicsCount.count ?? 0}</strong><small>Discussions</small></article>
+          </div>
+
+          <section className={`${styles.priority} ${attentionCount ? styles.priorityActive : ""}`} aria-label="Priorité de modération">
+            <div className={styles.priorityIcon} aria-hidden="true">{attentionCount ? "!" : "✓"}</div>
+            <div className={styles.priorityCopy}>
+              <span>Priorité</span>
+              <strong>{attentionCount ? `${attentionCount} signalement${attentionCount > 1 ? "s" : ""} à traiter` : "File de modération à jour"}</strong>
+              <p>{attentionCount ? "Commencez par les signalements ouverts avant de parcourir les autres contenus." : "Aucun signalement ouvert ou en cours pour le moment."}</p>
+            </div>
+            {attentionCount ? <Link href="/administration/forum?vue=reports&statut=open">Voir la file →</Link> : <Link href="/administration/forum?vue=history">Voir le journal →</Link>}
+          </section>
         </div>
 
-        <section className={`${styles.priority} ${attentionCount ? styles.priorityActive : ""}`} aria-label="Priorité de modération">
-          <div><span aria-hidden="true">{attentionCount ? "!" : "✓"}</span><div><strong>{attentionCount ? `${attentionCount} signalement${attentionCount > 1 ? "s" : ""} à traiter` : "Aucun signalement en attente"}</strong><small>{attentionCount ? "Les signalements ouverts et en cours apparaissent en premier." : "La file active est à jour."}</small></div></div>
-          {attentionCount ? <Link href="/administration/forum?vue=reports&statut=open">Voir les ouverts →</Link> : null}
+        <section className={styles.controlShell} aria-label="Pilotage du forum">
+          <nav className={styles.tabs} aria-label="Sections de modération">
+            <Link className={view === "reports" ? styles.active : ""} href="/administration/forum?vue=reports"><span className={styles.tabLabel}>Signalements</span><span className={styles.tabCount}>{attentionCount}</span></Link>
+            <Link className={view === "topics" ? styles.active : ""} href="/administration/forum?vue=topics"><span className={styles.tabLabel}>Sujets</span><span className={styles.tabCount}>{topicsCount.count ?? 0}</span></Link>
+            <Link className={view === "posts" ? styles.active : ""} href="/administration/forum?vue=posts"><span className={styles.tabLabel}>Messages</span><span className={styles.tabCount}>{hiddenPosts.count ?? 0}</span></Link>
+            <Link className={view === "history" ? styles.active : ""} href="/administration/forum?vue=history"><span className={styles.tabLabel}>Journal</span></Link>
+          </nav>
+
+          <header className={styles.viewHeader}>
+            <div><p className="eyebrow">{viewCopy.eyebrow}</p><h2>{viewCopy.title}</h2><p>{viewCopy.description}</p></div>
+            <div className={styles.viewCount}><strong>{resultCount}</strong><span>résultat{resultCount > 1 ? "s" : ""}</span></div>
+          </header>
+
+          <form className={styles.filters} method="get">
+            <input type="hidden" name="vue" value={view} />
+            <label><span>Recherche</span><input name="q" type="search" defaultValue={search} placeholder={searchPlaceholder(view)} /></label>
+            <label><span>Forum</span><select name="forum" defaultValue={validBoard}><option value="">Tous les forums</option>{boards.map((board) => <option value={board.id} key={board.id}>{board.title}</option>)}</select></label>
+            {view === "reports" ? <label><span>Statut</span><select name="statut" defaultValue={statusFilter}><option value="">Tous</option><option value="open">Ouverts</option><option value="in_review">En cours</option><option value="resolved">Résolus</option><option value="dismissed">Classés</option></select></label> : null}
+            {view === "topics" ? <label><span>Statut</span><select name="statut" defaultValue={statusFilter}><option value="">Tous</option><option value="open">Ouverts</option><option value="finished">Terminés</option><option value="archived">Archivés</option></select></label> : null}
+            {view === "posts" ? <label><span>Visibilité</span><select name="statut" defaultValue={statusFilter}><option value="">Tous</option><option value="visible">Visibles</option><option value="hidden">Masqués</option></select></label> : null}
+            <button className="button button--primary button--small" type="submit">Appliquer</button>
+            {(search || validBoard || statusFilter) ? <Link className={styles.resetLink} href={`/administration/forum?vue=${view}`}>Réinitialiser</Link> : null}
+          </form>
+
+          <div className={styles.resultSummary}>
+            <span>{search || validBoard || statusFilter ? "Vue filtrée" : "Vue complète"}</span>
+            <strong>{resultCount}</strong>
+            <span>élément{resultCount > 1 ? "s" : ""}</span>
+            {search || validBoard || statusFilter ? <small>Filtres actifs</small> : null}
+          </div>
         </section>
-
-        <nav className={styles.tabs} aria-label="Sections de modération">
-          <Link className={view === "reports" ? styles.active : ""} href="/administration/forum?vue=reports">Signalements <span>{attentionCount}</span></Link>
-          <Link className={view === "topics" ? styles.active : ""} href="/administration/forum?vue=topics">Sujets <span>{topicsCount.count ?? 0}</span></Link>
-          <Link className={view === "posts" ? styles.active : ""} href="/administration/forum?vue=posts">Messages <span>{hiddenPosts.count ?? 0}</span></Link>
-          <Link className={view === "history" ? styles.active : ""} href="/administration/forum?vue=history">Journal</Link>
-        </nav>
-
-        <form className={styles.filters} method="get">
-          <input type="hidden" name="vue" value={view} />
-          <label><span>Recherche</span><input name="q" type="search" defaultValue={search} placeholder={searchPlaceholder(view)} /></label>
-          <label><span>Forum</span><select name="forum" defaultValue={validBoard}><option value="">Tous les forums</option>{boards.map((board) => <option value={board.id} key={board.id}>{board.title}</option>)}</select></label>
-          {view === "reports" ? <label><span>Statut</span><select name="statut" defaultValue={statusFilter}><option value="">Tous</option><option value="open">Ouverts</option><option value="in_review">En cours</option><option value="resolved">Résolus</option><option value="dismissed">Classés</option></select></label> : null}
-          {view === "topics" ? <label><span>Statut</span><select name="statut" defaultValue={statusFilter}><option value="">Tous</option><option value="open">Ouverts</option><option value="finished">Terminés</option><option value="archived">Archivés</option></select></label> : null}
-          {view === "posts" ? <label><span>Visibilité</span><select name="statut" defaultValue={statusFilter}><option value="">Tous</option><option value="visible">Visibles</option><option value="hidden">Masqués</option></select></label> : null}
-          <button className="button button--ghost button--small" type="submit">Filtrer</button>
-          {(search || validBoard || statusFilter) ? <Link className="text-link" href={`/administration/forum?vue=${view}`}>Réinitialiser</Link> : null}
-        </form>
-
-        <div className={styles.resultSummary}><strong>{resultCount}</strong><span>élément{resultCount > 1 ? "s" : ""} dans cette vue</span>{search || validBoard || statusFilter ? <small>Filtres actifs</small> : null}</div>
 
         {view === "reports" ? <ReportList reports={filteredReports} maps={maps} returnTo={returnTo} /> : null}
         {view === "topics" ? <TopicList topics={filteredTopics} maps={maps} returnTo={returnTo} canDelete={canDelete} /> : null}
         {view === "posts" ? <PostList posts={filteredPosts} maps={maps} returnTo={returnTo} canDelete={canDelete} /> : null}
         {view === "history" ? <HistoryList events={filteredEvents} maps={maps} /> : null}
 
-        <p className={styles.limitNote}>Le centre charge les contenus récents par lots ; la pagination sera utile seulement lorsque le volume réel l’exigera.</p>
+        <p className={styles.limitNote}>Les contenus récents sont chargés par lots. Une pagination dédiée pourra être ajoutée lorsque le volume réel le justifiera.</p>
       </section>
     </main>
   );
