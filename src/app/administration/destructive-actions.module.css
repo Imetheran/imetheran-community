@@ -1,13 +1,24 @@
 .rowWithAction {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.7rem;
+  gap: 0;
   align-items: stretch;
+  border-bottom: 1px solid var(--admin-panel-border, var(--border));
+  background: var(--admin-panel-bg, var(--surface));
+}
+
+.rowWithAction:last-child {
+  border-bottom: 0;
 }
 
 .deleteForm {
+  min-width: 116px;
+  padding: .7rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--admin-panel-border, var(--border));
+  background: color-mix(in srgb, var(--surface-soft) 56%, var(--surface));
 }
 
 .dangerButton {
@@ -53,7 +64,13 @@
     grid-template-columns: 1fr;
   }
 
-  .deleteForm,
+  .deleteForm {
+    min-width: 0;
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid var(--admin-panel-border, var(--border));
+  }
+
   .deleteForm > button {
     width: 100%;
   }
