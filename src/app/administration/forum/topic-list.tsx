@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { ConfirmDeleteButton } from "../confirm-delete-button";
+import destructiveStyles from "../destructive-actions.module.css";
 import { moderateTopicFromAdmin, moveTopicFromAdmin } from "./actions";
+import { deleteForumTopicFromAdmin } from "./delete-actions";
 import { formatDate, sectionOf, statusLabel } from "./utils";
 import type { ForumMaps, TopicRow } from "./types";
 import styles from "./forum-admin.module.css";
 
-export function TopicList({ topics, maps, returnTo }: { topics: TopicRow[]; maps: ForumMaps; returnTo: string }) {
+export function TopicList({ topics, maps, returnTo, canDelete }: { topics: TopicRow[]; maps: ForumMaps; returnTo: string; canDelete: boolean }) {
   return (
     <section className={styles.panel} aria-labelledby="topics-title">
       <header className={styles.panelHead}>
@@ -57,6 +60,21 @@ export function TopicList({ topics, maps, returnTo }: { topics: TopicRow[]; maps
                     <button type="submit">Déplacer</button>
                   </form>
                 </div>
+
+                {canDelete ? (
+                  <div className={styles.actionGroup}>
+                    <small>Suppression définitive</small>
+                    <form action={deleteForumTopicFromAdmin}>
+                      <input type="hidden" name="topic_id" value={topic.id} />
+                      <input type="hidden" name="return_to" value={returnTo} />
+                      <ConfirmDeleteButton
+                        className={destructiveStyles.dangerButton}
+                        label="Supprimer le sujet"
+                        confirmMessage={`Supprimer définitivement « ${topic.title} » ?\n\nLes ${topic.post_count} message${topic.post_count > 1 ? "s" : ""}, signalements, suivis, lectures et médias joints seront également supprimés. Les éventuels actes de chronique liés perdront seulement leur lien vers ce sujet. Cette action est irréversible.`}
+                      />
+                    </form>
+                  </div>
+                ) : null}
               </div>
             </article>
           );
