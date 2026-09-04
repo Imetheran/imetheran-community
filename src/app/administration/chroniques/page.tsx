@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { createClient } from "@/lib/supabase/server";
 import { chronicleNarrativeLabels, chroniclePublicationLabels, formatChronicleDate, getAppRole, type ChronicleNarrativeStatus, type ChroniclePublicationStatus } from "@/lib/chronicles";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminChroniclesPage() {
+type Search = { q?: string; statut?: string; narration?: string };
+
+export default async function AdminChroniclesPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const query = await searchParams;
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   const claims = claimsData?.claims;
@@ -26,6 +29,15 @@ export default async function AdminChroniclesPage() {
   const published = rows.filter((row) => row.publication_status === "published").length;
   const drafts = rows.filter((row) => row.publication_status === "draft").length;
   const archived = rows.filter((row) => row.publication_status === "archived").length;
+  const search = String(query.q ?? "").trim().slice(0, 120);
+  const status = String(query.statut ?? "").trim();
+  const narrative = String(query.narration ?? "").trim();
+  const needle = search.toLocaleLowerCase("fr");
+  const filteredRows = rows.filter((row) =>
+    (!status || row.publication_status === status) &&
+    (!narrative || row.narrative_status === narrative) &&
+    (!needle || `${row.title} ${row.subtitle ?? ""} ${row.slug}`.toLocaleLowerCase("fr").includes(needle))
+  );
 
   return (
     <main className="site-shell admin-page admin-chronicles-page">
@@ -48,18 +60,22 @@ export default async function AdminChroniclesPage() {
 
         <section className="admin-panel" aria-labelledby="admin-chronicles-list-title">
           <header className="admin-panel__head"><div><p className="eyebrow">Bibliothèque</p><h2 id="admin-chronicles-list-title">Tous les dossiers</h2></div><Link className="text-link" href="/chroniques">Voir le public →</Link></header>
-          {rows.length ? (
+          <form className="admin-cms-filters" method="get">
+            <label><span>Recherche</span><input name="q" type="search" defaultValue={search} placeholder="Titre, sous-titre ou slug…" /></label>
+            <label><span>Publication</span><select name="statut" defaultValue={status}><option value="">Tous</option><option value="draft">Brouillons</option><option value="published">Publiées</option><option value="archived">Archivées</option></select></label>
+            <label><span>Narration</span><select name="narration" defaultValue={narrative}><option value="">Toutes</option>{Object.entries(chronicleNarrativeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+            <button className="button button--ghost button--small" type="submit">Filtrer</button>
+            {(search || status || narrative) ? <Link className="text-link" href="/administration/chroniques">Réinitialiser</Link> : null}
+          </form>
+          <p className="admin-filter-result">{filteredRows.length} résultat{filteredRows.length > 1 ? "s" : ""} sur {rows.length}</p>
+          {filteredRows.length ? (
             <div className="admin-chronicle-list">
-              {rows.map((chronicle) => {
+              {filteredRows.map((chronicle) => {
                 const narrativeStatus = chronicle.narrative_status as ChronicleNarrativeStatus;
                 const publicationStatus = chronicle.publication_status as ChroniclePublicationStatus;
                 return (
                   <Link className="admin-chronicle-row" href={`/administration/chroniques/${chronicle.id}`} key={chronicle.id}>
-                    <div className="admin-chronicle-row__badges">
-                      <span>{chroniclePublicationLabels[publicationStatus]}</span>
-                      <span>{chronicleNarrativeLabels[narrativeStatus]}</span>
-                      {chronicle.featured ? <span>À la une</span> : null}
-                    </div>
+                    <div className="admin-chronicle-row__badges"><span>{chroniclePublicationLabels[publicationStatus]}</span><span>{chronicleNarrativeLabels[narrativeStatus]}</span>{chronicle.featured ? <span>À la une</span> : null}</div>
                     <div className="admin-chronicle-row__main"><strong>{chronicle.title}</strong><small>{chronicle.subtitle || chronicle.slug}</small></div>
                     <div className="admin-chronicle-row__stats"><span><strong>{chapterCount.get(chronicle.id) ?? 0}</strong> actes</span><span><strong>{participantCount.get(chronicle.id) ?? 0}</strong> participants</span></div>
                     <time dateTime={chronicle.updated_at}>{formatChronicleDate(chronicle.updated_at)}</time>
@@ -69,7 +85,7 @@ export default async function AdminChroniclesPage() {
               })}
             </div>
           ) : (
-            <div className="admin-empty-state"><strong>Aucune chronique en base.</strong><p>Créez le premier dossier. Il restera privé tant que vous ne le publiez pas.</p><Link className="button button--primary button--small" href="/administration/chroniques/nouveau">Créer la première chronique</Link></div>
+            <div className="admin-empty-state"><strong>{rows.length ? "Aucun dossier ne correspond aux filtres." : "Aucune chronique en base."}</strong><p>{rows.length ? "Élargissez la recherche ou réinitialisez les filtres." : "Créez le premier dossier. Il restera privé tant que vous ne le publiez pas."}</p>{rows.length ? <Link className="text-link" href="/administration/chroniques">Réinitialiser les filtres →</Link> : <Link className="button button--primary button--small" href="/administration/chroniques/nouveau">Créer la première chronique</Link>}</div>
           )}
         </section>
       </section>
