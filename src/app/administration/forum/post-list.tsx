@@ -47,7 +47,7 @@ export function PostList({ posts, maps, returnTo, canDelete }: { posts: PostRow[
                   <div className={styles.actionGroup}>
                     <small>Suppression définitive</small>
                     {isLastPost ? (
-                      <span className={styles.actionHint}>Dernier message du sujet : supprimez le sujet entier depuis l’onglet Sujets.</span>
+                      <span>Dernier message du sujet : supprimez le sujet entier depuis l’onglet Sujets.</span>
                     ) : (
                       <form action={deleteForumPostFromAdmin}>
                         <input type="hidden" name="post_id" value={post.id} />
