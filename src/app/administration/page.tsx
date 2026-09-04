@@ -57,6 +57,8 @@ export default async function AdministrationPage({
     boardsResult,
     recentProfilesResult,
     recentTopicsResult,
+    reportsResult,
+    pendingRelationshipsResult,
   ] = await Promise.all([
     readSiteRuntimeSettings(),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -71,6 +73,8 @@ export default async function AdministrationPage({
     supabase.from("forum_boards").select("id, title, slug, is_active", { count: "exact" }).order("sort_order"),
     supabase.from("profiles").select("id, display_name, username, created_at").order("created_at", { ascending: false }).limit(5),
     supabase.from("forum_topics").select("id, board_id, title, slug, status, is_pinned, is_locked, last_activity_at, post_count").order("last_activity_at", { ascending: false }).limit(6),
+    supabase.from("forum_reports").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("character_relationships").select("id", { count: "exact", head: true }).eq("status", "pending"),
   ]);
 
   const loadErrors = [
@@ -86,6 +90,8 @@ export default async function AdministrationPage({
     boardsResult.error,
     recentProfilesResult.error,
     recentTopicsResult.error,
+    reportsResult.error,
+    pendingRelationshipsResult.error,
   ].filter(Boolean);
 
   const membersCount = membersResult.count ?? 0;
@@ -96,6 +102,10 @@ export default async function AdministrationPage({
   const publishedChroniclesCount = publishedChroniclesResult.count ?? 0;
   const gazettesCount = gazettesResult.count ?? 0;
   const publishedGazettesCount = publishedGazettesResult.count ?? 0;
+  const pendingReportsCount = reportsResult.count ?? 0;
+  const pendingRelationshipsCount = pendingRelationshipsResult.count ?? 0;
+  const unpublishedChroniclesCount = Math.max(0, chroniclesCount - publishedChroniclesCount);
+  const unpublishedGazettesCount = Math.max(0, gazettesCount - publishedGazettesCount);
   const sections = sectionsResult.data ?? [];
   const boards = boardsResult.data ?? [];
   const boardMap = new Map(boards.map((board) => [board.id, board]));
@@ -106,6 +116,16 @@ export default async function AdministrationPage({
   const backendHealthy = loadErrors.length === 0;
   const runtimeHealthy = runtimeSettings.source === "database";
   const maintenanceEnabled = runtimeSettings.maintenanceEnabled;
+  const attentionCount = pendingReportsCount + pendingRelationshipsCount + unpublishedChroniclesCount + unpublishedGazettesCount;
+  const readinessChecks = [
+    backendHealthy,
+    runtimeHealthy,
+    activeSections > 0,
+    activeBoards > 0,
+    publishedChroniclesCount > 0,
+    publishedGazettesCount > 0,
+  ];
+  const readinessPercent = Math.round((readinessChecks.filter(Boolean).length / readinessChecks.length) * 100);
 
   const feedback =
     params.etat === "maintenance"
@@ -176,6 +196,53 @@ export default async function AdministrationPage({
             <span>Le panneau reste accessible, mais vérifiez Supabase avant toute opération importante.</span>
           </div>
         ) : null}
+
+        <section className="admin-priority" aria-labelledby="admin-priority-title">
+          <div className="admin-priority__head">
+            <div>
+              <p className="eyebrow">Pilotage quotidien</p>
+              <h2 id="admin-priority-title">À traiter</h2>
+            </div>
+            <span className={`admin-priority__count ${attentionCount ? "is-attention" : "is-clear"}`}>
+              {attentionCount ? `${attentionCount} élément${attentionCount > 1 ? "s" : ""}` : "Tout est calme"}
+            </span>
+          </div>
+          <div className="admin-priority__grid">
+            <Link href="/administration/forum" className={pendingReportsCount ? "is-attention" : "is-clear"}>
+              <span className="admin-priority__icon" aria-hidden="true">!</span>
+              <div><strong>Signalements</strong><small>{pendingReportsCount ? `${pendingReportsCount} à examiner` : "Aucun en attente"}</small></div>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/administration/liens" className={pendingRelationshipsCount ? "is-attention" : "is-clear"}>
+              <span className="admin-priority__icon" aria-hidden="true">↔</span>
+              <div><strong>Demandes de liens</strong><small>{pendingRelationshipsCount ? `${pendingRelationshipsCount} à examiner` : "Aucune en attente"}</small></div>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/administration/chroniques" className={unpublishedChroniclesCount ? "is-attention" : "is-clear"}>
+              <span className="admin-priority__icon" aria-hidden="true">✦</span>
+              <div><strong>Chroniques</strong><small>{unpublishedChroniclesCount ? `${unpublishedChroniclesCount} non publiée${unpublishedChroniclesCount > 1 ? "s" : ""}` : "Tout est publié"}</small></div>
+              <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/administration/gazettes" className={unpublishedGazettesCount ? "is-attention" : "is-clear"}>
+              <span className="admin-priority__icon" aria-hidden="true">▤</span>
+              <div><strong>Gazettes</strong><small>{unpublishedGazettesCount ? `${unpublishedGazettesCount} non publiée${unpublishedGazettesCount > 1 ? "s" : ""}` : "Tout est publié"}</small></div>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </section>
+
+        <section className="admin-readiness" aria-labelledby="admin-readiness-title">
+          <div className="admin-readiness__copy">
+            <p className="eyebrow">Préparation bêta</p>
+            <h2 id="admin-readiness-title">État de préparation</h2>
+            <p>Un indicateur volontairement simple du socle opérationnel. Les retours des testeurs restent la référence pour valider les parcours réels.</p>
+          </div>
+          <div className="admin-readiness__meter" aria-label={`${readinessPercent}% de préparation technique et éditoriale`}>
+            <div className="admin-readiness__value">{readinessPercent}<span>%</span></div>
+            <div className="admin-readiness__bar"><span style={{ width: `${readinessPercent}%` }} /></div>
+            <small>{readinessPercent === 100 ? "Socle prêt · place aux tests terrain" : "Quelques points restent à vérifier"}</small>
+          </div>
+        </section>
 
         <div className="admin-metrics" aria-label="Indicateurs communautaires">
           <article className="admin-metric"><span>01</span><div><strong>{membersCount}</strong><small>Membres</small></div></article>
