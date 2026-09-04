@@ -1,0 +1,173 @@
+/* Adapters for legacy administration screens */
+
+/* Filter grids adapt to the real number of controls. */
+@media (min-width: 1181px) {
+  .admin-page .admin-cms-filters:has(label:nth-of-type(5)) {
+    grid-template-columns: minmax(220px, 1.6fr) repeat(4, minmax(130px, .72fr)) auto auto;
+  }
+
+  .admin-page .admin-cms-filters:has(label:nth-of-type(4)):not(:has(label:nth-of-type(5))) {
+    grid-template-columns: minmax(240px, 1.7fr) repeat(3, minmax(145px, .72fr)) auto auto;
+  }
+
+  .admin-page .admin-cms-filters:has(label:nth-of-type(3)):not(:has(label:nth-of-type(4))) {
+    grid-template-columns: minmax(260px, 1.8fr) repeat(2, minmax(155px, .72fr)) auto auto;
+  }
+
+  .admin-page .admin-cms-filters:has(label:nth-of-type(2)):not(:has(label:nth-of-type(3))) {
+    grid-template-columns: minmax(280px, 1.9fr) minmax(170px, .72fr) auto auto;
+  }
+}
+
+/* Privacy / RGPD administration used public legal styles before this layer. */
+.admin-page .legal-actions {
+  min-height: 52px;
+  margin: 0;
+  padding: .65rem .8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  border: 1px solid var(--admin-panel-border);
+  background: var(--admin-card-bg);
+}
+
+.admin-page .legal-actions .text-link {
+  font-family: var(--font-ui);
+  font-size: .55rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.admin-page .auth-message {
+  min-height: 48px;
+  margin: 0;
+  padding: .75rem .9rem;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--admin-panel-border-strong);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  color: var(--text);
+  font-size: .66rem;
+}
+
+.admin-page .auth-message--error {
+  border-color: color-mix(in srgb, #d46b6b 62%, var(--border));
+  background: color-mix(in srgb, #d46b6b 8%, var(--surface));
+}
+
+.admin-page .privacy-request-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-page .privacy-request-card {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--admin-panel-border);
+  border-radius: 0;
+  background: var(--admin-panel-bg);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--shadow) 18%, transparent);
+}
+
+.admin-page .privacy-request-card__head {
+  min-height: 68px;
+  padding: .85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--admin-panel-border);
+  background: var(--admin-panel-head-bg);
+}
+
+.admin-page .privacy-request-card__head strong {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.admin-page .privacy-request-card__head span,
+.admin-page .privacy-request-card__head small {
+  color: var(--muted);
+  font-size: .56rem;
+}
+
+.admin-page .privacy-request-card > p {
+  margin: 0;
+  padding: .8rem 1rem 0;
+  color: var(--muted);
+  font-size: .66rem;
+  line-height: 1.55;
+}
+
+.admin-page .privacy-request-card > p + p { padding-top: .45rem; }
+
+.admin-page .privacy-request-card form {
+  margin-top: .85rem;
+  padding: .85rem 1rem 1rem;
+  display: grid;
+  grid-template-columns: minmax(150px, .45fr) minmax(0, 1.55fr) auto;
+  gap: .65rem;
+  align-items: end;
+  border-top: 1px solid var(--admin-panel-border);
+  background: color-mix(in srgb, var(--surface-soft) 55%, var(--surface));
+}
+
+.admin-page .privacy-request-card form label {
+  min-width: 0;
+  display: grid;
+  gap: .3rem;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: var(--admin-label-size);
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.admin-page .privacy-request-card form textarea { min-height: 86px; }
+
+.admin-page .privacy-request-card form .privacy-request-card__meta {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: .54rem;
+}
+
+.admin-page .privacy-request-card form > button { align-self: end; }
+
+/* Legacy status/detail strips become quieter inner cards. */
+.admin-page :where(.admin-member-card__facts > span, .admin-gazette-publication-status, .admin-chronicle-participant-list > div) {
+  border-color: var(--admin-panel-border);
+  background: var(--admin-card-bg);
+}
+
+@media (max-width: 900px) {
+  .admin-page .privacy-request-card form {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-page .privacy-request-card form > button { width: 100%; }
+}
+
+@media (max-width: 640px) {
+  .admin-page .legal-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-page .privacy-request-card__head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .2rem;
+  }
+
+  .admin-page .privacy-request-card form {
+    grid-template-columns: 1fr;
+    padding: .75rem;
+  }
+
+  .admin-page .privacy-request-card form .privacy-request-card__meta { grid-column: auto; }
+}
