@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { formatGazetteDate, gazetteArticleLabels, gazettePublicationLabels, getAppRole, type GazetteArticleKind, type GazettePublicationStatus } from "@/lib/gazettes";
 import { createClient } from "@/lib/supabase/server";
+import { AdminBreadcrumbs } from "../../admin-breadcrumbs";
+import { ConfirmDeleteButton } from "../../confirm-delete-button";
 import { createGazetteArticle, deleteGazetteArticle, featureGazette, setGazettePublication, updateGazette, updateGazetteArticle } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -67,8 +69,8 @@ export default async function EditGazettePage({ params, searchParams }: { params
       <SiteHeader />
       <section className="admin-hero">
         <div className="content-frame admin-hero__layout">
-          <div><p className="eyebrow">CMS · Gazette N° {String(gazette.issue_number).padStart(2, "0")}</p><h1>{gazette.headline || gazette.title}</h1><p>{gazettePublicationLabels[publicationStatus]} · dernière modification {formatGazetteDate(gazette.updated_at)}</p></div>
-          <div className="admin-hero__side"><span className="admin-role-badge">{gazette.featured ? "✦ À la une" : `✦ ${gazettePublicationLabels[publicationStatus]}`}</span><Link className="button button--ghost button--small" href="/administration/gazettes">← Tous les numéros</Link>{publicationStatus === "published" ? <Link className="button button--ghost button--small" href={`/gazettes/${gazette.slug}`}>Voir le public</Link> : <Link className="button button--ghost button--small" href={`/gazettes/${gazette.slug}`}>Prévisualiser</Link>}</div>
+          <div><AdminBreadcrumbs items={[{ label: "Gazettes", href: "/administration/gazettes" }, { label: `N° ${String(gazette.issue_number).padStart(2, "0")}` }]} /><p className="eyebrow">CMS · Gazette N° {String(gazette.issue_number).padStart(2, "0")}</p><h1>{gazette.headline || gazette.title}</h1><p>{gazettePublicationLabels[publicationStatus]} · dernière modification {formatGazetteDate(gazette.updated_at)}</p></div>
+          <div className="admin-hero__side"><span className="admin-role-badge">{gazette.featured ? "✦ À la une" : `✦ ${gazettePublicationLabels[publicationStatus]}`}</span><Link className="button button--ghost button--small" href="/administration/gazettes">← Tous les numéros</Link><Link className="button button--ghost button--small" href={`/gazettes/${gazette.slug}`}>{publicationStatus === "published" ? "Voir le public" : "Prévisualiser"}</Link></div>
         </div>
       </section>
 
@@ -76,6 +78,15 @@ export default async function EditGazettePage({ params, searchParams }: { params
         {message ? <div className="admin-notice"><strong>{message}</strong></div> : null}
         {error ? <div className="admin-alert" role="alert"><strong>{error}</strong></div> : null}
         {gazetteResult.error || articlesResult.error ? <div className="admin-alert" role="alert">Certaines données n’ont pas pu être chargées depuis Supabase.</div> : null}
+
+        <div className="admin-editor-sticky-bar" aria-label="Actions rapides de la Gazette">
+          <div className="admin-editor-sticky-bar__context"><strong>{gazette.headline || gazette.title}</strong><small>{gazettePublicationLabels[publicationStatus]} · {articles.length} article{articles.length > 1 ? "s" : ""}</small></div>
+          <div className="admin-editor-sticky-bar__actions">
+            <button className="button button--primary button--small" type="submit" form="gazette-main-form">Enregistrer</button>
+            <Link className="button button--ghost button--small" href={`/gazettes/${gazette.slug}`}>{publicationStatus === "published" ? "Voir" : "Prévisualiser"}</Link>
+            {publicationStatus !== "published" ? <form action={setGazettePublication}><input type="hidden" name="gazette_id" value={gazette.id} /><input type="hidden" name="publication_status" value="published" /><button className="button button--ghost button--small" type="submit">Publier</button></form> : <form action={setGazettePublication}><input type="hidden" name="gazette_id" value={gazette.id} /><input type="hidden" name="publication_status" value="draft" /><button className="button button--ghost button--small" type="submit">Brouillon</button></form>}
+          </div>
+        </div>
 
         <section className="admin-panel admin-editorial-check-panel">
           <header className="admin-panel__head"><div><p className="eyebrow">Contrôle éditorial</p><h2>Avant de publier</h2></div><span className="admin-panel__status">{writtenArticles}/{articles.length} articles rédigés</span></header>
@@ -88,7 +99,7 @@ export default async function EditGazettePage({ params, searchParams }: { params
         <div className="admin-gazette-layout">
           <section className="admin-panel admin-chronicle-editor-panel">
             <header className="admin-panel__head"><div><p className="eyebrow">Numéro</p><h2>Informations éditoriales</h2></div><span className="admin-panel__status">{gazettePublicationLabels[publicationStatus]}</span></header>
-            <form className="admin-chronicle-form" action={updateGazette} encType="multipart/form-data">
+            <form id="gazette-main-form" className="admin-chronicle-form" action={updateGazette} encType="multipart/form-data">
               <input type="hidden" name="gazette_id" value={gazette.id} />
               <input type="hidden" name="cover_image" value={coverImage} />
               <label className="admin-chronicle-field"><span>Nom du journal</span><input name="title" maxLength={160} defaultValue={gazette.title} /></label>
@@ -106,24 +117,14 @@ export default async function EditGazettePage({ params, searchParams }: { params
                 </div>
 
                 {coverImage ? (
-                  <div className="admin-gazette-cover-preview">
-                    <img src={coverImage} alt="Aperçu de la couverture actuelle" />
-                  </div>
+                  <div className="admin-gazette-cover-preview"><img src={coverImage} alt="Aperçu de la couverture actuelle" /></div>
                 ) : (
                   <div className="admin-gazette-cover-preview admin-gazette-cover-preview--empty"><span>✦</span><strong>Aucune image de couverture</strong><small>Le visuel par défaut de la Gazette sera utilisé.</small></div>
                 )}
 
                 <div className="admin-gazette-cover-controls">
-                  <label>
-                    <span>Importer / remplacer</span>
-                    <input name="cover_file" type="file" accept="image/jpeg,image/png,image/webp" />
-                    <small>JPG, PNG ou WebP · 4 Mo maximum. Un nouvel upload remplace automatiquement l’ancien.</small>
-                  </label>
-                  <label>
-                    <span>URL externe · facultatif</span>
-                    <input name="cover_url" type="url" maxLength={1200} defaultValue={coverIsStored ? "" : coverImage} placeholder="https://…" />
-                    <small>Si aucune image n’est importée, cette URL peut servir de couverture.</small>
-                  </label>
+                  <label><span>Importer / remplacer</span><input name="cover_file" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG ou WebP · 4 Mo maximum. Un nouvel upload remplace automatiquement l’ancien.</small></label>
+                  <label><span>URL externe · facultatif</span><input name="cover_url" type="url" maxLength={1200} defaultValue={coverIsStored ? "" : coverImage} placeholder="https://…" /><small>Si aucune image n’est importée, cette URL peut servir de couverture.</small></label>
                 </div>
 
                 {coverImage ? <label className="admin-gazette-cover-remove"><input name="remove_cover" type="checkbox" /><span>Retirer la couverture actuelle au prochain enregistrement</span></label> : null}
@@ -169,7 +170,10 @@ export default async function EditGazettePage({ params, searchParams }: { params
                       <label className="admin-gazette-article-wide"><span>Corps de l’article</span><textarea name="body" rows={10} maxLength={50000} defaultValue={article.body ?? ""} /><small>Séparez les paragraphes par une ligne vide.</small></label>
                       <div className="admin-gazette-article-actions"><button className="button button--primary button--small" type="submit">Enregistrer l’article</button></div>
                     </form>
-                    <form action={deleteGazetteArticle}><input type="hidden" name="gazette_id" value={gazette.id} /><input type="hidden" name="article_id" value={article.id} /><button className="admin-gazette-delete" type="submit">Supprimer cet article</button></form>
+                    <form action={deleteGazetteArticle}>
+                      <input type="hidden" name="gazette_id" value={gazette.id} /><input type="hidden" name="article_id" value={article.id} />
+                      <ConfirmDeleteButton className="admin-gazette-delete" label="Supprimer cet article" confirmMessage={`Supprimer définitivement l’article « ${article.title} » ? Son texte, son encadré et ses métadonnées seront supprimés de ce numéro. Cette action est irréversible.`} />
+                    </form>
                   </article>
                 );
               })}
