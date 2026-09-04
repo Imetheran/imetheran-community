@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
 import { chronicleNarrativeLabels, chroniclePublicationLabels, getAppRole, type ChronicleNarrativeStatus, type ChroniclePublicationStatus } from "@/lib/chronicles";
+import { AdminBreadcrumbs } from "../../admin-breadcrumbs";
+import { ConfirmDeleteButton } from "../../confirm-delete-button";
 import {
   addChronicleParticipant,
   createChronicleChapter,
@@ -92,13 +94,22 @@ export default async function EditChroniclePage({
       <SiteHeader />
       <section className="admin-hero">
         <div className="content-frame admin-hero__layout">
-          <div><p className="eyebrow">CMS · Chroniques</p><h1>{chronicle.title}</h1><p>{chronicle.subtitle || "Dossier narratif sans sous-titre."}</p></div>
+          <div><AdminBreadcrumbs items={[{ label: "Chroniques", href: "/administration/chroniques" }, { label: chronicle.title }]} /><p className="eyebrow">CMS · Chroniques</p><h1>{chronicle.title}</h1><p>{chronicle.subtitle || "Dossier narratif sans sous-titre."}</p></div>
           <div className="admin-hero__side"><span className="admin-role-badge">{chroniclePublicationLabels[publicationStatus]} · {chronicleNarrativeLabels[narrativeStatus]}</span><Link className="button button--ghost button--small" href={`/chroniques/${chronicle.slug}`}>{publicationStatus === "published" ? "Voir le public" : "Prévisualiser"}</Link><Link className="button button--ghost button--small" href="/administration/chroniques">← Liste</Link></div>
         </div>
       </section>
 
       <section className="content-frame admin-workspace">
         {pageNotice ? <div className={`admin-alert admin-alert--${pageNotice.kind}`} role="status">{pageNotice.text}</div> : null}
+
+        <div className="admin-editor-sticky-bar" aria-label="Actions rapides de la chronique">
+          <div className="admin-editor-sticky-bar__context"><strong>{chronicle.title}</strong><small>{chroniclePublicationLabels[publicationStatus]} · {chapters.length} acte{chapters.length > 1 ? "s" : ""}</small></div>
+          <div className="admin-editor-sticky-bar__actions">
+            <button className="button button--primary button--small" type="submit" form="chronicle-main-form">Enregistrer</button>
+            <Link className="button button--ghost button--small" href={`/chroniques/${chronicle.slug}`}>{publicationStatus === "published" ? "Voir" : "Prévisualiser"}</Link>
+            {publicationStatus !== "published" ? <form action={setChroniclePublication}><input type="hidden" name="chronicle_id" value={id} /><input type="hidden" name="publication_status" value="published" /><button className="button button--ghost button--small" type="submit">Publier</button></form> : <form action={setChroniclePublication}><input type="hidden" name="chronicle_id" value={id} /><input type="hidden" name="publication_status" value="draft" /><button className="button button--ghost button--small" type="submit">Brouillon</button></form>}
+          </div>
+        </div>
 
         <section className="admin-panel admin-chronicle-publish-panel">
           <header className="admin-panel__head"><div><p className="eyebrow">Publication</p><h2>État du dossier</h2></div>{chronicle.featured ? <span className="admin-panel__status">À la une</span> : null}</header>
@@ -116,7 +127,7 @@ export default async function EditChroniclePage({
 
         <section className="admin-panel admin-chronicle-editor-panel">
           <header className="admin-panel__head"><div><p className="eyebrow">Dossier</p><h2>Informations publiques</h2></div><span className="admin-panel__status">{chronicle.slug}</span></header>
-          <form className="admin-chronicle-form" action={updateChronicle} encType="multipart/form-data">
+          <form id="chronicle-main-form" className="admin-chronicle-form" action={updateChronicle} encType="multipart/form-data">
             <input type="hidden" name="chronicle_id" value={id} />
             <input type="hidden" name="cover_image" value={coverImage} />
             <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Titre *</span><input name="title" maxLength={160} required defaultValue={chronicle.title} /></label>
@@ -189,7 +200,10 @@ export default async function EditChroniclePage({
                 <label className="admin-chronicle-field admin-chronicle-field--wide"><span>Récit / compte rendu</span><textarea name="body" rows={12} maxLength={50000} defaultValue={chapter.body} /><small>Séparez les paragraphes par une ligne vide.</small></label>
                 <div className="admin-chronicle-form__actions"><button className="button button--primary button--small" type="submit">Enregistrer l’acte</button></div>
               </form>
-              <form className="admin-chronicle-delete-form" action={deleteChronicleChapter}><input type="hidden" name="chronicle_id" value={id} /><input type="hidden" name="chapter_id" value={chapter.id} /><button className="admin-text-button admin-text-button--danger" type="submit">Supprimer cet acte</button></form>
+              <form className="admin-chronicle-delete-form" action={deleteChronicleChapter}>
+                <input type="hidden" name="chronicle_id" value={id} /><input type="hidden" name="chapter_id" value={chapter.id} />
+                <ConfirmDeleteButton className="admin-text-button admin-text-button--danger" label="Supprimer cet acte" confirmMessage={`Supprimer définitivement l’acte « ${chapter.title} » ? Son résumé, son récit et son lien éventuel vers le forum seront supprimés. Cette action est irréversible.`} />
+              </form>
             </article>
           ))}</div> : <div className="admin-empty-state"><strong>Aucun acte pour le moment.</strong><p>Ajoutez le premier acte depuis le bloc Progression ci-dessus.</p></div>}
         </section>
