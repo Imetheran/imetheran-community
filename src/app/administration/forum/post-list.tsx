@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { ConfirmDeleteButton } from "../confirm-delete-button";
+import destructiveStyles from "../destructive-actions.module.css";
 import { setPostVisibilityFromAdmin } from "./actions";
+import { deleteForumPostFromAdmin } from "./delete-actions";
 import { formatDate } from "./utils";
 import type { ForumMaps, PostRow } from "./types";
 import styles from "./forum-admin.module.css";
 
-export function PostList({ posts, maps, returnTo }: { posts: PostRow[]; maps: ForumMaps; returnTo: string }) {
+export function PostList({ posts, maps, returnTo, canDelete }: { posts: PostRow[]; maps: ForumMaps; returnTo: string; canDelete: boolean }) {
   return (
     <section className={styles.panel} aria-labelledby="posts-title">
       <header className={styles.panelHead}>
@@ -18,6 +21,7 @@ export function PostList({ posts, maps, returnTo }: { posts: PostRow[]; maps: Fo
           const board = topic ? maps.boardMap.get(topic.board_id) : null;
           const href = topic && board ? `/forum/${board.slug}/sujet/${topic.slug}#${post.id}` : "/forum";
           const author = post.author_id ? maps.profileMap.get(post.author_id) ?? "Membre" : "Compte supprimé";
+          const isLastPost = (topic?.post_count ?? 0) <= 1;
 
           return (
             <article className={`${styles.row} ${post.is_hidden ? styles.rowHidden : ""}`} key={post.id}>
@@ -28,14 +32,35 @@ export function PostList({ posts, maps, returnTo }: { posts: PostRow[]; maps: Fo
                 <small>{author} · {formatDate(post.created_at)}{post.hidden_at ? ` · masqué ${formatDate(post.hidden_at)}` : ""}</small>
               </div>
 
-              <div className={styles.singleAction}>
-                <small>{post.is_hidden ? "Modération active" : "Visibilité"}</small>
-                <form className={styles.visibilityAction} action={setPostVisibilityFromAdmin}>
-                  <input type="hidden" name="post_id" value={post.id} />
-                  <input type="hidden" name="hidden" value={post.is_hidden ? "false" : "true"} />
-                  <input type="hidden" name="return_to" value={returnTo} />
-                  <button className={post.is_hidden ? "button button--primary button--small" : "button button--ghost button--small"} type="submit">{post.is_hidden ? "Restaurer" : "Masquer"}</button>
-                </form>
+              <div className={styles.rowActions}>
+                <div className={styles.actionGroup}>
+                  <small>{post.is_hidden ? "Modération active" : "Visibilité"}</small>
+                  <form className={styles.visibilityAction} action={setPostVisibilityFromAdmin}>
+                    <input type="hidden" name="post_id" value={post.id} />
+                    <input type="hidden" name="hidden" value={post.is_hidden ? "false" : "true"} />
+                    <input type="hidden" name="return_to" value={returnTo} />
+                    <button className={post.is_hidden ? "button button--primary button--small" : "button button--ghost button--small"} type="submit">{post.is_hidden ? "Restaurer" : "Masquer"}</button>
+                  </form>
+                </div>
+
+                {canDelete ? (
+                  <div className={styles.actionGroup}>
+                    <small>Suppression définitive</small>
+                    {isLastPost ? (
+                      <span className={styles.actionHint}>Dernier message du sujet : supprimez le sujet entier depuis l’onglet Sujets.</span>
+                    ) : (
+                      <form action={deleteForumPostFromAdmin}>
+                        <input type="hidden" name="post_id" value={post.id} />
+                        <input type="hidden" name="return_to" value={returnTo} />
+                        <ConfirmDeleteButton
+                          className={destructiveStyles.dangerButton}
+                          label="Supprimer le message"
+                          confirmMessage={`Supprimer définitivement ce message de « ${topic?.title ?? "ce sujet"} » ?\n\nLe message, ses signalements et ses médias joints seront supprimés de la base et du stockage. Cette action est irréversible.`}
+                        />
+                      </form>
+                    )}
+                  </div>
+                ) : null}
               </div>
             </article>
           );
