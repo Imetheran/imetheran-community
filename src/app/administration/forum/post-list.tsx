@@ -17,6 +17,7 @@ export function PostList({ posts, maps, returnTo }: { posts: PostRow[]; maps: Fo
           const topic = maps.topicMap.get(post.topic_id);
           const board = topic ? maps.boardMap.get(topic.board_id) : null;
           const href = topic && board ? `/forum/${board.slug}/sujet/${topic.slug}#${post.id}` : "/forum";
+          const author = post.author_id ? maps.profileMap.get(post.author_id) ?? "Membre" : "Compte supprimé";
 
           return (
             <article className={`${styles.row} ${post.is_hidden ? styles.rowHidden : ""}`} key={post.id}>
@@ -24,15 +25,18 @@ export function PostList({ posts, maps, returnTo }: { posts: PostRow[]; maps: Fo
                 <div className={styles.badges}><span>{post.is_hidden ? "Masqué" : "Visible"}</span></div>
                 <Link href={href}><strong>{topic?.title ?? "Sujet indisponible"}</strong></Link>
                 <p className={styles.excerpt}>{post.content.slice(0, 360)}{post.content.length > 360 ? "…" : ""}</p>
-                <small>{maps.profileMap.get(post.author_id) ?? "Membre"} · {formatDate(post.created_at)}{post.hidden_at ? ` · masqué ${formatDate(post.hidden_at)}` : ""}</small>
+                <small>{author} · {formatDate(post.created_at)}{post.hidden_at ? ` · masqué ${formatDate(post.hidden_at)}` : ""}</small>
               </div>
 
-              <form className={styles.visibilityAction} action={setPostVisibilityFromAdmin}>
-                <input type="hidden" name="post_id" value={post.id} />
-                <input type="hidden" name="hidden" value={post.is_hidden ? "false" : "true"} />
-                <input type="hidden" name="return_to" value={returnTo} />
-                <button className="button button--ghost button--small" type="submit">{post.is_hidden ? "Restaurer" : "Masquer"}</button>
-              </form>
+              <div className={styles.singleAction}>
+                <small>{post.is_hidden ? "Modération active" : "Visibilité"}</small>
+                <form className={styles.visibilityAction} action={setPostVisibilityFromAdmin}>
+                  <input type="hidden" name="post_id" value={post.id} />
+                  <input type="hidden" name="hidden" value={post.is_hidden ? "false" : "true"} />
+                  <input type="hidden" name="return_to" value={returnTo} />
+                  <button className={post.is_hidden ? "button button--primary button--small" : "button button--ghost button--small"} type="submit">{post.is_hidden ? "Restaurer" : "Masquer"}</button>
+                </form>
+              </div>
             </article>
           );
         }) : <div className={styles.empty}><strong>Aucun message ne correspond aux filtres.</strong></div>}
