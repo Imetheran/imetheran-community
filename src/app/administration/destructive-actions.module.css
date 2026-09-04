@@ -1,0 +1,70 @@
+.rowWithAction {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: stretch;
+}
+
+.deleteForm {
+  display: flex;
+  align-items: center;
+}
+
+.dangerButton {
+  min-height: 38px;
+  color: #b54747;
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+
+.dangerButton:hover,
+.dangerButton:focus-visible {
+  background: color-mix(in srgb, currentColor 13%, transparent);
+  border-color: currentColor;
+}
+
+.memberDanger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.9rem;
+  margin-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.memberDangerText {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.memberDangerText strong {
+  font-size: 0.9rem;
+}
+
+.memberDangerText small {
+  max-width: 58ch;
+  opacity: 0.72;
+  line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+  .rowWithAction {
+    grid-template-columns: 1fr;
+  }
+
+  .deleteForm,
+  .deleteForm > button {
+    width: 100%;
+  }
+
+  .memberDanger {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .memberDanger form,
+  .memberDanger button {
+    width: 100%;
+  }
+}
