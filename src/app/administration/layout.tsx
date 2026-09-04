@@ -32,7 +32,7 @@ export default async function AdministrationLayout({ children }: { children: Rea
           {isAdmin ? <Link href="/administration/liens">Liens</Link> : null}
           {isAdmin ? <Link href="/administration/chroniques">Chroniques</Link> : null}
           {isAdmin ? <Link href="/administration/gazettes">Gazettes</Link> : null}
-          {isModerator ? <Link href="/forum">Retour au forum</Link> : null}
+          <Link href="/forum">Retour au site</Link>
         </nav>
       ) : null}
     </>
