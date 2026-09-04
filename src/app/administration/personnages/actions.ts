@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ACTIONS = new Set(["feature", "unfeature", "hide", "restore", "publish", "archive"]);
+const CHARACTER_PORTRAIT_BUCKET = "character-portraits";
 
 function getRole(appMetadata: unknown) {
   if (!appMetadata || typeof appMetadata !== "object" || !("role" in appMetadata)) return "member";
@@ -24,9 +25,12 @@ async function requireAdmin() {
 }
 
 function refresh(slug?: string) {
+  revalidatePath("/");
   revalidatePath("/administration");
   revalidatePath("/administration/personnages");
   revalidatePath("/personnages");
+  revalidatePath("/liens");
+  revalidatePath("/chroniques");
   if (slug) revalidatePath(`/personnages/${slug}`);
 }
 
@@ -77,4 +81,32 @@ export async function moderateCharacter(formData: FormData) {
 
   refresh(character.slug);
   redirect(`/administration/personnages?message=${action}`);
+}
+
+export async function deleteCharacter(formData: FormData) {
+  const characterId = String(formData.get("character_id") ?? "");
+  if (!UUID_PATTERN.test(characterId)) redirect("/administration/personnages?erreur=donnees");
+
+  const { supabase } = await requireAdmin();
+  const { data: character, error: loadError } = await supabase
+    .from("characters")
+    .select("id, slug, portrait_path")
+    .eq("id", characterId)
+    .maybeSingle();
+
+  if (loadError || !character) redirect("/administration/personnages?erreur=introuvable");
+
+  const { error: deleteError } = await supabase.from("characters").delete().eq("id", characterId);
+  if (deleteError) redirect("/administration/personnages?erreur=suppression");
+
+  let storageRemoved = true;
+  if (character.portrait_path) {
+    const { error: storageError } = await supabase.storage
+      .from(CHARACTER_PORTRAIT_BUCKET)
+      .remove([character.portrait_path]);
+    storageRemoved = !storageError;
+  }
+
+  refresh(character.slug);
+  redirect(`/administration/personnages?message=${storageRemoved ? "supprime" : "supprime-stockage"}`);
 }
