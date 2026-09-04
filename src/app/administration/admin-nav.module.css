@@ -43,15 +43,35 @@
 }
 
 .nav a:hover,
-.nav a:focus-visible {
+.nav a:focus-visible,
+.nav a.active {
   background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft));
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   color: var(--accent-bright);
   outline: none;
 }
 
+.nav a.active::after {
+  content: "";
+  position: absolute;
+  left: .65rem;
+  right: .65rem;
+  bottom: .18rem;
+  height: 2px;
+  background: var(--accent-bright);
+  opacity: .8;
+}
+
 .nav a:focus-visible {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-bright) 28%, transparent);
+}
+
+.separator {
+  width: 1px;
+  height: 22px;
+  flex: 0 0 auto;
+  margin-inline: .2rem;
+  background: var(--border-strong);
 }
 
 @media (max-width: 900px) {
@@ -75,6 +95,11 @@
   .nav a {
     min-height: 42px;
     padding-inline: .72rem;
+  }
+
+  .nav a.active::after {
+    left: .58rem;
+    right: .58rem;
   }
 }
 
