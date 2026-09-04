@@ -6,7 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminGazettesPage() {
+type Search = { q?: string; statut?: string };
+
+export default async function AdminGazettesPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const query = await searchParams;
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   const claims = claimsData?.claims;
@@ -24,6 +27,13 @@ export default async function AdminGazettesPage() {
   const published = rows.filter((row) => row.publication_status === "published").length;
   const drafts = rows.filter((row) => row.publication_status === "draft").length;
   const archived = rows.filter((row) => row.publication_status === "archived").length;
+  const search = String(query.q ?? "").trim().slice(0, 120);
+  const status = String(query.statut ?? "").trim();
+  const needle = search.toLocaleLowerCase("fr");
+  const filteredRows = rows.filter((row) =>
+    (!status || row.publication_status === status) &&
+    (!needle || `${row.title} ${row.headline ?? ""} ${row.edition ?? ""} ${row.slug}`.toLocaleLowerCase("fr").includes(needle))
+  );
 
   return (
     <main className="site-shell admin-page admin-gazettes-page">
@@ -46,18 +56,21 @@ export default async function AdminGazettesPage() {
 
         <section className="admin-panel" aria-labelledby="admin-gazettes-list-title">
           <header className="admin-panel__head"><div><p className="eyebrow">Rédaction</p><h2 id="admin-gazettes-list-title">Tous les numéros</h2></div><Link className="text-link" href="/gazettes">Voir le public →</Link></header>
-          {rows.length ? (
+          <form className="admin-cms-filters" method="get">
+            <label><span>Recherche</span><input name="q" type="search" defaultValue={search} placeholder="Titre, une, édition ou slug…" /></label>
+            <label><span>Publication</span><select name="statut" defaultValue={status}><option value="">Toutes</option><option value="draft">Brouillons</option><option value="published">Publiées</option><option value="archived">Archivées</option></select></label>
+            <button className="button button--ghost button--small" type="submit">Filtrer</button>
+            {(search || status) ? <Link className="text-link" href="/administration/gazettes">Réinitialiser</Link> : null}
+          </form>
+          <p className="admin-filter-result">{filteredRows.length} résultat{filteredRows.length > 1 ? "s" : ""} sur {rows.length}</p>
+          {filteredRows.length ? (
             <div className="admin-gazette-list">
-              {rows.map((gazette) => {
+              {filteredRows.map((gazette) => {
                 const publicationStatus = gazette.publication_status as GazettePublicationStatus;
                 return (
                   <Link className="admin-gazette-row" href={`/administration/gazettes/${gazette.id}`} key={gazette.id}>
                     <span className="admin-gazette-row__issue">N° {String(gazette.issue_number).padStart(2, "0")}</span>
-                    <div className="admin-gazette-row__main">
-                      <div className="admin-gazette-row__badges"><span>{gazettePublicationLabels[publicationStatus]}</span>{gazette.featured ? <span>À la une</span> : null}</div>
-                      <strong>{gazette.headline || gazette.title}</strong>
-                      <small>{gazette.edition || gazette.slug}</small>
-                    </div>
+                    <div className="admin-gazette-row__main"><div className="admin-gazette-row__badges"><span>{gazettePublicationLabels[publicationStatus]}</span>{gazette.featured ? <span>À la une</span> : null}</div><strong>{gazette.headline || gazette.title}</strong><small>{gazette.edition || gazette.slug}</small></div>
                     <div className="admin-gazette-row__stats"><strong>{articleCount.get(gazette.id) ?? 0}</strong><small>article{(articleCount.get(gazette.id) ?? 0) > 1 ? "s" : ""}</small></div>
                     <time dateTime={gazette.updated_at}>{formatGazetteDate(gazette.updated_at)}</time>
                     <span aria-hidden="true">→</span>
@@ -66,7 +79,7 @@ export default async function AdminGazettesPage() {
               })}
             </div>
           ) : (
-            <div className="admin-empty-state"><strong>Aucune Gazette en base.</strong><p>Créez le premier numéro. Il restera privé tant qu’il n’est pas publié.</p><Link className="button button--primary button--small" href="/administration/gazettes/nouveau">Créer la première Gazette</Link></div>
+            <div className="admin-empty-state"><strong>{rows.length ? "Aucun numéro ne correspond aux filtres." : "Aucune Gazette en base."}</strong><p>{rows.length ? "Élargissez la recherche ou réinitialisez les filtres." : "Créez le premier numéro. Il restera privé tant qu’il n’est pas publié."}</p>{rows.length ? <Link className="text-link" href="/administration/gazettes">Réinitialiser les filtres →</Link> : <Link className="button button--primary button--small" href="/administration/gazettes/nouveau">Créer la première Gazette</Link>}</div>
           )}
         </section>
       </section>
