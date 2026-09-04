@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { createClient } from "@/lib/supabase/server";
+import { AdminBreadcrumbs } from "../admin-breadcrumbs";
 import { ReportList } from "./report-list";
 import { TopicList } from "./topic-list";
 import { PostList } from "./post-list";
@@ -157,7 +158,7 @@ export default async function ForumAdministrationPage({ searchParams }: { search
       <SiteHeader />
       <section className="admin-hero">
         <div className="content-frame admin-hero__layout">
-          <div><p className="eyebrow">Administration · Forum</p><h1>Forum</h1><p>Pilotez la modération, les discussions et la structure du forum depuis un espace unique, sans mélanger les actions courantes aux suppressions définitives.</p></div>
+          <div><AdminBreadcrumbs items={[{ label: "Forum" }]} /><p className="eyebrow">Administration · Forum</p><h1>Forum</h1><p>Pilotez la modération, les discussions et la structure du forum depuis un espace unique, sans mélanger les actions courantes aux suppressions définitives.</p></div>
           <div className="admin-hero__side">
             <span className="admin-role-badge"><span aria-hidden="true">✦</span> {role === "admin" ? "Administrateur" : "Modérateur"}</span>
             {role === "admin" ? <Link className="button button--ghost button--small" href="/administration/forum/structure">Structure & permissions</Link> : null}
