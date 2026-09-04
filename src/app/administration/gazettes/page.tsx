@@ -3,10 +3,23 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { formatGazetteDate, gazettePublicationLabels, getAppRole, type GazettePublicationStatus } from "@/lib/gazettes";
 import { createClient } from "@/lib/supabase/server";
+import { ConfirmDeleteButton } from "../confirm-delete-button";
+import destructiveStyles from "../destructive-actions.module.css";
+import { deleteGazette } from "./delete-action";
 
 export const dynamic = "force-dynamic";
 
-type Search = { q?: string; statut?: string };
+type Search = { q?: string; statut?: string; message?: string; erreur?: string };
+
+const successMessages: Record<string, string> = {
+  supprimee: "La Gazette a été supprimée définitivement, avec ses articles et sa couverture stockée.",
+};
+
+const errorMessages: Record<string, string> = {
+  introuvable: "Cette Gazette n’existe plus.",
+  suppression: "La Gazette n’a pas pu être supprimée. Réessayez dans un instant.",
+  "suppression-couverture": "La couverture stockée n’a pas pu être supprimée. La Gazette a été conservée pour éviter de laisser un fichier orphelin.",
+};
 
 export default async function AdminGazettesPage({ searchParams }: { searchParams: Promise<Search> }) {
   const query = await searchParams;
@@ -34,6 +47,8 @@ export default async function AdminGazettesPage({ searchParams }: { searchParams
     (!status || row.publication_status === status) &&
     (!needle || `${row.title} ${row.headline ?? ""} ${row.edition ?? ""} ${row.slug}`.toLocaleLowerCase("fr").includes(needle))
   );
+  const success = query.message ? successMessages[query.message] : null;
+  const error = query.erreur ? errorMessages[query.erreur] ?? "Une erreur est survenue." : null;
 
   return (
     <main className="site-shell admin-page admin-gazettes-page">
@@ -46,6 +61,8 @@ export default async function AdminGazettesPage({ searchParams }: { searchParams
       </section>
 
       <section className="content-frame admin-workspace">
+        {success ? <div className="admin-members-message admin-members-message--success" role="status">{success}</div> : null}
+        {error ? <div className="admin-members-message admin-members-message--error" role="alert">{error}</div> : null}
         {gazettesResult.error || articlesResult.error ? <div className="admin-alert" role="alert">Les Gazettes n’ont pas pu être chargées complètement depuis Supabase.</div> : null}
         <div className="admin-metrics" aria-label="Indicateurs Gazettes">
           <article className="admin-metric"><span>01</span><div><strong>{rows.length}</strong><small>Total</small></div></article>
@@ -68,13 +85,23 @@ export default async function AdminGazettesPage({ searchParams }: { searchParams
               {filteredRows.map((gazette) => {
                 const publicationStatus = gazette.publication_status as GazettePublicationStatus;
                 return (
-                  <Link className="admin-gazette-row" href={`/administration/gazettes/${gazette.id}`} key={gazette.id}>
-                    <span className="admin-gazette-row__issue">N° {String(gazette.issue_number).padStart(2, "0")}</span>
-                    <div className="admin-gazette-row__main"><div className="admin-gazette-row__badges"><span>{gazettePublicationLabels[publicationStatus]}</span>{gazette.featured ? <span>À la une</span> : null}</div><strong>{gazette.headline || gazette.title}</strong><small>{gazette.edition || gazette.slug}</small></div>
-                    <div className="admin-gazette-row__stats"><strong>{articleCount.get(gazette.id) ?? 0}</strong><small>article{(articleCount.get(gazette.id) ?? 0) > 1 ? "s" : ""}</small></div>
-                    <time dateTime={gazette.updated_at}>{formatGazetteDate(gazette.updated_at)}</time>
-                    <span aria-hidden="true">→</span>
-                  </Link>
+                  <div className={destructiveStyles.rowWithAction} key={gazette.id}>
+                    <Link className="admin-gazette-row" href={`/administration/gazettes/${gazette.id}`}>
+                      <span className="admin-gazette-row__issue">N° {String(gazette.issue_number).padStart(2, "0")}</span>
+                      <div className="admin-gazette-row__main"><div className="admin-gazette-row__badges"><span>{gazettePublicationLabels[publicationStatus]}</span>{gazette.featured ? <span>À la une</span> : null}</div><strong>{gazette.headline || gazette.title}</strong><small>{gazette.edition || gazette.slug}</small></div>
+                      <div className="admin-gazette-row__stats"><strong>{articleCount.get(gazette.id) ?? 0}</strong><small>article{(articleCount.get(gazette.id) ?? 0) > 1 ? "s" : ""}</small></div>
+                      <time dateTime={gazette.updated_at}>{formatGazetteDate(gazette.updated_at)}</time>
+                      <span aria-hidden="true">→</span>
+                    </Link>
+                    <form action={deleteGazette} className={destructiveStyles.deleteForm}>
+                      <input type="hidden" name="gazette_id" value={gazette.id} />
+                      <ConfirmDeleteButton
+                        className={`button button--ghost button--small ${destructiveStyles.dangerButton}`}
+                        label="Supprimer"
+                        confirmMessage={`Supprimer définitivement « ${gazette.headline || gazette.title} » ? Tous ses articles et sa couverture stockée seront également effacés. Cette action est irréversible.`}
+                      />
+                    </form>
+                  </div>
                 );
               })}
             </div>
