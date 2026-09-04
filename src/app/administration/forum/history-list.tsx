@@ -5,12 +5,7 @@ import styles from "./forum-admin.module.css";
 
 export function HistoryList({ events, maps }: { events: EventRow[]; maps: ForumMaps }) {
   return (
-    <section className={styles.panel} aria-labelledby="history-title">
-      <header className={styles.panelHead}>
-        <div><p className="eyebrow">Audit</p><h2 id="history-title">Journal de modération</h2></div>
-        <span>{events.length} événement{events.length > 1 ? "s" : ""}</span>
-      </header>
-
+    <section className={styles.panel} aria-label="Journal de modération">
       <div className={styles.timeline}>
         {events.length ? events.map((event) => {
           const topic = event.topic_id ? maps.topicMap.get(event.topic_id) : null;
@@ -31,7 +26,7 @@ export function HistoryList({ events, maps }: { events: EventRow[]; maps: ForumM
               </div>
             </article>
           );
-        }) : <div className={styles.empty}><strong>Aucune action de modération enregistrée.</strong></div>}
+        }) : <div className={styles.empty}><strong>Aucune action de modération enregistrée.</strong><p>Les nouvelles actions apparaîtront ici automatiquement.</p></div>}
       </div>
     </section>
   );
