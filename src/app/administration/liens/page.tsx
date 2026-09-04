@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { relationshipKinds, type RelationshipKind } from "@/content/relationship-content";
 import { createClient } from "@/lib/supabase/server";
 import { moderateRelationship } from "./actions";
+import styles from "./liens-admin.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -127,7 +128,7 @@ export default async function AdminRelationshipsPage({ searchParams }: { searchP
             <span className="admin-panel__status">{attentionCount ? `${attentionCount} à traiter` : "File à jour"}</span>
           </header>
 
-          <form className="admin-cms-filters admin-cms-filters--wide" method="get">
+          <form className={`admin-cms-filters ${styles.wideFilters}`} method="get">
             <label><span>Recherche</span><input name="q" type="search" defaultValue={search} placeholder="Relation ou personnage…" /></label>
             <label><span>Statut</span><select name="statut" defaultValue={statusFilter}><option value="">Tous</option><option value="pending">En attente</option><option value="revision_requested">Révision demandée</option><option value="approved">Validées</option><option value="rejected">Refusées</option></select></label>
             <label><span>Type</span><select name="type" defaultValue={kindFilter}><option value="">Tous</option>{Object.entries(relationshipKinds).map(([value, item]) => <option value={value} key={value}>{item.label}</option>)}</select></label>
