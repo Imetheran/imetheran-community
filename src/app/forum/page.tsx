@@ -4,14 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type SectionKind = "community" | "universe" | "chronicles" | "campaign" | "game";
+type SectionKind = "community" | "universe" | "chronicles" | "campaign" | "game" | "tavern";
 
 const presentation: Record<string, { kind: SectionKind; eyebrow: string }> = {
   communaute: { kind: "community", eyebrow: "Vie communautaire" },
-  "univers-roleplay": { kind: "universe", eyebrow: "Préparer le jeu" },
-  chroniques: { kind: "chronicles", eyebrow: "Rôleplay communautaire" },
-  evercold: { kind: "campaign", eyebrow: "Campagne RP en cours" },
+  "autour-du-roleplay": { kind: "universe", eyebrow: "Préparer le jeu" },
+  "place-publique": { kind: "chronicles", eyebrow: "Jouer sur le forum" },
+  campagnes: { kind: "campaign", eyebrow: "Histoires au long cours" },
   "final-fantasy-xiv": { kind: "game", eyebrow: "Autour du jeu" },
+  taverne: { kind: "tavern", eyebrow: "Coin détente" },
 };
 
 function BoardIcon({ kind }: { kind: SectionKind }) {
@@ -89,21 +90,10 @@ export default async function ForumPage() {
     topicStats.set(topic.board_id, previous);
   }
 
-  const lastAuthorIds = Array.from(
-    new Set(
-      Array.from(topicStats.values())
-        .map((stats) => stats.lastAuthorId)
-        .filter((id): id is string => typeof id === "string" && id.length > 0),
-    ),
-  );
-
+  const lastAuthorIds = Array.from(new Set(Array.from(topicStats.values()).map((stats) => stats.lastAuthorId).filter((id): id is string => typeof id === "string" && id.length > 0)));
   const profileMap = new Map<string, string>();
   if (lastAuthorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", lastAuthorIds);
-
+    const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", lastAuthorIds);
     for (const profile of profiles ?? []) profileMap.set(profile.id, profile.display_name);
   }
 
@@ -114,116 +104,43 @@ export default async function ForumPage() {
   return (
     <main className="site-shell forum-page">
       <SiteHeader />
-
       <section className="forum-hero" aria-labelledby="forum-title">
         <div className="forum-hero__image" aria-hidden="true" />
         <div className="forum-hero__veil" aria-hidden="true" />
         <div className="content-frame forum-hero__content">
           <p className="eyebrow">Place publique</p>
           <h1 id="forum-title">Forum</h1>
-          <p>
-            Le cœur des échanges d’Imetheran : espaces communautaires hors-RP, préparation du jeu,
-            scènes rôleplay, campagnes saisonnières et discussions autour de Final Fantasy XIV.
-          </p>
-          <div className="forum-hero__actions">
-            <Link className="button button--ghost" href="/personnages">Voir les personnages</Link>
-          </div>
+          <p>Le cœur des échanges d’Imetheran : rencontrer d’autres rôlistes, préparer ses histoires, jouer des scènes, suivre les campagnes et partager autour de Final Fantasy XIV.</p>
+          <div className="forum-hero__actions"><Link className="button button--ghost" href="/personnages">Voir les personnages</Link></div>
         </div>
       </section>
 
       <section className="forum-index content-frame" aria-labelledby="forum-index-title">
         <header className="forum-index__header">
-          <div>
-            <p className="eyebrow">Index communautaire</p>
-            <h2 id="forum-index-title">Les espaces du forum</h2>
-            <p>
-              Parcourez les discussions publiques, les espaces réservés aux membres et les différentes zones dédiées au rôleplay.
-            </p>
-          </div>
-          <div className="forum-index__summary" aria-label="Résumé du forum">
-            <span><strong>{sections.length}</strong> catégories</span>
-            <span><strong>{boardCount}</strong> forums</span>
-            <span><strong>{visibleTopicCount}</strong> sujets visibles</span>
-          </div>
+          <div><p className="eyebrow">Index communautaire</p><h2 id="forum-index-title">Les espaces du forum</h2><p>Chaque espace a un rôle précis : vie communautaire, préparation du RP, scènes en personnage, campagnes, entraide en jeu ou détente.</p></div>
+          <div className="forum-index__summary" aria-label="Résumé du forum"><span><strong>{sections.length}</strong> catégories</span><span><strong>{boardCount}</strong> forums</span><span><strong>{visibleTopicCount}</strong> sujets visibles</span></div>
         </header>
 
-        {loadError ? (
-          <div className="forum-index__notice">
-            <div>
-              <span className="forum-index__notice-mark" aria-hidden="true">!</span>
-              <div>
-                <strong>Le forum est momentanément indisponible</strong>
-                <p>Une partie des espaces n’a pas pu être chargée. Réessayez dans quelques instants.</p>
-              </div>
-            </div>
-            <span className="status-pill status-pill--quiet">Indisponible</span>
-          </div>
-        ) : null}
+        {loadError ? <div className="forum-index__notice"><div><span className="forum-index__notice-mark" aria-hidden="true">!</span><div><strong>Le forum est momentanément indisponible</strong><p>Une partie des espaces n’a pas pu être chargée. Réessayez dans quelques instants.</p></div></div><span className="status-pill status-pill--quiet">Indisponible</span></div> : null}
 
         <div className="forum-sections">
           {sections.map((section, sectionIndex) => {
             const style = presentation[section.slug] ?? { kind: "community" as const, eyebrow: "Forum" };
-            return (
-              <section id={section.slug} className={`forum-section forum-section--${style.kind}`} key={section.id}>
-                <header className="forum-section__header">
-                  <div className="forum-section__identity">
-                    <span className="forum-section__number">{String(sectionIndex + 1).padStart(2, "0")}</span>
-                    <div>
-                      <p>{style.eyebrow}</p>
-                      <h2>{section.title}</h2>
-                    </div>
-                  </div>
-                  <p className="forum-section__subtitle">{section.subtitle}</p>
-                  <div className="forum-section__meta" aria-label="Nature et accès de la catégorie">
-                    <span className={`forum-section__mode forum-section__mode--${section.mode}`}>{section.mode === "rp" ? "RP" : "Hors-RP"}</span>
-                    <span className={`forum-section__access forum-section__access--${section.access_scope}`}>{accessLabel(section.access_scope)}</span>
-                    {style.kind === "campaign" ? <span className="status-pill">Campagne active</span> : null}
-                  </div>
-                </header>
-
-                <div className="forum-board-list">
-                  {section.forum_boards.map((board) => {
-                    const stats = topicStats.get(board.id) ?? { topics: 0, posts: 0, lastActivity: null, lastAuthorId: null };
-                    const lastAuthorName = stats.lastAuthorId ? profileMap.get(stats.lastAuthorId) ?? "Membre" : null;
-                    return (
-                      <Link className="forum-board" href={`/forum/${board.slug}`} key={board.id}>
-                        <BoardIcon kind={style.kind} />
-                        <div className="forum-board__main">
-                          <div className="forum-board__title-row">
-                            <h3>{board.title}</h3>
-                            {board.badge ? <span className="forum-board__badge">{board.badge}</span> : null}
-                          </div>
-                          <p>{board.description}</p>
-                        </div>
-                        <div className="forum-board__stats" aria-label={`Statistiques de ${board.title}`}>
-                          <span><strong>{stats.topics}</strong><small>Sujets</small></span>
-                          <span><strong>{stats.posts}</strong><small>Messages</small></span>
-                        </div>
-                        <div className="forum-board__last">
-                          <small>Dernière activité</small>
-                          <strong>{formatActivity(stats.lastActivity)}</strong>
-                          <span>
-                            {lastAuthorName ? `Par ${lastAuthorName} · ` : ""}
-                            {section.access_scope === "members" ? "Accès membre" : "Lecture publique"}
-                          </span>
-                        </div>
-                        <span className="forum-board__arrow" aria-hidden="true">→</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </section>
-            );
+            return <section id={section.slug} className={`forum-section forum-section--${style.kind}`} key={section.id}>
+              <header className="forum-section__header">
+                <div className="forum-section__identity"><span className="forum-section__number">{String(sectionIndex + 1).padStart(2, "0")}</span><div><p>{style.eyebrow}</p><h2>{section.title}</h2></div></div>
+                <p className="forum-section__subtitle">{section.subtitle}</p>
+                <div className="forum-section__meta" aria-label="Nature et accès de la catégorie"><span className={`forum-section__mode forum-section__mode--${section.mode}`}>{section.mode === "rp" ? "RP" : "Hors-RP"}</span><span className={`forum-section__access forum-section__access--${section.access_scope}`}>{accessLabel(section.access_scope)}</span>{style.kind === "campaign" ? <span className="status-pill">Campagne active</span> : null}</div>
+              </header>
+              <div className="forum-board-list">{section.forum_boards.map((board) => {
+                const stats = topicStats.get(board.id) ?? { topics: 0, posts: 0, lastActivity: null, lastAuthorId: null };
+                const lastAuthorName = stats.lastAuthorId ? profileMap.get(stats.lastAuthorId) ?? "Membre" : null;
+                return <Link className="forum-board" href={`/forum/${board.slug}`} key={board.id}><BoardIcon kind={style.kind} /><div className="forum-board__main"><div className="forum-board__title-row"><h3>{board.title}</h3>{board.badge ? <span className="forum-board__badge">{board.badge}</span> : null}</div><p>{board.description}</p></div><div className="forum-board__stats" aria-label={`Statistiques de ${board.title}`}><span><strong>{stats.topics}</strong><small>Sujets</small></span><span><strong>{stats.posts}</strong><small>Messages</small></span></div><div className="forum-board__last"><small>Dernière activité</small><strong>{formatActivity(stats.lastActivity)}</strong><span>{lastAuthorName ? `Par ${lastAuthorName} · ` : ""}{section.access_scope === "members" ? "Accès membre" : "Lecture publique"}</span></div><span className="forum-board__arrow" aria-hidden="true">→</span></Link>;
+              })}</div>
+            </section>;
           })}
         </div>
-
-        <footer className="forum-index__footer">
-          <div>
-            <p className="eyebrow">Faire vivre la communauté</p>
-            <strong>Les espaces du forum évolueront avec les histoires, campagnes et besoins des membres d’Imetheran.</strong>
-          </div>
-          <Link className="text-link" href="/">← Retour à l’accueil</Link>
-        </footer>
+        <footer className="forum-index__footer"><div><p className="eyebrow">Faire vivre la communauté</p><strong>Le forum est la couche vivante d’Imetheran : on y rencontre, prépare et joue. Les fiches, chroniques, gazettes et autres publications durables restent organisées dans leurs espaces dédiés du site.</strong></div><Link className="text-link" href="/">← Retour à l’accueil</Link></footer>
       </section>
     </main>
   );
