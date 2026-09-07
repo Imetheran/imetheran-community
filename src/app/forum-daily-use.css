@@ -17,9 +17,9 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: .75rem;
+  padding: .8rem;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: linear-gradient(90deg, var(--surface), var(--surface-soft));
 }
 .forum-topic-browser__filters,
 .forum-topic-browser__tools { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
@@ -49,7 +49,7 @@
   color: var(--text);
   font: 600 .62rem var(--font-ui);
 }
-.forum-topic-browser__search input { width: min(260px, 34vw); padding: .5rem .7rem; }
+.forum-topic-browser__search input { width: min(280px, 36vw); padding: .5rem .7rem; }
 .forum-topic-browser__sort { display: flex; align-items: center; gap: .45rem; color: var(--muted); font: 700 .56rem var(--font-ui); text-transform: uppercase; }
 .forum-topic-browser__sort select { padding: .45rem 2rem .45rem .6rem; }
 .forum-topic-browser__search input:focus,
@@ -57,6 +57,33 @@
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.forum-topic-group {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.forum-topic-group > header {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .65rem .85rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-soft);
+}
+.forum-topic-group > header > span {
+  color: var(--accent-bright);
+  font: 800 .62rem var(--font-ui);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.forum-topic-group > header small { color: var(--muted); font-size: .58rem; }
+.forum-topic-group--pinned { border-color: var(--border-strong); }
+.forum-topic-group--pinned > header {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-soft));
 }
 
 .forum-topic-row { position: relative; }
@@ -68,15 +95,57 @@
   width: 2px;
   background: var(--accent-bright);
 }
+.forum-topic-row--pinned {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 7%, var(--surface)), var(--surface));
+}
+.forum-topic-row__main { min-width: 0; }
+.forum-topic-row__kicker {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-bottom: .2rem;
+}
+.forum-topic-row__type,
+.forum-topic-row__location {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: .16rem .4rem;
+  border: 1px solid var(--border);
+  font: 800 .5rem var(--font-ui);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.forum-topic-row__type {
+  border-color: var(--border-strong);
+  color: var(--accent-bright);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.forum-topic-row__location { color: var(--muted); background: var(--surface-soft); }
 .forum-topic-row__title > a {
   color: var(--text);
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   font-weight: 500;
+  line-height: 1.2;
   text-decoration: none;
 }
 .forum-topic-row__title > a:hover { color: var(--accent-bright); }
+.forum-topic-row__title > span {
+  padding: .17rem .34rem;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font: 800 .48rem var(--font-ui);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
 .forum-topic-row__unread-badge { border-color: var(--border-strong) !important; color: var(--accent-bright) !important; }
+.forum-topic-row__tags { margin-top: .4rem; }
+.forum-topic-row__tags > span {
+  background: var(--surface-soft);
+}
 .forum-topic-row__last a { color: var(--accent-bright); font-size: .67rem; font-weight: 700; text-decoration: none; }
 .forum-topic-row__last a:hover { text-decoration: underline; }
 .forum-topic-row__last strong { font-size: .6rem; color: var(--muted); }
@@ -113,6 +182,7 @@
   color: var(--muted);
   font: 700 .6rem var(--font-ui);
 }
+.forum-pagination > button.is-current,
 .forum-pagination > span.is-current { border-color: var(--border-strong); color: var(--accent-bright); }
 .forum-pagination > button:disabled { opacity: .45; }
 .forum-pagination small { margin-left: .35rem; color: var(--muted); font-size: .56rem; }
@@ -171,5 +241,6 @@
   .forum-topic-browser__tools { align-items: stretch; flex-direction: column; }
   .forum-topic-browser__sort { justify-content: space-between; }
   .forum-topic-browser__sort select { flex: 1; }
+  .forum-topic-row__kicker { margin-top: .05rem; }
   .forum-pagination small { width: 100%; margin: .25rem 0 0; }
 }
