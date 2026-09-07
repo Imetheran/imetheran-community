@@ -65,7 +65,7 @@ export default async function ForumPage() {
       .order("sort_order"),
     supabase
       .from("forum_topics")
-      .select("board_id, post_count, last_activity_at"),
+      .select("board_id, author_id, last_author_id, post_count, last_activity_at"),
   ]);
 
   const sections = (sectionRows ?? [])
@@ -77,15 +77,34 @@ export default async function ForumPage() {
     }))
     .sort((a, b) => a.sort_order - b.sort_order);
 
-  const topicStats = new Map<string, { topics: number; posts: number; lastActivity: string | null }>();
+  const topicStats = new Map<string, { topics: number; posts: number; lastActivity: string | null; lastAuthorId: string | null }>();
   for (const topic of topicRows ?? []) {
-    const previous = topicStats.get(topic.board_id) ?? { topics: 0, posts: 0, lastActivity: null };
+    const previous = topicStats.get(topic.board_id) ?? { topics: 0, posts: 0, lastActivity: null, lastAuthorId: null };
     previous.topics += 1;
     previous.posts += topic.post_count;
     if (!previous.lastActivity || topic.last_activity_at > previous.lastActivity) {
       previous.lastActivity = topic.last_activity_at;
+      previous.lastAuthorId = topic.last_author_id ?? topic.author_id ?? null;
     }
     topicStats.set(topic.board_id, previous);
+  }
+
+  const lastAuthorIds = Array.from(
+    new Set(
+      Array.from(topicStats.values())
+        .map((stats) => stats.lastAuthorId)
+        .filter((id): id is string => typeof id === "string" && id.length > 0),
+    ),
+  );
+
+  const profileMap = new Map<string, string>();
+  if (lastAuthorIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", lastAuthorIds);
+
+    for (const profile of profiles ?? []) profileMap.set(profile.id, profile.display_name);
   }
 
   const boardCount = sections.reduce((total, section) => total + section.forum_boards.length, 0);
@@ -164,7 +183,8 @@ export default async function ForumPage() {
 
                 <div className="forum-board-list">
                   {section.forum_boards.map((board) => {
-                    const stats = topicStats.get(board.id) ?? { topics: 0, posts: 0, lastActivity: null };
+                    const stats = topicStats.get(board.id) ?? { topics: 0, posts: 0, lastActivity: null, lastAuthorId: null };
+                    const lastAuthorName = stats.lastAuthorId ? profileMap.get(stats.lastAuthorId) ?? "Membre" : null;
                     return (
                       <Link className="forum-board" href={`/forum/${board.slug}`} key={board.id}>
                         <BoardIcon kind={style.kind} />
@@ -182,7 +202,10 @@ export default async function ForumPage() {
                         <div className="forum-board__last">
                           <small>Dernière activité</small>
                           <strong>{formatActivity(stats.lastActivity)}</strong>
-                          <span>{section.access_scope === "members" ? "Accès membre" : "Lecture publique"}</span>
+                          <span>
+                            {lastAuthorName ? `Par ${lastAuthorName} · ` : ""}
+                            {section.access_scope === "members" ? "Accès membre" : "Lecture publique"}
+                          </span>
                         </div>
                         <span className="forum-board__arrow" aria-hidden="true">→</span>
                       </Link>
