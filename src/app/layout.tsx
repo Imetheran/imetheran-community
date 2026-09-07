@@ -58,11 +58,11 @@ import "./global-theme-selector.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Imetheran — Communauté Final Fantasy XIV",
+    default: "Imetheran — Communauté RP Final Fantasy XIV sur Moogle",
     template: "%s | Imetheran",
   },
   description:
-    "Communauté francophone Final Fantasy XIV consacrée au jeu de rôle, aux chroniques et aux personnages.",
+    "Imetheran est une communauté francophone de rôleplay sur Final Fantasy XIV, basée sur le serveur Moogle, autour des chroniques, personnages et échanges communautaires.",
 };
 
 const themeBootstrap = `(() => {
