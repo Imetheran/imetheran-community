@@ -9,35 +9,15 @@ import type { ForumMediaRenderMap } from "@/lib/forum-media";
 import { FORUM_QUOTE_EVENT } from "@/lib/forum-quotes";
 import { createClient } from "@/lib/supabase/client";
 
-type CharacterOption = {
-  id: string;
-  name: string;
-};
-
+type CharacterOption = { id: string; name: string };
 type QuoteEvent = CustomEvent<{ quote?: string }>;
 
 function ReplyButton({ disabled = false }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
-  return (
-    <button className="button button--primary button--small" type="submit" disabled={pending || disabled}>
-      {pending ? "Publication…" : "Publier la réponse"}
-    </button>
-  );
+  return <button className="button button--primary button--small" type="submit" disabled={pending || disabled}>{pending ? "Publication…" : "Publier la réponse"}</button>;
 }
 
-export function ForumReplyEditor({
-  boardSlug,
-  topicSlug,
-  topicId,
-  isRoleplay,
-  characters,
-}: {
-  boardSlug: string;
-  topicSlug: string;
-  topicId: string;
-  isRoleplay: boolean;
-  characters: CharacterOption[];
-}) {
+export function ForumReplyEditor({ boardSlug, topicSlug, topicId, isRoleplay, characters }: { boardSlug: string; topicSlug: string; topicId: string; isRoleplay: boolean; characters: CharacterOption[] }) {
   const [content, setContent] = useState("");
   const [characterId, setCharacterId] = useState("");
   const [mediaMap, setMediaMap] = useState<ForumMediaRenderMap>({});
@@ -50,143 +30,39 @@ export function ForumReplyEditor({
   const editorId = `forum-reply-content-${topicId}`;
 
   useEffect(() => {
-    const supabase = createClient();
-    let active = true;
-
+    const supabase = createClient(); let active = true;
     async function loadPreviewContext() {
-      const [{ data: claimsData }, { count }] = await Promise.all([
-        supabase.auth.getClaims(),
-        supabase
-          .from("forum_posts")
-          .select("id", { count: "exact", head: true })
-          .eq("topic_id", topicId),
-      ]);
-
-      if (!active) return;
-      setNextMessageNumber((count ?? 0) + 1);
-
-      const userId = claimsData?.claims?.sub;
-      if (typeof userId !== "string") return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", userId)
-        .maybeSingle();
-
+      const [{ data: claimsData }, { count }] = await Promise.all([supabase.auth.getClaims(), supabase.from("forum_posts").select("id", { count: "exact", head: true }).eq("topic_id", topicId)]);
+      if (!active) return; setNextMessageNumber((count ?? 0) + 1);
+      const userId = claimsData?.claims?.sub; if (typeof userId !== "string") return;
+      const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", userId).maybeSingle();
       if (active && profile?.display_name) setMemberName(profile.display_name);
     }
-
-    void loadPreviewContext();
-    return () => { active = false; };
+    void loadPreviewContext(); return () => { active = false; };
   }, [topicId]);
 
   useEffect(() => {
     const handleQuote = (event: Event) => {
-      const quote = (event as QuoteEvent).detail?.quote?.trim();
-      if (!quote) return;
-
-      setPreviewOpen(false);
-      setQuoteNotice(null);
-      setContent((current) => {
-        const prefix = current.trimEnd();
-        const next = `${prefix}${prefix ? "\n\n" : ""}${quote}\n\n`;
-        if (next.length > 50000) {
-          setQuoteNotice("La citation ne peut pas être ajoutée : votre réponse atteindrait la limite de 50 000 caractères.");
-          return current;
-        }
-        return next;
-      });
-
-      requestAnimationFrame(() => {
-        document.getElementById(editorId)?.focus();
-      });
+      const quote = (event as QuoteEvent).detail?.quote?.trim(); if (!quote) return;
+      setPreviewOpen(false); setQuoteNotice(null);
+      setContent((current) => { const prefix = current.trimEnd(); const next = `${prefix}${prefix ? "\n\n" : ""}${quote}\n\n`; if (next.length > 50000) { setQuoteNotice("La citation ne peut pas être ajoutée : votre réponse atteindrait la limite de 50 000 caractères."); return current; } return next; });
+      requestAnimationFrame(() => document.getElementById(editorId)?.focus());
     };
-
-    window.addEventListener(FORUM_QUOTE_EVENT, handleQuote);
-    return () => window.removeEventListener(FORUM_QUOTE_EVENT, handleQuote);
+    window.addEventListener(FORUM_QUOTE_EVENT, handleQuote); return () => window.removeEventListener(FORUM_QUOTE_EVENT, handleQuote);
   }, [editorId]);
 
-  return (
-    <form action={createForumPost}>
-      <input type="hidden" name="board_slug" value={boardSlug} />
-      <input type="hidden" name="topic_slug" value={topicSlug} />
-      <input type="hidden" name="topic_id" value={topicId} />
-
-      <div hidden={previewOpen}>
-        <div className="forum-reply-box__identity">
-          <span>Publier en tant que</span>
-          {isRoleplay ? (
-            <select name="character_id" value={characterId} onChange={(event) => setCharacterId(event.target.value)}>
-              <option value="">Compte membre</option>
-              {characters.map((character) => <option value={character.id} key={character.id}>{character.name}</option>)}
-            </select>
-          ) : <input type="hidden" name="character_id" value="" />}
-          <small>Le compte reste toujours l’auteur ; dans un espace RP, vous pouvez signer le message avec l’un de vos personnages.</small>
-        </div>
-
-        <BbcodeEditor
-          id={editorId}
-          name="content"
-          value={content}
-          onChange={setContent}
-          onMediaMapChange={setMediaMap}
-          previewMode="none"
-          ariaLabel="Contenu de la réponse"
-          placeholder="Écrivez votre réponse…"
-          rows={10}
-          minLength={2}
-          maxLength={50000}
-          required
-        />
-
-        {quoteNotice ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{quoteNotice}</div> : null}
-
-        <div className="forum-reply-box__footer">
-          <span>Vérifiez le rendu du message avant de le publier.</span>
-          <div className="forum-reply-box__actions">
-            <button className="button button--ghost button--small" type="button" onClick={() => setPreviewOpen(true)}>
-              Prévisualiser le message
-            </button>
-            <ReplyButton disabled={!canPublish} />
-          </div>
-        </div>
+  return <form action={createForumPost}>
+    <input type="hidden" name="board_slug" value={boardSlug}/><input type="hidden" name="topic_slug" value={topicSlug}/><input type="hidden" name="topic_id" value={topicId}/>
+    <div hidden={previewOpen}>
+      <div className="forum-reply-box__identity">
+        <span>{isRoleplay ? "Identité de scène" : "Publier en tant que"}</span>
+        {isRoleplay ? <select name="character_id" value={characterId} onChange={(event) => setCharacterId(event.target.value)}><option value="">Compte membre</option>{characters.map((character) => <option value={character.id} key={character.id}>{character.name}</option>)}</select> : <input type="hidden" name="character_id" value=""/>}
+        <small>{isRoleplay ? "Choisissez le personnage qui prendra la parole dans cette scène. Votre compte reste l’auteur du message." : "Votre réponse sera publiée avec votre identité de membre."}</small>
       </div>
-
-      {previewOpen ? (
-        <div className="forum-reply-preview">
-          <div className="forum-reply-preview__heading">
-            <div>
-              <p className="eyebrow">Avant publication</p>
-              <h3>Prévisualisation de la réponse</h3>
-            </div>
-            <span className="status-pill">Non publiée</span>
-          </div>
-
-          <div className="forum-posts">
-            <ForumMessagePreview
-              authorName={memberName}
-              characterName={selectedCharacter?.name}
-              content={content.trim() || "Votre réponse apparaîtra ici."}
-              mediaMap={mediaMap}
-              messageNumber={nextMessageNumber}
-            />
-          </div>
-
-          {!canPublish ? (
-            <div className="forum-editor-notice forum-editor-notice--error" role="status">
-              Écrivez au moins deux caractères avant de publier cette réponse.
-            </div>
-          ) : null}
-
-          <div className="forum-reply-box__footer">
-            <button className="button button--ghost button--small" type="button" onClick={() => setPreviewOpen(false)}>
-              ← Revenir à l’édition
-            </button>
-            <ReplyButton disabled={!canPublish} />
-          </div>
-        </div>
-      ) : null}
-    </form>
-  );
+      <BbcodeEditor id={editorId} name="content" value={content} onChange={setContent} onMediaMapChange={setMediaMap} previewMode="none" ariaLabel="Contenu de la réponse" placeholder={isRoleplay ? "Poursuivez la scène…" : "Écrivez votre réponse…"} rows={isRoleplay ? 14 : 10} minLength={2} maxLength={50000} required/>
+      {quoteNotice ? <div className="forum-editor-notice forum-editor-notice--error" role="alert">{quoteNotice}</div> : null}
+      <div className="forum-reply-box__footer"><span>{content.length.toLocaleString("fr-FR")} / 50 000 caractères · prévisualisez avant publication.</span><div className="forum-reply-box__actions"><button className="button button--ghost button--small" type="button" onClick={() => setPreviewOpen(true)}>Prévisualiser</button><ReplyButton disabled={!canPublish}/></div></div>
+    </div>
+    {previewOpen ? <div className="forum-reply-preview"><div className="forum-reply-preview__heading"><div><p className="eyebrow">Avant publication</p><h3>Votre réponse telle qu’elle sera lue</h3></div><span className="status-pill">Non publiée</span></div><div className="forum-posts"><ForumMessagePreview authorName={memberName} characterName={selectedCharacter?.name} content={content.trim() || "Votre réponse apparaîtra ici."} mediaMap={mediaMap} messageNumber={nextMessageNumber}/></div>{!canPublish ? <div className="forum-editor-notice forum-editor-notice--error" role="status">Écrivez au moins deux caractères avant de publier cette réponse.</div> : null}<div className="forum-reply-box__footer"><button className="button button--ghost button--small" type="button" onClick={() => setPreviewOpen(false)}>← Revenir à l’écriture</button><ReplyButton disabled={!canPublish}/></div></div> : null}
+  </form>;
 }
