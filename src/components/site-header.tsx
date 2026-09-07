@@ -31,7 +31,7 @@ export function SiteHeader() {
             <span className="topbar__brand-mark" aria-hidden="true">✦</span>
             <span className="topbar__brand-copy">
               <strong>Imetheran</strong>
-              <small>Communauté RP</small>
+              <small>Communauté RP · Moogle</small>
             </span>
           </Link>
 
