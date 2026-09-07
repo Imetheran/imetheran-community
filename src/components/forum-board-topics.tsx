@@ -17,6 +17,8 @@ export type ForumTopicListItem = {
   pinned: boolean;
   locked: boolean;
   status: string;
+  topicType: string | null;
+  rpLocation: string | null;
   tags: string[];
   lastAuthor: { name: string };
   lastPostId: string | null;
@@ -27,6 +29,16 @@ type Filter = "all" | "unread" | "open" | "finished";
 type Sort = "activity" | "replies" | "views";
 
 const pageSize = 20;
+
+function topicTypeLabel(value: string | null) {
+  if (!value) return null;
+  const normalized = value.toLocaleLowerCase("fr");
+  if (normalized === "rp") return "RP";
+  if (normalized === "hrp" || normalized === "non-rp") return "Hors-RP";
+  if (normalized === "campaign" || normalized === "campagne") return "Campagne";
+  if (normalized === "search" || normalized === "recherche") return "Recherche";
+  return value;
+}
 
 export function ForumBoardTopics({
   boardSlug,
@@ -64,7 +76,7 @@ export function ForumBoardTopics({
       if (filter === "finished" && topic.status !== "finished") return false;
       if (!normalizedQuery) return true;
 
-      return [topic.title, topic.excerpt, ...topic.tags]
+      return [topic.title, topic.excerpt, topic.topicType ?? "", topic.rpLocation ?? "", ...topic.tags]
         .join(" ")
         .toLocaleLowerCase("fr")
         .includes(normalizedQuery);
@@ -113,7 +125,7 @@ export function ForumBoardTopics({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Rechercher un sujet…"
+              placeholder="Titre, tag, lieu RP…"
             />
           </label>
           <label className="forum-topic-browser__sort">
@@ -128,8 +140,8 @@ export function ForumBoardTopics({
       </div>
 
       {pinned.length > 0 ? (
-        <section className="forum-topic-group">
-          <header><span>Épinglés</span><small>{pinned.length} sujet{pinned.length > 1 ? "s" : ""}</small></header>
+        <section className="forum-topic-group forum-topic-group--pinned">
+          <header><span>À retenir</span><small>{pinned.length} sujet{pinned.length > 1 ? "s" : ""} épinglé{pinned.length > 1 ? "s" : ""}</small></header>
           <div className="forum-topic-list">
             {pinned.map((topic) => <TopicRow key={topic.id} boardSlug={boardSlug} topic={topic} />)}
           </div>
@@ -138,7 +150,7 @@ export function ForumBoardTopics({
 
       <section className="forum-topic-group">
         <header>
-          <span>Sujets</span>
+          <span>Discussions</span>
           <small>{regular.length} sujet{regular.length > 1 ? "s" : ""}</small>
         </header>
         {visibleRegular.length > 0 ? (
@@ -185,11 +197,16 @@ export function ForumBoardTopics({
 
 function TopicRow({ boardSlug, topic }: { boardSlug: string; topic: ForumTopicListItem }) {
   const lastAnchor = topic.lastPostId ? `#${topic.lastPostId}` : "";
+  const typeLabel = topicTypeLabel(topic.topicType);
 
   return (
     <article className={`forum-topic-row${topic.pinned ? " forum-topic-row--pinned" : ""}${topic.unread ? " forum-topic-row--unread" : ""}`}>
       <span className="forum-topic-row__state" aria-hidden="true">{topic.locked ? "◆" : topic.unread ? "●" : topic.pinned ? "✦" : "◇"}</span>
       <div className="forum-topic-row__main">
+        <div className="forum-topic-row__kicker">
+          {typeLabel ? <span className="forum-topic-row__type">{typeLabel}</span> : null}
+          {topic.rpLocation ? <span className="forum-topic-row__location">⌖ {topic.rpLocation}</span> : null}
+        </div>
         <div className="forum-topic-row__title">
           <Link href={`/forum/${boardSlug}/sujet/${topic.slug}`}>{topic.title}</Link>
           {topic.unread ? <span className="forum-topic-row__unread-badge">Nouveau</span> : null}
@@ -199,7 +216,7 @@ function TopicRow({ boardSlug, topic }: { boardSlug: string; topic: ForumTopicLi
           {topic.status === "archived" ? <span>Archivé</span> : null}
         </div>
         <p>{topic.excerpt}</p>
-        <div className="forum-topic-row__tags">{topic.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+        {topic.tags.length > 0 ? <div className="forum-topic-row__tags">{topic.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}
         <div className="forum-topic-row__mobile-meta">
           <span>{topic.replies} réponse{topic.replies > 1 ? "s" : ""}</span>
           <span>Dernier : {topic.lastAuthor.name}</span>
