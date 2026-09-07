@@ -91,6 +91,8 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
       is_pinned,
       is_locked,
       status,
+      topic_type,
+      rp_location,
       tags
     `)
     .eq("board_id", boardRow.id)
@@ -153,6 +155,8 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
       pinned: topic.is_pinned,
       locked: topic.is_locked,
       status: topic.status,
+      topicType: topic.topic_type,
+      rpLocation: topic.rp_location,
       tags: Array.isArray(topic.tags) ? topic.tags : [],
       lastAuthor: { name: lastAuthorName },
       lastPostId: topic.last_post_id,
@@ -191,6 +195,7 @@ export default async function ForumBoardPage({ params }: { params: Promise<{ boa
             </div>
             <div className="forum-subhero__meta">
               <span className={`forum-section__mode forum-section__mode--${section.mode}`}>{section.mode === "rp" ? "RP" : "Hors-RP"}</span>
+              {boardRow.badge ? <span className="status-pill">{boardRow.badge}</span> : null}
               {section.access_scope === "members" ? <span className="forum-section__access forum-section__access--members">Membres uniquement</span> : null}
               {section.access_scope === "guest-read" ? <span className="forum-section__access forum-section__access--guest-read">Lecture invités</span> : null}
             </div>
