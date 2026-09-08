@@ -1,156 +1,186 @@
-/* Unified public page headers and compact homepage rhythm. */
+/* Authoritative public header system.
+   Imported last on purpose: public page headers must no longer inherit page-specific sizing,
+   artwork positioning or typography from legacy stylesheets. */
 :root {
   --public-hero-height: 280px;
   --public-hero-title-size: clamp(2.7rem, 5vw, 4.2rem);
-  --public-hero-padding: clamp(1.8rem, 3.2vw, 2.5rem);
+  --public-hero-padding: clamp(1.6rem, 3vw, 2.35rem);
   --public-hero-copy-width: 62ch;
-  --public-hero-art-position: center center;
+  --public-hero-art-position: center 42%;
 }
 
-/* Homepage hero follows the same vertical system as the other public pages. */
-.hero--portal {
-  min-height: var(--public-hero-height);
-  height: var(--public-hero-height);
+/* One frame, one artwork layer and one veil for every public hero. */
+.site-shell > section.hero--portal,
+.site-shell > section[class$="-hero"],
+.site-shell > section[class*="-hero "],
+.site-shell > .forum-subhero {
+  position: relative !important;
+  isolation: isolate;
+  min-height: var(--public-hero-height) !important;
+  height: var(--public-hero-height) !important;
+  overflow: hidden !important;
+  display: grid !important;
+  place-items: center !important;
+  border-bottom: 1px solid var(--border-strong) !important;
+  background: transparent !important;
 }
 
-/* Keep every public hero artwork anchored to one shared focal point. */
-.hero--portal,
-.hero--portal .hero__image,
-.hero--portal .hero__media,
-[class$="-hero__image"],
-[class*="-hero__image "] {
+.site-shell > section.hero--portal::before,
+.site-shell > section[class$="-hero"]::before,
+.site-shell > section[class*="-hero "]::before,
+.site-shell > .forum-subhero::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  display: block !important;
+  background-image: var(--hero-image) !important;
   background-size: cover !important;
   background-position: var(--public-hero-art-position) !important;
   background-repeat: no-repeat !important;
+  filter: var(--hero-filter, saturate(1.02) contrast(1.03)) !important;
+  transform: none !important;
 }
 
-.hero--portal img[class*="hero"],
-[class$="-hero__image"] > img,
-[class*="-hero__image "] > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover !important;
-  object-position: center center !important;
+.site-shell > section.hero--portal::after,
+.site-shell > section[class$="-hero"]::after,
+.site-shell > section[class*="-hero "]::after,
+.site-shell > .forum-subhero::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  display: block !important;
+  background:
+    linear-gradient(90deg, rgba(2, 3, 3, .68), rgba(5, 6, 6, .18) 30%, rgba(5, 6, 6, .18) 70%, rgba(2, 3, 3, .68)),
+    linear-gradient(180deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .12) 50%, rgba(5, 6, 7, .78)) !important;
+  pointer-events: none;
 }
 
-.hero--portal .hero__content {
-  min-height: var(--public-hero-height);
-  padding-block: var(--public-hero-padding);
-  justify-content: center;
-}
-
-.hero--portal .expansion-logo {
-  width: clamp(132px, 14vw, 190px);
-  height: clamp(44px, 5vw, 60px);
-  margin-bottom: .45rem;
-}
-
-.hero--portal .brand-title {
-  font-size: var(--public-hero-title-size);
-  line-height: .94;
-}
-
-.hero--portal .brand-kicker {
-  font-size: .7rem;
-}
-
-.hero--portal .brand-motto {
-  margin-top: .55rem;
-  font-size: .65rem;
-}
-
-.hero--portal .hero__actions {
-  margin-top: .9rem;
-}
-
-/* Public archive/index headers: same alignment, rhythm and typography everywhere. */
-section[class$="-hero"],
-section[class*="-hero "],
-.forum-subhero {
-  min-height: var(--public-hero-height);
-  height: var(--public-hero-height);
-}
-
-section[class$="-hero"] > .content-frame,
-section[class*="-hero "] > .content-frame,
-.forum-subhero > .content-frame,
-.forum-subhero__content {
-  min-height: var(--public-hero-height);
-  padding-block: var(--public-hero-padding);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-[class*="-hero__content"] h1,
-.forum-subhero h1 {
-  width: min(100%, 18ch);
-  margin: .08rem auto .5rem;
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: var(--public-hero-title-size);
-  font-weight: 500;
-  line-height: .94;
-  letter-spacing: .01em;
-  text-align: center;
-  text-transform: none;
-  text-wrap: balance;
-}
-
-[class*="-hero__content"] > p:not(.eyebrow),
-.forum-subhero__content > p:not(.eyebrow),
-.guides-hero__intro,
-.chronicle-hero__subtitle {
-  width: min(100%, var(--public-hero-copy-width));
-  max-width: var(--public-hero-copy-width);
-  margin: 0 auto;
-  color: var(--muted);
-  font-size: .88rem;
-  line-height: 1.5;
-  text-align: center;
-  text-wrap: balance;
-}
-
-[class*="-hero__content"] .eyebrow,
-.forum-subhero .eyebrow {
-  width: 100%;
-  margin: 0 0 .3rem;
-  text-align: center;
-}
-
-/* Header actions and contextual badges belong in page content, not in the hero. */
-.forum-hero__actions,
-.characters-hero__actions,
-.links-hero__actions,
-.guides-hero__actions,
-.chronicle-directory-hero-actions,
-.chronicle-hero__status,
-.chronicle-hero__tags,
-.gazette-hero__content > .theme-selector {
+/* Disable every old per-page artwork/veil layer. The shared pseudo-elements above are the source of truth. */
+.site-shell > section.hero--portal .hero__image,
+.site-shell > section.hero--portal .hero__veil,
+.site-shell > section[class$="-hero"] [class$="-hero__image"],
+.site-shell > section[class$="-hero"] [class*="-hero__image "],
+.site-shell > section[class$="-hero"] [class$="-hero__veil"],
+.site-shell > section[class$="-hero"] [class*="-hero__veil "],
+.site-shell > section[class*="-hero "] [class$="-hero__image"],
+.site-shell > section[class*="-hero "] [class*="-hero__image "],
+.site-shell > section[class*="-hero "] [class$="-hero__veil"],
+.site-shell > section[class*="-hero "] [class*="-hero__veil "],
+.site-shell > .forum-subhero .forum-subhero__image,
+.site-shell > .forum-subhero .forum-subhero__veil {
   display: none !important;
 }
 
-/* Keep one short descriptive line only. */
-.chronicle-hero__synopsis {
-  display: none !important;
-}
-
-/* Override legacy page-specific hero alignment. */
-.chronicle-hero__content,
-.gazette-hero__content,
-.characters-hero__content,
-.links-hero__content,
-.guides-hero__content,
-.forum-hero__content {
+/* Identical content box on every page. */
+.site-shell > section.hero--portal > .content-frame,
+.site-shell > section[class$="-hero"] > .content-frame,
+.site-shell > section[class*="-hero "] > .content-frame,
+.site-shell > .forum-subhero > .content-frame,
+.site-shell > .forum-subhero .forum-subhero__content {
+  position: relative !important;
+  z-index: 2 !important;
+  width: min(var(--content-max), calc(100% - var(--page-gutter) - var(--page-gutter))) !important;
+  min-height: var(--public-hero-height) !important;
+  height: var(--public-hero-height) !important;
+  margin-inline: auto !important;
+  padding-block: var(--public-hero-padding) !important;
+  display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  text-align: center !important;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, .72);
+}
+
+.site-shell > section.hero--portal .hero__identity {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-align: center !important;
 }
 
-/* Keep non-illustrated compose/thread headers visually aligned with the same scale. */
-.forum-compose-head {
-  padding-block: var(--public-hero-padding);
+/* Same eyebrow on every header, including the homepage brand kicker. */
+.site-shell > section.hero--portal .brand-kicker,
+.site-shell > section[class$="-hero"] .eyebrow,
+.site-shell > section[class*="-hero "] .eyebrow,
+.site-shell > .forum-subhero .eyebrow {
+  width: 100% !important;
+  margin: 0 0 .35rem !important;
+  color: var(--accent-bright) !important;
+  font-family: var(--font-ui) !important;
+  font-size: .68rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .16em !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+}
+
+/* Same title metrics everywhere. */
+.site-shell > section.hero--portal h1,
+.site-shell > section[class$="-hero"] h1,
+.site-shell > section[class*="-hero "] h1,
+.site-shell > .forum-subhero h1 {
+  width: min(100%, 18ch) !important;
+  max-width: 18ch !important;
+  margin: 0 auto .55rem !important;
+  color: var(--text) !important;
+  font-family: var(--font-display) !important;
+  font-size: var(--public-hero-title-size) !important;
+  font-weight: 500 !important;
+  line-height: .95 !important;
+  letter-spacing: .01em !important;
+  text-align: center !important;
+  text-transform: none !important;
+  text-wrap: balance;
+}
+
+/* Same description metrics everywhere. */
+.site-shell > section.hero--portal .brand-motto,
+.site-shell > section[class$="-hero"] > .content-frame > p:not(.eyebrow),
+.site-shell > section[class*="-hero "] > .content-frame > p:not(.eyebrow),
+.site-shell > section[class$="-hero"] [class$="-hero__content"] > p:not(.eyebrow),
+.site-shell > section[class*="-hero "] [class$="-hero__content"] > p:not(.eyebrow),
+.site-shell > .forum-subhero .forum-subhero__content > p:not(.eyebrow),
+.site-shell > section[class$="-hero"] .guides-hero__intro,
+.site-shell > section[class$="-hero"] .chronicle-hero__subtitle {
+  width: min(100%, var(--public-hero-copy-width)) !important;
+  max-width: var(--public-hero-copy-width) !important;
+  margin: 0 auto !important;
+  color: var(--muted) !important;
+  font-family: var(--font-body) !important;
+  font-size: .88rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  letter-spacing: .01em !important;
+  text-align: center !important;
+  text-transform: none !important;
+  text-wrap: balance;
+}
+
+/* A public page header only identifies the page. Actions and contextual metadata belong below it. */
+.site-shell > section.hero--portal .expansion-logo,
+.site-shell > section.hero--portal .hero__actions,
+.site-shell > section[class$="-hero"] [class$="__actions"],
+.site-shell > section[class*="-hero "] [class$="__actions"],
+.site-shell > section[class$="-hero"] .theme-selector,
+.site-shell > section[class*="-hero "] .theme-selector,
+.site-shell > section[class$="-hero"] .chronicle-hero__status,
+.site-shell > section[class$="-hero"] .chronicle-hero__tags,
+.site-shell > section[class$="-hero"] .chronicle-hero__synopsis,
+.site-shell > section[class*="-hero "] .chronicle-hero__status,
+.site-shell > section[class*="-hero "] .chronicle-hero__tags,
+.site-shell > section[class*="-hero "] .chronicle-hero__synopsis {
+  display: none !important;
+}
+
+/* Forum compose/thread headers do not carry artwork, but keep the exact same type scale and alignment. */
+.forum-compose-head,
+.forum-thread-head {
   text-align: center;
 }
 
@@ -166,12 +196,13 @@ section[class*="-hero "] > .content-frame,
 .forum-thread-head h1 {
   max-width: 18ch;
   margin-inline: auto;
-  font-size: var(--public-hero-title-size);
-  line-height: .96;
-  text-align: center;
+  font-size: var(--public-hero-title-size) !important;
+  line-height: .95 !important;
+  text-align: center !important;
   text-wrap: balance;
 }
 
+/* Keep the compact rhythm introduced on the homepage. */
 .forum-index {
   padding-block: clamp(2.2rem, 4.5vw, 4rem);
 }
@@ -192,30 +223,25 @@ section[class*="-hero "] > .content-frame,
   :root {
     --public-hero-height: 220px;
     --public-hero-title-size: clamp(2.15rem, 9vw, 3.15rem);
-    --public-hero-padding: 1.45rem;
+    --public-hero-padding: 1.3rem;
     --public-hero-copy-width: 42ch;
+    --public-hero-art-position: center 42%;
   }
 
-  .hero--portal .expansion-logo {
-    width: 120px;
-    height: 42px;
+  .site-shell > section.hero--portal .brand-kicker,
+  .site-shell > section[class$="-hero"] .eyebrow,
+  .site-shell > section[class*="-hero "] .eyebrow,
+  .site-shell > .forum-subhero .eyebrow {
+    font-size: .62rem !important;
   }
 
-  .hero--portal .hero__actions {
-    margin-top: .7rem;
-  }
-
-  .hero--portal .hero__actions .button {
-    min-height: 38px;
-    padding: .55rem .8rem;
-    font-size: .62rem;
-  }
-
-  [class*="-hero__content"] > p:not(.eyebrow),
-  .forum-subhero__content > p:not(.eyebrow),
-  .guides-hero__intro,
-  .chronicle-hero__subtitle {
-    font-size: .82rem;
-    line-height: 1.45;
+  .site-shell > section.hero--portal .brand-motto,
+  .site-shell > section[class$="-hero"] > .content-frame > p:not(.eyebrow),
+  .site-shell > section[class*="-hero "] > .content-frame > p:not(.eyebrow),
+  .site-shell > section[class$="-hero"] [class$="-hero__content"] > p:not(.eyebrow),
+  .site-shell > section[class*="-hero "] [class$="-hero__content"] > p:not(.eyebrow),
+  .site-shell > .forum-subhero .forum-subhero__content > p:not(.eyebrow) {
+    font-size: .82rem !important;
+    line-height: 1.45 !important;
   }
 }
