@@ -1,5 +1,5 @@
 export type ChronicleNarrativeStatus = "upcoming" | "open" | "closed";
-export type ChroniclePublicationStatus = "draft" | "published" | "archived";
+export type ChroniclePublicationStatus = "draft" | "submitted" | "changes_requested" | "staff_approved" | "published" | "archived";
 export type ChronicleChapterStatus = "completed" | "active" | "upcoming";
 
 export const chronicleNarrativeLabels: Record<ChronicleNarrativeStatus, string> = {
@@ -10,6 +10,9 @@ export const chronicleNarrativeLabels: Record<ChronicleNarrativeStatus, string> 
 
 export const chroniclePublicationLabels: Record<ChroniclePublicationStatus, string> = {
   draft: "Brouillon",
+  submitted: "Soumise au staff",
+  changes_requested: "Corrections demandées",
+  staff_approved: "Validée par le staff",
   published: "Publiée",
   archived: "Archivée",
 };
