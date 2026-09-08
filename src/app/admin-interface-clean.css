@@ -1,0 +1,245 @@
+/* Final admin cleanup: reduce visual noise and make permission management obvious. */
+
+/* Members: keep everyday controls prominent and destructive actions quiet. */
+.admin-members-page .admin-member-card {
+  padding: .9rem 1rem;
+}
+
+.admin-members-page .admin-member-card__controls {
+  gap: .5rem;
+  margin-top: .65rem;
+  padding-top: .65rem;
+}
+
+.admin-members-page .admin-member-role-form,
+.admin-members-page .admin-member-suspend-form,
+.admin-members-page .admin-member-reactivate-form,
+.admin-members-page .admin-member-self-guard {
+  padding: .6rem .7rem;
+  background: color-mix(in srgb, var(--surface-soft) 68%, var(--surface));
+}
+
+.admin-members-page .admin-member-self-guard {
+  min-height: 42px;
+}
+
+.admin-members-page .admin-member-self-guard small {
+  display: none;
+}
+
+.admin-members-page .admin-member-card__facts {
+  margin-top: .6rem;
+  gap: .45rem;
+}
+
+.admin-members-page .admin-member-card__facts > span {
+  min-width: 135px;
+  padding: .42rem .55rem;
+  background: transparent;
+}
+
+/* Editorial access: one clear management row per member. */
+.admin-editorial-access-page .admin-editorial-access-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-editorial-access-page .admin-editorial-access-panel {
+  overflow: hidden;
+}
+
+.admin-editorial-access-page .admin-editorial-access-search {
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+}
+
+.admin-editorial-access-page .admin-editorial-access-search > label {
+  max-width: 620px;
+}
+
+.admin-editorial-access-page .admin-editorial-access-list {
+  display: grid;
+  gap: 0;
+}
+
+.admin-editorial-access-page .admin-editorial-access-card {
+  padding: .9rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+}
+
+.admin-editorial-access-page .admin-editorial-access-card:last-child {
+  border-bottom: 0;
+}
+
+.admin-editorial-access-page .admin-member-card__identity {
+  align-items: center;
+}
+
+.admin-editorial-access-page .admin-member-card__badges {
+  max-width: none;
+}
+
+.admin-cms-access-form {
+  margin-top: .7rem;
+  padding-top: .7rem;
+  display: grid;
+  grid-template-columns: minmax(170px, .7fr) minmax(330px, 1.35fr) auto;
+  gap: .75rem;
+  align-items: end;
+  border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+}
+
+.admin-cms-access-role {
+  display: grid;
+  gap: .3rem;
+}
+
+.admin-cms-access-role > span,
+.admin-cms-access-scope > legend {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .5rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.admin-cms-access-role select {
+  min-height: 42px;
+}
+
+.admin-cms-access-scope {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .5rem;
+  border: 0;
+}
+
+.admin-cms-access-scope > legend {
+  grid-column: 1 / -1;
+  margin: 0 0 .3rem;
+  padding: 0;
+}
+
+.admin-cms-access-toggle {
+  min-width: 0;
+  min-height: 54px;
+  padding: .5rem .6rem;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: .55rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-soft) 74%, var(--surface));
+  cursor: pointer;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+
+.admin-cms-access-toggle:hover {
+  border-color: var(--border-strong);
+}
+
+.admin-cms-access-toggle:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent-bright) 44%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-soft));
+}
+
+.admin-cms-access-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.admin-cms-access-toggle > span {
+  min-width: 0;
+  display: grid;
+  gap: .08rem;
+}
+
+.admin-cms-access-toggle strong {
+  font-size: .67rem;
+}
+
+.admin-cms-access-toggle small {
+  color: var(--muted);
+  font-size: .53rem;
+  line-height: 1.3;
+}
+
+.admin-cms-access-form > .button {
+  min-width: 112px;
+}
+
+.admin-cms-access-admin {
+  min-height: 44px;
+  margin-top: .7rem;
+  padding-top: .7rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+  color: var(--muted);
+}
+
+.admin-cms-access-admin > span {
+  color: var(--accent-bright);
+}
+
+.admin-cms-access-admin strong {
+  color: var(--text);
+  font-size: .64rem;
+}
+
+.admin-cms-access-admin small {
+  margin-left: auto;
+  font-size: .54rem;
+}
+
+@media (max-width: 980px) {
+  .admin-cms-access-form {
+    grid-template-columns: minmax(160px, .7fr) minmax(0, 1.3fr);
+  }
+
+  .admin-cms-access-form > .button {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-editorial-access-page .admin-editorial-access-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-editorial-access-page .admin-editorial-access-search {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-editorial-access-page .admin-editorial-access-search > label {
+    max-width: none;
+  }
+
+  .admin-cms-access-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-cms-access-scope {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-cms-access-form > .button {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .admin-cms-access-admin {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .admin-cms-access-admin small {
+    width: 100%;
+    margin-left: 1.5rem;
+  }
+}
