@@ -5,41 +5,62 @@ import { useEffect, useState } from "react";
 import { NOTIFICATION_COUNT_EVENT } from "@/components/notification-count-sync";
 import { createClient } from "@/lib/supabase/client";
 
+function appRole(appMetadata: unknown) {
+  if (!appMetadata || typeof appMetadata !== "object" || !("role" in appMetadata)) return "member";
+  return String((appMetadata as { role?: unknown }).role ?? "member");
+}
+
 export function AuthNav() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [unread, setUnread] = useState(0);
+  const [hasCmsAccess, setHasCmsAccess] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     let active = true;
 
-    async function refreshUnread() {
+    async function refreshMemberState() {
       const { data: claimsData } = await supabase.auth.getClaims();
-      const connected = Boolean(claimsData?.claims);
+      const claims = claimsData?.claims;
+      const connected = Boolean(claims);
       if (!active) return;
       setSignedIn(connected);
-      if (!connected) {
+      if (!connected || !claims || typeof claims.sub !== "string") {
         setUnread(0);
+        setHasCmsAccess(false);
         return;
       }
 
-      const { count } = await supabase
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .is("read_at", null);
-      if (active) setUnread(count ?? 0);
+      const [{ count }, cmsResult] = await Promise.all([
+        supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .is("read_at", null),
+        appRole(claims.app_metadata) === "admin"
+          ? Promise.resolve({ data: { user_id: claims.sub } })
+          : supabase.from("cms_permissions").select("user_id").eq("user_id", claims.sub).maybeSingle(),
+      ]);
+
+      if (active) {
+        setUnread(count ?? 0);
+        setHasCmsAccess(Boolean(cmsResult.data));
+      }
     }
 
-    void refreshUnread();
+    void refreshMemberState();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       setSignedIn(Boolean(session));
-      if (!session) setUnread(0);
-      else void refreshUnread();
+      if (!session) {
+        setUnread(0);
+        setHasCmsAccess(false);
+      } else {
+        void refreshMemberState();
+      }
     });
 
-    const onFocus = () => void refreshUnread();
+    const onFocus = () => void refreshMemberState();
     const onCount = (event: Event) => {
       const detail = (event as CustomEvent<{ count?: unknown }>).detail;
       const nextCount = Number(detail?.count);
@@ -59,6 +80,7 @@ export function AuthNav() {
 
   return (
     <>
+      {signedIn && hasCmsAccess ? <Link className="topbar__utility" href="/redaction">Rédaction</Link> : null}
       {signedIn ? (
         <Link className="topbar__notifications" href="/notifications" aria-label={`${unread} notification${unread > 1 ? "s" : ""} non lue${unread > 1 ? "s" : ""}`}>
           Notifications
