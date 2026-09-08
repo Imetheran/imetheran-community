@@ -58,6 +58,7 @@ import "./admin-cms-adapters.css";
 import "./admin-cms-navigation.css";
 import "./global-theme-selector.css";
 import "./compact-layout.css";
+import "./admin-shell-polish.css";
 
 export const metadata: Metadata = {
   title: {
