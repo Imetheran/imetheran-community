@@ -40,18 +40,13 @@ export default async function ChroniquesPage() {
   const participantCount = new Map<string, number>();
   for (const chapter of chaptersResult.data ?? []) chapterCount.set(chapter.chronicle_id, (chapterCount.get(chapter.chronicle_id) ?? 0) + 1);
   for (const participant of participantsResult.data ?? []) participantCount.set(participant.chronicle_id, (participantCount.get(participant.chronicle_id) ?? 0) + 1);
-  const featured = chronicles.find((chronicle) => chronicle.featured) ?? chronicles[0] ?? null;
 
   return (
     <main className="site-shell chronicles-page chronicle-directory-page">
       <SiteHeader />
 
       <section className="chronicle-hero" aria-labelledby="chronicles-title">
-        <div
-          className="chronicle-hero__image"
-          style={{ backgroundImage: featured?.cover_image ? `url(${featured.cover_image})` : "var(--hero-image)" }}
-          aria-hidden="true"
-        />
+        <div className="chronicle-hero__image" aria-hidden="true" />
         <div className="chronicle-hero__veil" aria-hidden="true" />
         <div className="content-frame chronicle-hero__content">
           <p className="eyebrow">Récits communautaires</p>
