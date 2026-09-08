@@ -3,13 +3,52 @@
   scroll-margin-top: 1rem;
 }
 
+/* Compact, readable community statistics. */
 .compact-status--home {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0;
+  overflow: hidden;
 }
 
 .compact-status--home > div {
   min-width: 0;
+  min-height: 54px;
+  padding: .72rem .85rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .7rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.compact-status--home > div:nth-child(odd) {
+  border-right: 1px solid var(--border);
+}
+
+.compact-status--home > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.compact-status--home .status-dot {
+  display: none;
+}
+
+.compact-status--home > div > span:not(.status-dot) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-status--home strong {
+  min-width: 1.5ch;
+  color: var(--accent-bright);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1;
+  text-align: right;
 }
 
 .home-community-notice h3 {
@@ -23,32 +62,81 @@
   -webkit-line-clamp: 4;
 }
 
+/* Forum cards: denser and closer to the editorial direction of the homepage. */
+.home-section--forum {
+  padding-block: clamp(2.6rem, 5vw, 4.25rem);
+}
+
 .home-forum-section-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
 }
 
-.home-forum-section {
-  min-height: 230px;
+.home-forum-section,
+.home-forum-section:nth-child(2n),
+.home-forum-section:nth-last-child(-n + 2) {
+  min-height: 168px;
+  padding: 1rem 1.05rem;
+  grid-template-columns: 34px minmax(0, 1fr) 18px;
+  gap: .75rem;
+  align-items: start;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.home-forum-section:nth-child(3n) {
+  border-right: 0;
+}
+
+.home-forum-section:nth-last-child(-n + 3) {
+  border-bottom: 0;
+}
+
+.home-forum-section .forum-category__index {
+  padding-top: 1.15rem;
+  font-size: 1rem;
 }
 
 .home-forum-section .forum-category__content {
-  height: 100%;
+  height: auto;
 }
 
 .home-forum-section .forum-category__content > span:not(.forum-category__arrow) {
-  line-height: 1.55;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.45;
+}
+
+.home-forum-section .forum-category__content strong {
+  margin-block: .18rem .28rem;
+  font-size: 1.22rem;
 }
 
 .home-forum-section .forum-category__content em {
-  margin-top: auto;
-  padding-top: .85rem;
+  margin-top: .55rem;
+  padding-top: 0;
   color: var(--accent-bright);
   font-family: var(--font-ui);
-  font-size: .61rem;
+  font-size: .58rem;
   font-style: normal;
   font-weight: 800;
   letter-spacing: .07em;
   text-transform: uppercase;
+}
+
+.home-forum-section .forum-category__arrow {
+  align-self: center;
+  font-size: 1rem;
+}
+
+.home-section--activity .panel__heading {
+  padding: .95rem 1.1rem;
+}
+
+.home-section--activity .panel__heading h3 {
+  font-size: 1.35rem;
 }
 
 .home-section--characters .character-card__portrait {
@@ -92,13 +180,58 @@
   line-height: 1.6;
 }
 
+@media (max-width: 1040px) {
+  .home-forum-section-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-forum-section,
+  .home-forum-section:nth-child(3n) {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .home-forum-section:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .home-forum-section:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+
 @media (max-width: 720px) {
   .compact-status--home {
     grid-template-columns: 1fr;
   }
 
-  .home-forum-section {
+  .compact-status--home > div,
+  .compact-status--home > div:nth-child(odd),
+  .compact-status--home > div:nth-last-child(-n + 2) {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compact-status--home > div:last-child {
+    border-bottom: 0;
+  }
+
+  .home-forum-section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-forum-section,
+  .home-forum-section:nth-child(2n),
+  .home-forum-section:nth-child(3n),
+  .home-forum-section:nth-last-child(-n + 2),
+  .home-forum-section:nth-last-child(-n + 3) {
     min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .home-forum-section:last-child {
+    border-bottom: 0;
   }
 
   .home-character-empty {
