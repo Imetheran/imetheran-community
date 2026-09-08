@@ -171,9 +171,50 @@
   display: flex !important;
 }
 
-/* The old dashboard maintenance card was too large for the unified hero. It now lives in Administration > Site. */
+/* Dashboard: keep maintenance visible, but compact enough not to break the unified hero. */
 .admin-page > .admin-hero--clean .admin-site-control {
+  width: min(100%, 760px) !important;
+  min-height: 0 !important;
+  padding: .48rem .62rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: .65rem !important;
+  flex-wrap: wrap !important;
+  border-color: color-mix(in srgb, var(--border-strong) 78%, transparent) !important;
+  background: rgba(9, 11, 12, .68) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .22) !important;
+  backdrop-filter: blur(9px);
+  text-shadow: none !important;
+}
+
+.admin-page > .admin-hero--clean .admin-site-control::before {
+  width: 2px;
+}
+
+.admin-page > .admin-hero--clean .admin-site-control > p,
+.admin-page > .admin-hero--clean .admin-site-control > small {
   display: none !important;
+}
+
+.admin-page > .admin-hero--clean .admin-site-control__status {
+  flex: 0 0 auto;
+}
+
+.admin-page > .admin-hero--clean .admin-site-control__status strong {
+  font-size: 1rem;
+}
+
+.admin-page > .admin-hero--clean .admin-site-control__actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: .55rem !important;
+}
+
+.admin-page > .admin-hero--clean .admin-site-control__button {
+  min-height: 34px;
+  padding: .42rem .65rem;
 }
 
 /* Back-office page rhythm. */
@@ -316,6 +357,15 @@
 
   .admin-page .admin-role-badge,
   .redaction-page .tools-hero__side small {
+    display: none !important;
+  }
+
+  .admin-page > .admin-hero--clean .admin-site-control {
+    width: 100% !important;
+    padding: .4rem .5rem !important;
+  }
+
+  .admin-page > .admin-hero--clean .admin-site-control__actions .text-link {
     display: none !important;
   }
 
