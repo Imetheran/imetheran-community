@@ -18,6 +18,7 @@ export function AdminNav({ isAdmin, isModerator }: AdminNavProps) {
     ...(isAdmin ? [
       { href: "/administration/forum/structure", label: "Structure" },
       { href: "/administration/membres", label: "Membres" },
+      { href: "/administration/redaction", label: "Accès rédaction" },
       { href: "/administration/personnages", label: "Personnages" },
       { href: "/administration/liens", label: "Liens" },
       { href: "/administration/chroniques", label: "Chroniques" },
