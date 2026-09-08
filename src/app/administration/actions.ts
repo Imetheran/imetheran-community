@@ -19,20 +19,26 @@ export async function setMaintenanceMode(formData: FormData) {
   }
 
   const enabled = formData.get("enabled") === "true";
-  const { error } = await supabase
+  const requestedReturnTo = String(formData.get("return_to") ?? "");
+  const returnTo = requestedReturnTo === "/administration/site" ? "/administration/site" : "/administration";
+  const { data, error } = await supabase
     .from("site_runtime_settings")
     .update({
       maintenance_enabled: enabled,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", "main");
+    .eq("id", "main")
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     console.error("Unable to update maintenance mode", error);
-    redirect("/administration?etat=erreur");
+    redirect(`${returnTo}?etat=erreur`);
   }
 
+  revalidatePath("/");
   revalidatePath("/administration");
+  revalidatePath("/administration/site");
   revalidatePath("/maintenance");
-  redirect(`/administration?etat=${enabled ? "maintenance" : "online"}`);
+  redirect(`${returnTo}?etat=${enabled ? "maintenance" : "online"}`);
 }
