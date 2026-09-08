@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readSiteRuntimeSettings } from "@/lib/site-runtime";
 import { updateSession } from "@/lib/supabase/proxy";
 
-const maintenanceAllowedPrefixes = ["/administration", "/auth"];
+const maintenanceAllowedPrefixes = ["/administration", "/redaction", "/auth"];
 const maintenancePublicRoutes = new Set(["/maintenance", "/robots.txt", "/sitemap.xml"]);
 
 function isMaintenanceAllowed(pathname: string) {
@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  // Administration and authentication routes remain reachable while the public site is closed.
+  // Internal workspaces and authentication remain reachable while the public site is closed.
   if (isMaintenanceAllowed(pathname)) {
     return updateSession(request);
   }
