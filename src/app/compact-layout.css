@@ -54,6 +54,13 @@
   background:
     linear-gradient(90deg, rgba(2, 3, 3, .68), rgba(5, 6, 6, .18) 30%, rgba(5, 6, 6, .18) 70%, rgba(2, 3, 3, .68)),
     linear-gradient(180deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .12) 50%, rgba(5, 6, 7, .78)) !important;
+  opacity: 1 !important;
+  mask: none !important;
+  mask-image: none !important;
+  -webkit-mask: none !important;
+  -webkit-mask-image: none !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
   pointer-events: none;
 }
 
