@@ -1,24 +1,60 @@
 .sociogram-workspace--empty {
+  min-height: 0;
   box-shadow: none;
 }
 
 .sociogram-live-empty {
-  padding: clamp(2rem, 6vw, 4rem);
-  text-align: center;
+  padding: 1.25rem 1.4rem;
+  display: grid;
+  grid-template-columns: minmax(210px, .72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: .8rem 1.25rem;
+  text-align: left;
 }
 
 .sociogram-live-empty strong,
 .relationship-empty strong {
   display: block;
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 500;
+  line-height: 1.15;
 }
 
 .sociogram-live-empty p,
 .sociogram-live-empty-copy,
 .relationship-empty p {
   color: var(--muted);
+}
+
+.sociogram-live-empty p {
+  margin: 0;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.links-intro {
+  padding-block: clamp(2rem, 4vw, 3.2rem);
+}
+
+.links-intro > .section-heading {
+  margin-bottom: 0;
+}
+
+.links-intro > .section-heading h2 {
+  margin: .12rem 0 .3rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.links-intro > .section-heading p:last-child {
+  margin-top: .4rem;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+
+.links-intro .sociogram-workspace {
+  margin-top: 1rem;
 }
 
 .sociogram-node__portrait,
@@ -35,15 +71,34 @@
 }
 
 .relationship-manager {
-  padding-bottom: clamp(3rem, 7vw, 6rem);
+  padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.relationship-manager > .section-heading {
+  margin-bottom: 0;
+  align-items: end;
+}
+
+.relationship-manager > .section-heading h2 {
+  margin: .12rem 0 .3rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.relationship-manager > .section-heading p:last-child {
+  max-width: 74ch;
+  margin: .35rem 0 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.5;
 }
 
 .relationship-notice {
-  margin: 1rem 0;
-  padding: .85rem 1rem;
+  margin: .8rem 0;
+  padding: .75rem .9rem;
   border: 1px solid var(--border);
   background: var(--surface);
-  font-size: .8rem;
+  font-size: .76rem;
 }
 
 .relationship-notice--success {
@@ -57,25 +112,25 @@
 .relationship-manager__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 1.2rem;
+  gap: .85rem;
+  margin-top: .9rem;
 }
 
 .relationship-panel {
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid var(--border-strong);
   background: linear-gradient(145deg, var(--surface-raised), var(--surface));
 }
 
 .relationship-panel--full {
-  margin-top: 1rem;
+  margin-top: .85rem;
 }
 
 .relationship-panel__head {
-  margin-bottom: 1rem;
+  margin-bottom: .75rem;
   display: flex;
   align-items: flex-end;
-  gap: .75rem;
+  gap: .6rem;
   flex-wrap: wrap;
 }
 
@@ -87,21 +142,22 @@
 .relationship-panel__head h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.65rem;
   font-weight: 500;
+  line-height: 1.05;
 }
 
 .relationship-panel__head > span {
   margin-left: auto;
   color: var(--accent-bright);
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 1.05rem;
 }
 
 .relationship-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .75rem;
+  gap: .65rem;
 }
 
 .relationship-form label {
@@ -124,7 +180,7 @@
 .relationship-form textarea,
 .relationship-request textarea {
   width: 100%;
-  padding: .72rem .8rem;
+  padding: .65rem .72rem;
   border: 1px solid var(--border);
   background: var(--surface-soft);
   color: var(--text);
@@ -156,12 +212,12 @@
 .relationship-request-list,
 .relationship-owned-list {
   display: grid;
-  gap: .7rem;
+  gap: .6rem;
 }
 
 .relationship-request,
 .relationship-owned {
-  padding: 1rem;
+  padding: .85rem;
   border: 1px solid var(--border);
   background: var(--surface-soft);
 }
@@ -169,16 +225,16 @@
 .relationship-request small {
   color: var(--accent-bright);
   font-family: var(--font-ui);
-  font-size: .62rem;
+  font-size: .6rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .relationship-request h4,
 .relationship-owned h4 {
-  margin: .35rem 0;
+  margin: .3rem 0;
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 500;
 }
 
@@ -186,15 +242,16 @@
 .relationship-owned p {
   margin: 0;
   color: var(--muted);
-  font-size: .8rem;
+  font-size: .76rem;
+  line-height: 1.5;
 }
 
 .relationship-request__actions {
-  margin-top: .85rem;
+  margin-top: .7rem;
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: .5rem;
+  gap: .45rem;
 }
 
 .relationship-request__actions form {
@@ -210,7 +267,7 @@
 .relationship-owned summary {
   color: var(--muted);
   font-family: var(--font-ui);
-  font-size: .68rem;
+  font-size: .66rem;
   cursor: pointer;
 }
 
@@ -224,7 +281,7 @@
 .relationship-owned {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: .8rem 1rem;
+  gap: .7rem .9rem;
   align-items: start;
 }
 
@@ -258,21 +315,21 @@
 }
 
 .relationship-owned blockquote {
-  margin: .7rem 0 0;
+  margin: .6rem 0 0;
   padding-left: .7rem;
   border-left: 2px solid var(--accent-bright);
   color: var(--muted);
-  font-size: .78rem;
+  font-size: .76rem;
 }
 
 .relationship-owned__edit {
   grid-column: 1 / -1;
-  padding-top: .6rem;
+  padding-top: .55rem;
   border-top: 1px solid var(--border);
 }
 
 .relationship-form--compact {
-  margin-top: .65rem;
+  margin-top: .55rem;
 }
 
 .relationship-owned__withdraw {
@@ -281,14 +338,27 @@
 }
 
 .relationship-empty {
-  padding: 1.5rem 1rem;
+  min-height: 118px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   border: 1px dashed var(--border);
+  background: color-mix(in srgb, var(--surface-soft) 68%, transparent);
+}
+
+.relationship-empty p {
+  max-width: 54ch;
+  margin: .35rem auto .55rem;
+  font-size: .76rem;
+  line-height: 1.45;
 }
 
 .relationship-guest-cta {
-  margin-bottom: clamp(3rem, 7vw, 6rem);
-  padding-block: 1.4rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+  padding-block: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -300,7 +370,7 @@
 .relationship-guest-cta h2 {
   margin: .1rem 0;
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 500;
 }
 
@@ -376,12 +446,27 @@
 }
 
 @media (max-width: 900px) {
+  .sociogram-live-empty {
+    grid-template-columns: 1fr;
+    gap: .35rem;
+    text-align: center;
+  }
+
   .relationship-manager__grid { grid-template-columns: 1fr; }
   .relationship-owned { grid-template-columns: 1fr; }
   .relationship-owned__approval { justify-content: flex-start; }
 }
 
 @media (max-width: 650px) {
+  .links-intro {
+    padding-block: 1.6rem 2rem;
+  }
+
+  .relationship-manager > .section-heading,
+  .links-intro > .section-heading {
+    align-items: flex-start;
+  }
+
   .relationship-form { grid-template-columns: 1fr; }
   .relationship-form__wide { grid-column: auto; }
   .relationship-guest-cta { align-items: flex-start; flex-direction: column; }
