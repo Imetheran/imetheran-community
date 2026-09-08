@@ -4,12 +4,33 @@
   --public-hero-title-size: clamp(2.7rem, 5vw, 4.2rem);
   --public-hero-padding: clamp(1.8rem, 3.2vw, 2.5rem);
   --public-hero-copy-width: 62ch;
+  --public-hero-art-position: center center;
 }
 
 /* Homepage hero follows the same vertical system as the other public pages. */
 .hero--portal {
   min-height: var(--public-hero-height);
   height: var(--public-hero-height);
+}
+
+/* Keep every public hero artwork anchored to one shared focal point. */
+.hero--portal,
+.hero--portal .hero__image,
+.hero--portal .hero__media,
+[class$="-hero__image"],
+[class*="-hero__image "] {
+  background-size: cover !important;
+  background-position: var(--public-hero-art-position) !important;
+  background-repeat: no-repeat !important;
+}
+
+.hero--portal img[class*="hero"],
+[class$="-hero__image"] > img,
+[class*="-hero__image "] > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+  object-position: center center !important;
 }
 
 .hero--portal .hero__content {
