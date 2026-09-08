@@ -13,7 +13,10 @@ export function AdminNav({ isAdmin, isModerator }: AdminNavProps) {
   const pathname = usePathname();
 
   const items = [
-    ...(isAdmin ? [{ href: "/administration", label: "Tableau de bord" }] : []),
+    ...(isAdmin ? [
+      { href: "/administration", label: "Tableau de bord" },
+      { href: "/administration/site", label: "Site" },
+    ] : []),
     { href: "/administration/forum", label: isModerator ? "Modération forum" : "Forum" },
     ...(isAdmin ? [
       { href: "/administration/forum/structure", label: "Structure" },
