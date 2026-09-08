@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/server";
 import { chronicleNarrativeLabels, formatChronicleDate, type ChronicleNarrativeStatus } from "@/lib/chronicles";
 
@@ -55,23 +54,9 @@ export default async function ChroniquesPage() {
         />
         <div className="chronicle-hero__veil" aria-hidden="true" />
         <div className="content-frame chronicle-hero__content">
-          <div className="chronicle-hero__status">
-            <span className="status-pill">{featured ? chronicleNarrativeLabels[featured.narrative_status] : "Bibliothèque"}</span>
-            <span>{featured ? "Chronique mise en avant" : "Aucune chronique publiée"}</span>
-          </div>
-          <p className="eyebrow">Les fils rouges d’Imetheran</p>
-          <h1 id="chronicles-title">{featured?.title ?? "Chroniques"}</h1>
-          <p className="chronicle-hero__subtitle">{featured?.subtitle || "Scénarios, campagnes et récits communautaires"}</p>
-          <p className="chronicle-hero__synopsis">
-            {featured?.synopsis || "Les premières chroniques publiées par l’équipe apparaîtront ici avec leur progression, leurs participants et leurs actes."}
-          </p>
-          {featured ? (
-            <div className="chronicle-hero__tags">{featured.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-          ) : null}
-          <div className="chronicle-directory-hero-actions">
-            {featured ? <Link className="button button--primary" href={`/chroniques/${featured.slug}`}>Ouvrir le dossier</Link> : null}
-            <ThemeToggle />
-          </div>
+          <p className="eyebrow">Récits communautaires</p>
+          <h1 id="chronicles-title">Chroniques</h1>
+          <p className="chronicle-hero__subtitle">Campagnes, scénarios et récits suivis d’Imetheran.</p>
         </div>
       </section>
 
