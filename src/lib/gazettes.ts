@@ -1,8 +1,11 @@
-export type GazettePublicationStatus = "draft" | "published" | "archived";
+export type GazettePublicationStatus = "draft" | "submitted" | "changes_requested" | "staff_approved" | "published" | "archived";
 export type GazetteArticleKind = "lead" | "column" | "brief" | "recipe" | "quote" | "article";
 
 export const gazettePublicationLabels: Record<GazettePublicationStatus, string> = {
   draft: "Brouillon",
+  submitted: "Soumise au staff",
+  changes_requested: "Corrections demandées",
+  staff_approved: "Validée par le staff",
   published: "Publiée",
   archived: "Archivée",
 };
