@@ -3,6 +3,7 @@
   --public-hero-height: 280px;
   --public-hero-title-size: clamp(2.7rem, 5vw, 4.2rem);
   --public-hero-padding: clamp(1.8rem, 3.2vw, 2.5rem);
+  --public-hero-copy-width: 62ch;
 }
 
 /* Homepage hero follows the same vertical system as the other public pages. */
@@ -41,7 +42,7 @@
   margin-top: .9rem;
 }
 
-/* Public archive/index headers: one visual language everywhere. */
+/* Public archive/index headers: same alignment, rhythm and typography everywhere. */
 section[class$="-hero"],
 section[class*="-hero "],
 .forum-subhero {
@@ -57,34 +58,45 @@ section[class*="-hero "] > .content-frame,
   padding-block: var(--public-hero-padding);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  text-align: left;
+  text-align: center;
 }
 
 [class*="-hero__content"] h1,
 .forum-subhero h1 {
-  margin: .08rem 0 .5rem;
+  width: min(100%, 18ch);
+  margin: .08rem auto .5rem;
+  color: var(--text);
   font-family: var(--font-display);
   font-size: var(--public-hero-title-size);
   font-weight: 500;
   line-height: .94;
   letter-spacing: .01em;
+  text-align: center;
   text-transform: none;
+  text-wrap: balance;
 }
 
 [class*="-hero__content"] > p:not(.eyebrow),
-.forum-subhero__content > p:not(.eyebrow) {
-  max-width: 58ch;
-  margin: 0;
+.forum-subhero__content > p:not(.eyebrow),
+.guides-hero__intro,
+.chronicle-hero__subtitle {
+  width: min(100%, var(--public-hero-copy-width));
+  max-width: var(--public-hero-copy-width);
+  margin: 0 auto;
   color: var(--muted);
   font-size: .88rem;
   line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
 }
 
 [class*="-hero__content"] .eyebrow,
 .forum-subhero .eyebrow {
+  width: 100%;
   margin: 0 0 .3rem;
+  text-align: center;
 }
 
 /* Header actions and contextual badges belong in page content, not in the hero. */
@@ -104,24 +116,39 @@ section[class*="-hero "] > .content-frame,
   display: none !important;
 }
 
-.guides-hero__intro,
-.chronicle-hero__subtitle {
-  max-width: 58ch;
-  margin: 0;
-  color: var(--muted);
-  font-size: .88rem;
-  line-height: 1.5;
+/* Override legacy page-specific hero alignment. */
+.chronicle-hero__content,
+.gazette-hero__content,
+.characters-hero__content,
+.links-hero__content,
+.guides-hero__content,
+.forum-hero__content {
+  align-items: center !important;
+  text-align: center !important;
 }
 
 /* Keep non-illustrated compose/thread headers visually aligned with the same scale. */
 .forum-compose-head {
   padding-block: var(--public-hero-padding);
+  text-align: center;
+}
+
+.forum-compose-head .content-frame,
+.forum-thread-head .content-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .forum-compose-head h1,
 .forum-thread-head h1 {
+  max-width: 18ch;
+  margin-inline: auto;
   font-size: var(--public-hero-title-size);
   line-height: .96;
+  text-align: center;
+  text-wrap: balance;
 }
 
 .forum-index {
@@ -145,6 +172,7 @@ section[class*="-hero "] > .content-frame,
     --public-hero-height: 220px;
     --public-hero-title-size: clamp(2.15rem, 9vw, 3.15rem);
     --public-hero-padding: 1.45rem;
+    --public-hero-copy-width: 42ch;
   }
 
   .hero--portal .expansion-logo {
