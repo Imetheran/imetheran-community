@@ -81,6 +81,7 @@ export function AuthNav() {
   return (
     <>
       {signedIn && hasCmsAccess ? <Link className="topbar__utility" href="/redaction">Rédaction</Link> : null}
+      {signedIn ? <Link className="topbar__utility" href="/activite">Activité</Link> : null}
       {signedIn ? (
         <Link className="topbar__notifications" href="/notifications" aria-label={`${unread} notification${unread > 1 ? "s" : ""} non lue${unread > 1 ? "s" : ""}`}>
           Notifications
