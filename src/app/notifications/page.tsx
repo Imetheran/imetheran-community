@@ -30,6 +30,7 @@ type NotificationRow = {
 
 const typeLabels: Record<string, string> = {
   forum_reply: "Forum",
+  forum_mention: "Mention",
   announcement: "Annonce",
   relationship_request: "Relation",
   relationship_approved: "Relation validée",
@@ -48,6 +49,7 @@ function formatDate(value: string) {
 function actionLabel(type: string) {
   if (type === "relationship_request" || type === "relationship_revision") return "Examiner";
   if (type === "forum_reply") return "Voir la réponse";
+  if (type === "forum_mention") return "Voir la mention";
   if (type === "announcement") return "Lire";
   return "Ouvrir";
 }
@@ -90,7 +92,7 @@ export default async function NotificationsPage({
           <div>
             <p className="eyebrow">Espace membre</p>
             <h1>Notifications</h1>
-            <p>Réponses suivies, annonces importantes et décisions concernant les relations de vos personnages.</p>
+            <p>Réponses suivies, mentions et décisions concernant votre activité.</p>
           </div>
           <div className="tools-hero__side">
             <span className="status-pill">{unreadCount} non lue{unreadCount > 1 ? "s" : ""}</span>
@@ -164,9 +166,6 @@ export default async function NotificationsPage({
           <div className="tools-empty">
             <span aria-hidden="true">✦</span>
             <h3>{showUnreadOnly ? "Tout est à jour" : "Aucune notification pour le moment"}</h3>
-            <p>{showUnreadOnly
-              ? "Vous n’avez aucune notification non lue. Le fil complet reste disponible à tout moment."
-              : "Suivez un sujet du forum ou créez des relations entre personnages : les événements qui vous concernent apparaîtront ici."}</p>
             <div className="tools-empty__actions">
               {showUnreadOnly ? <Link className="button button--primary" href="/notifications">Voir tout le fil</Link> : <Link className="button button--primary" href="/forum">Parcourir le forum</Link>}
               <Link className="button button--ghost" href="/liens">Voir les liens</Link>
