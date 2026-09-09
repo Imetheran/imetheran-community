@@ -60,6 +60,7 @@ import "./global-theme-selector.css";
 import "./compact-layout.css";
 import "./admin-shell-polish.css";
 import "./admin-interface-clean.css";
+import "./site-interface-simplify.css";
 
 export const metadata: Metadata = {
   title: {
