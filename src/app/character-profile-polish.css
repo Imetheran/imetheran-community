@@ -1,0 +1,54 @@
+/* Character detail: keep the public hero atmospheric and place the member portrait inside the profile itself. */
+.character-profile-hero__layout--identity {
+  grid-template-columns: minmax(0, 1fr) !important;
+  max-width: 920px;
+}
+
+.character-profile-hero__layout--identity .character-profile-identity {
+  min-width: 0;
+}
+
+.character-profile-portrait--sidebar {
+  width: 100%;
+  min-height: 360px;
+  aspect-ratio: 4 / 5;
+  background:
+    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 10rem),
+    var(--surface-soft);
+  box-shadow: 0 16px 40px rgba(0,0,0,.24);
+}
+
+.character-profile-portrait--sidebar .character-live-portrait {
+  object-position: center 22%;
+}
+
+.character-profile-portrait--sidebar small {
+  padding: .28rem .5rem;
+  background: color-mix(in srgb, var(--page-bg) 76%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+@media (max-width: 980px) and (min-width: 721px) {
+  .character-profile__sidebar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .character-profile-portrait--sidebar {
+    grid-column: 1 / -1;
+    width: min(100%, 320px);
+    min-height: 360px;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .character-profile-hero__layout--identity {
+    max-width: none;
+  }
+
+  .character-profile-portrait--sidebar {
+    width: min(100%, 340px);
+    min-height: 360px;
+  }
+}
