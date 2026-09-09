@@ -1,0 +1,187 @@
+/* Global interface simplification.
+   Keep editorial content, system feedback and safety information; remove prose that only explains obvious UI. */
+
+/* Page headers: eyebrow + title are enough. Homepage motto remains untouched. */
+.site-shell > section:not(.hero--portal)[class$="-hero"] [class$="-hero__content"] > p:not(.eyebrow),
+.site-shell > section:not(.hero--portal)[class*="-hero "] [class$="-hero__content"] > p:not(.eyebrow),
+.site-shell > section:not(.hero--portal)[class$="-hero"] [class*="-hero__content "] > p:not(.eyebrow),
+.site-shell > section:not(.hero--portal)[class*="-hero "] [class*="-hero__content "] > p:not(.eyebrow),
+.site-shell > .forum-subhero .forum-subhero__content > p:not(.eyebrow),
+.account-hero__layout > div:first-child > p:not(.eyebrow),
+.admin-hero__layout > div:first-child > p:not(.eyebrow),
+.tools-hero__layout > div:first-child > p:not(.eyebrow),
+.guides-hero__intro,
+.chronicle-hero__subtitle {
+  display: none !important;
+}
+
+.site-shell > section:not(.hero--portal)[class$="-hero"] h1,
+.site-shell > section:not(.hero--portal)[class*="-hero "] h1,
+.site-shell > .forum-subhero h1,
+.account-hero h1,
+.admin-hero h1,
+.tools-hero h1 {
+  margin-bottom: 0 !important;
+}
+
+/* Homepage: keep real excerpts, remove promotional filler. */
+.editorial-card > p,
+.about-strip > p,
+.empty-feed p,
+.home-character-empty p:last-child,
+.gazette-feature__cms-note {
+  display: none !important;
+}
+
+.editorial-card {
+  min-height: 132px !important;
+}
+
+.about-strip {
+  align-items: center;
+}
+
+/* Forum index: names, access and activity are enough to navigate. */
+.forum-index__header > div:first-child > p:not(.eyebrow),
+.forum-section__subtitle,
+.forum-board__main > p,
+.forum-index__footer strong {
+  display: none !important;
+}
+
+.forum-index__header h2 {
+  margin-bottom: 0 !important;
+}
+
+.forum-section__header {
+  min-height: 88px !important;
+  grid-template-columns: minmax(260px, 1fr) auto !important;
+}
+
+.forum-board {
+  min-height: 82px !important;
+}
+
+.forum-index__footer > div {
+  max-width: none !important;
+}
+
+/* Authentication and member account: forms/actions speak for themselves. */
+.auth-card > p:not(.eyebrow):not(.auth-charter-note),
+.account-card > p:not(.eyebrow),
+.account-next p,
+.account-dashboard__stats > a > span,
+.account-onboarding__steps article p,
+.account-onboarding > small,
+.account-onboarding-complete p {
+  display: none !important;
+}
+
+.auth-form {
+  margin-top: .8rem !important;
+}
+
+.account-dashboard__stats > a {
+  min-height: 96px !important;
+}
+
+.account-onboarding {
+  padding: 1rem !important;
+}
+
+.account-onboarding__steps article {
+  min-height: 118px !important;
+  grid-template-rows: auto 1fr !important;
+}
+
+.account-onboarding__steps a {
+  align-self: end;
+}
+
+/* Administration: preserve states and warnings, remove instructional prose. */
+.admin-readiness__copy > p:not(.eyebrow),
+.admin-content-grid > a > p,
+.admin-panel__note > p,
+.admin-site-control--page > p,
+.admin-site-behaviour__list small,
+.admin-member-reactivate-form small,
+.admin-member-self-guard small,
+.admin-empty-state p,
+.admin-cms-access-toggle small,
+.admin-cms-access-admin small {
+  display: none !important;
+}
+
+.admin-content-grid > a,
+.admin-content-grid--clean > a,
+.admin-content-grid--clean > a:nth-child(2n),
+.admin-content-grid--clean > a:nth-last-child(-n + 2) {
+  min-height: 118px !important;
+}
+
+.admin-panel__note {
+  padding-block: .6rem !important;
+}
+
+.admin-site-behaviour__list > div {
+  min-height: 56px !important;
+}
+
+.admin-cms-access-toggle {
+  min-height: 44px !important;
+}
+
+.admin-empty-state {
+  min-height: 120px !important;
+}
+
+/* Editorial workspace: workflow labels and actions are sufficient. */
+.redaction-review-card > p,
+.redaction-workflow__step > p,
+.tools-empty > p {
+  display: none !important;
+}
+
+.redaction-review-card h3 {
+  margin-bottom: .65rem !important;
+}
+
+.redaction-workflow__step {
+  padding-block: .6rem !important;
+}
+
+.tools-empty {
+  min-height: 190px !important;
+  padding-block: 2rem !important;
+}
+
+/* Search start screen: remove generic examples, keep actual search results intact. */
+.search-start-grid article > p {
+  display: none !important;
+}
+
+.search-start-grid article {
+  padding-block: 1rem !important;
+}
+
+@media (max-width: 1080px) {
+  .forum-section__header {
+    grid-template-columns: minmax(220px, 1fr) auto !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .forum-section__header {
+    grid-template-columns: 1fr !important;
+  }
+
+  .account-onboarding__steps article {
+    min-height: 100px !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .account-onboarding__steps article {
+    min-height: 0 !important;
+  }
+}
