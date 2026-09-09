@@ -1,11 +1,63 @@
-/* Character detail: keep the public hero atmospheric and place the member portrait inside the profile itself. */
-.character-profile-hero__layout--identity {
-  grid-template-columns: minmax(0, 1fr) !important;
+/* Character detail: the public hero stays atmospheric; identity and controls belong to the profile content. */
+.character-profile-page .character-profile-hero {
+  min-height: var(--public-hero-height, 280px) !important;
+}
+
+.character-profile-intro {
+  padding-block: 2rem 1.6rem;
+}
+
+.character-profile-intro__toolbar {
+  margin-bottom: 1.6rem;
+  padding-bottom: .9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.character-profile-intro__back {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: .67rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.character-profile-intro__back:hover,
+.character-profile-intro__back:focus-visible {
+  color: var(--accent-bright);
+  outline: none;
+}
+
+.character-profile-intro__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .5rem;
+}
+
+.character-profile-identity--content {
   max-width: 920px;
 }
 
-.character-profile-hero__layout--identity .character-profile-identity {
-  min-width: 0;
+.character-profile-identity--content h1 {
+  color: var(--text);
+}
+
+.character-profile-identity--content blockquote {
+  max-width: 62ch;
+}
+
+.character-profile-identity--content .character-profile-identity__tags {
+  margin-top: 1rem;
+}
+
+.character-profile-intro .character-live-message {
+  margin: 0 0 1.4rem;
 }
 
 .character-profile-portrait--sidebar {
@@ -43,8 +95,25 @@
 }
 
 @media (max-width: 720px) {
-  .character-profile-hero__layout--identity {
-    max-width: none;
+  .character-profile-intro {
+    padding-block: 1.35rem 1.2rem;
+  }
+
+  .character-profile-intro__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .character-profile-intro__actions {
+    justify-content: flex-start;
+  }
+
+  .character-profile-intro__actions .button {
+    flex: 1 1 auto;
+  }
+
+  .character-profile-identity--content h1 {
+    font-size: clamp(2.8rem, 14vw, 4.6rem);
   }
 
   .character-profile-portrait--sidebar {
