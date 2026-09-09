@@ -30,6 +30,7 @@ import "./forum-reply-preview.css";
 import "./guides.css";
 import "./guide-articles.css";
 import "./community-tools.css";
+import "./events.css";
 import "./redaction.css";
 import "./maintenance.css";
 import "./maintenance-compact.css";
