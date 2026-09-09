@@ -1,16 +1,26 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { createForumTopic } from "@/app/forum/actions";
 import { BbcodeEditor } from "@/components/bbcode-editor";
 import { ForumMessagePreview } from "@/components/forum-message-preview";
+import { deleteForumDraft, loadForumDraft, saveForumDraft } from "@/lib/forum-drafts";
 import type { ForumMediaRenderMap } from "@/lib/forum-media";
 import { forumTopicTypeLabel } from "@/lib/forum-presentation";
 
 type CharacterOption = {
   id: string;
   name: string;
+};
+
+type TopicDraft = {
+  title?: string;
+  content?: string;
+  characterId?: string;
+  sceneType?: string;
+  location?: string;
+  tags?: string;
 };
 
 function PublishButton({ disabled = false }: { disabled?: boolean }) {
@@ -38,6 +48,7 @@ export function ForumTopicEditor({
   errorMessage?: string | null;
 }) {
   const previewRef = useRef<HTMLElement>(null);
+  const draftRestoreStarted = useRef(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -46,10 +57,47 @@ export function ForumTopicEditor({
   const [location, setLocation] = useState("");
   const [tags, setTags] = useState("");
   const [mediaMap, setMediaMap] = useState<ForumMediaRenderMap>({});
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<"restored" | "saving" | "saved" | null>(null);
+  const draftKey = `topic:${boardSlug}`;
 
   const tagList = useMemo(() => tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 5), [tags]);
   const selectedCharacter = characters.find((character) => character.id === characterId);
   const canPublish = title.trim().length > 0 && content.trim().length >= 2;
+
+  useEffect(() => {
+    if (draftRestoreStarted.current) return;
+    draftRestoreStarted.current = true;
+    let active = true;
+    void loadForumDraft<TopicDraft>(draftKey).then((draft) => {
+      if (!active) return;
+      if (draft) {
+        if (draft.title) setTitle(draft.title.slice(0, 120));
+        if (draft.content) setContent(draft.content.slice(0, 50000));
+        if (draft.characterId && characters.some((character) => character.id === draft.characterId)) setCharacterId(draft.characterId);
+        if (draft.sceneType) setSceneType(draft.sceneType.slice(0, 32));
+        if (isRoleplay && draft.location) setLocation(draft.location.slice(0, 120));
+        if (draft.tags) setTags(draft.tags.slice(0, 180));
+        if (draft.title || draft.content || draft.location || draft.tags) setDraftStatus("restored");
+      }
+      setDraftReady(true);
+    });
+    return () => { active = false; };
+  }, [characters, draftKey, isRoleplay]);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    const timer = window.setTimeout(() => {
+      if (!title.trim() && !content.trim() && !location.trim() && !tags.trim() && !characterId) {
+        void deleteForumDraft(draftKey).then((ok) => { if (ok) setDraftStatus(null); });
+        return;
+      }
+      setDraftStatus("saving");
+      void saveForumDraft(draftKey, { title, content, characterId, sceneType, location, tags })
+        .then((ok) => setDraftStatus(ok ? "saved" : null));
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [characterId, content, draftKey, draftReady, location, sceneType, tags, title]);
 
   const openPreview = () => {
     setPreviewOpen(true);
@@ -66,6 +114,8 @@ export function ForumTopicEditor({
     });
   };
 
+  const draftLabel = draftStatus === "restored" ? "Brouillon restauré" : draftStatus === "saving" ? "Enregistrement…" : draftStatus === "saved" ? "Brouillon enregistré" : null;
+
   return (
     <div className="forum-topic-editor">
       <form className="forum-topic-editor__form" action={createForumTopic}>
@@ -79,7 +129,7 @@ export function ForumTopicEditor({
               <div><span>01</span><div><small>Destination</small><h2>{boardTitle}</h2></div></div>
               <span className="status-pill">Forum</span>
             </div>
-            <p>Choisissez votre identité, préparez la discussion puis prévisualisez le rendu exact avant publication.</p>
+            {draftLabel ? <small className="forum-editor-help">{draftLabel}</small> : null}
           </section>
 
           <section className="forum-editor-panel">
@@ -93,13 +143,6 @@ export function ForumTopicEditor({
                     <option key={character.id} value={character.id}>{character.name}</option>
                   )) : null}
                 </select>
-                <small>
-                  {isRoleplay
-                    ? characters.length > 0
-                      ? "Le compte reste l’auteur ; le personnage choisi devient l’identité RP affichée."
-                      : "Aucun personnage ne vous est encore rattaché : vous pouvez publier avec votre compte membre."
-                    : "Les zones hors-RP utilisent normalement l’identité du membre."}
-                </small>
               </label>
               <label>
                 <span>{isRoleplay ? "Type de scène" : "Type de sujet"}</span>
@@ -134,7 +177,6 @@ export function ForumTopicEditor({
               <label>
                 <span>Tags</span>
                 <input name="tags" value={tags} onChange={(event) => setTags(event.target.value)} placeholder="Séparés par des virgules" maxLength={180} />
-                <small>Jusqu’à 5 tags.</small>
               </label>
             </div>
           </section>
@@ -153,7 +195,6 @@ export function ForumTopicEditor({
               onMediaMapChange={setMediaMap}
               placeholder={isRoleplay ? "Décrivez l’ouverture de la scène…" : "Écrivez votre message…"}
             />
-            <small className="forum-editor-help">Le BBCode permet aussi d’envoyer des images privées qui seront rattachées au message lors de la publication.</small>
           </section>
 
           <div className="forum-topic-editor__actions">
@@ -173,7 +214,6 @@ export function ForumTopicEditor({
               <div>
                 <p className="eyebrow">Avant publication</p>
                 <h2 id="forum-topic-preview-title">Prévisualisation du sujet</h2>
-                <p>Voici le rendu du sujet et de son premier message tels qu’ils apparaîtront sur le forum.</p>
               </div>
               <span className="status-pill">Non publié</span>
             </header>
