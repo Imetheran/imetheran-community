@@ -38,6 +38,7 @@ import "./auth.css";
 import "./account-onboarding.css";
 import "./member-dashboard.css";
 import "./member-activity.css";
+import "./member-directory.css";
 import "./admin.css";
 import "./admin-members.css";
 import "./admin-chronicles.css";
