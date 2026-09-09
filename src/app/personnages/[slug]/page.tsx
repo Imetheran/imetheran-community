@@ -120,33 +120,34 @@ export default async function CharacterProfilePage({
     <main className="site-shell character-profile-page">
       <SiteHeader />
 
-      <section className="character-profile-hero" aria-labelledby="character-name">
+      <section className="character-profile-hero" aria-label={`Ambiance de la fiche de ${character.name}`}>
         <div className="character-profile-hero__image" aria-hidden="true" />
         <div className="character-profile-hero__veil" aria-hidden="true" />
-        <div className="content-frame character-profile-hero__content">
-          <div className="character-profile-hero__nav">
-            <Link className="character-profile-hero__back" href="/personnages">← Tous les personnages</Link>
-            <div className="character-live-header-actions">
-              {isOwner ? <Link className="button button--ghost button--small" href={`/personnages/${character.slug}/modifier`}>Modifier cette fiche</Link> : null}
-              {canModerate ? <Link className="button button--ghost button--small" href="/administration/personnages">Administration</Link> : null}
-            </div>
+      </section>
+
+      <section className="character-profile-intro content-frame" aria-labelledby="character-name">
+        <div className="character-profile-intro__toolbar">
+          <Link className="character-profile-intro__back" href="/personnages">← Tous les personnages</Link>
+          <div className="character-profile-intro__actions">
+            {isOwner ? <Link className="button button--ghost button--small" href={`/personnages/${character.slug}/modifier`}>Modifier cette fiche</Link> : null}
+            {canModerate ? <Link className="button button--ghost button--small" href="/administration/personnages">Administration</Link> : null}
           </div>
-          {savedMessage ? <div className="character-live-message" role="status">{savedMessage}</div> : null}
-          <div className="character-profile-hero__layout character-profile-hero__layout--identity">
-            <div className="character-profile-identity">
-              <div className="character-profile-identity__meta">
-                {(isOwner || canModerate || character.status !== "published") ? <span className="status-pill">{statusLabel(character.status)}</span> : null}
-                {(isOwner || canModerate || character.visibility !== "public") ? <span>{visibilityLabel(character.visibility)}</span> : null}
-                {character.is_featured ? <span>Mis en avant</span> : null}
-                {character.is_moderation_hidden ? <span>Masqué par l’équipe</span> : null}
-              </div>
-              <p className="eyebrow">Personnage rôleplay</p>
-              <h1 id="character-name">{character.name}</h1>
-              <p className="character-profile-identity__epithet">{character.epithet || "Personnage d’Imetheran"}</p>
-              {character.quote ? <blockquote>« {character.quote} »</blockquote> : null}
-              <div className="character-profile-identity__tags">{traits.map((trait) => <span key={trait}>{trait}</span>)}</div>
-            </div>
+        </div>
+
+        {savedMessage ? <div className="character-live-message" role="status">{savedMessage}</div> : null}
+
+        <div className="character-profile-identity character-profile-identity--content">
+          <div className="character-profile-identity__meta">
+            {(isOwner || canModerate || character.status !== "published") ? <span className="status-pill">{statusLabel(character.status)}</span> : null}
+            {(isOwner || canModerate || character.visibility !== "public") ? <span>{visibilityLabel(character.visibility)}</span> : null}
+            {character.is_featured ? <span>Mis en avant</span> : null}
+            {character.is_moderation_hidden ? <span>Masqué par l’équipe</span> : null}
           </div>
+          <p className="eyebrow">Personnage rôleplay</p>
+          <h1 id="character-name">{character.name}</h1>
+          <p className="character-profile-identity__epithet">{character.epithet || "Personnage d’Imetheran"}</p>
+          {character.quote ? <blockquote>« {character.quote} »</blockquote> : null}
+          <div className="character-profile-identity__tags">{traits.map((trait) => <span key={trait}>{trait}</span>)}</div>
         </div>
       </section>
 
