@@ -14,6 +14,16 @@ import {
 
 export const dynamic = "force-dynamic";
 
+function formatEventDate(value: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Paris",
+  }).format(new Date(value));
+}
+
 export default async function ChronicleDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
@@ -30,7 +40,7 @@ export default async function ChronicleDetailPage({ params }: { params: Promise<
   const { data: chronicle, error } = await chronicleQuery.maybeSingle();
   if (error || !chronicle) notFound();
 
-  const [chaptersResult, participantsResult] = await Promise.all([
+  const [chaptersResult, participantsResult, eventsResult] = await Promise.all([
     supabase
       .from("chronicle_chapters")
       .select("id, sort_order, act, title, summary, body, status, forum_topic_id")
@@ -43,9 +53,25 @@ export default async function ChronicleDetailPage({ params }: { params: Promise<
       .eq("chronicle_id", chronicle.id)
       .order("sort_order")
       .order("created_at"),
+    supabase
+      .from("community_events")
+      .select("id, slug, title, starts_at, status, event_type")
+      .eq("related_chronicle_id", chronicle.id)
+      .order("starts_at", { ascending: false })
+      .limit(8),
   ]);
   const chapters = chaptersResult.data ?? [];
   const participants = participantsResult.data ?? [];
+  const linkedEvents = eventsResult.data ?? [];
+  const now = Date.now();
+  const upcomingEvents = linkedEvents
+    .filter((event) => event.status === "scheduled" && new Date(event.starts_at).getTime() >= now)
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+    .slice(0, 4);
+  const recentEvents = linkedEvents
+    .filter((event) => !upcomingEvents.some((upcoming) => upcoming.id === event.id))
+    .slice(0, 2);
+  const displayedEvents = upcomingEvents.length ? upcomingEvents : recentEvents;
 
   const characterIds = participants.flatMap((participant) => participant.character_id ? [participant.character_id] : []);
   const { data: characters } = characterIds.length
@@ -111,6 +137,21 @@ export default async function ChronicleDetailPage({ params }: { params: Promise<
                 <div><dt>Organisation</dt><dd>{chronicle.organizer || "Équipe d’Imetheran"}</dd></div>
               </dl>
             </section>
+
+            {displayedEvents.length ? (
+              <section className="chronicle-info-card chronicle-linked-events">
+                <p className="chronicle-info-card__label">Événements</p>
+                <div className="chronicle-linked-events__list">
+                  {displayedEvents.map((event) => (
+                    <Link href={`/evenements/${event.slug}`} key={event.id}>
+                      <span>{event.event_type === "rp" ? "RP" : "HRP"} · {formatEventDate(event.starts_at)}</span>
+                      <strong>{event.title}</strong>
+                    </Link>
+                  ))}
+                </div>
+                <Link className="text-link" href="/evenements">Agenda →</Link>
+              </section>
+            ) : null}
 
             <section className="chronicle-info-card">
               <p className="chronicle-info-card__label">Personnages impliqués</p>
