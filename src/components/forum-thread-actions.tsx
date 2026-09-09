@@ -7,8 +7,25 @@ import { createClient } from "@/lib/supabase/client";
 
 type TopicStatus = "open" | "finished" | "archived" | string;
 type ModerationAction = "pin" | "unpin" | "lock" | "unlock" | "finish" | "archive" | "reopen";
+type LinkedEvent = {
+  slug: string;
+  title: string;
+  startsAt: string;
+  status: string;
+  chronicle: { slug: string; title: string } | null;
+};
 
 const trackedTopicViews = new Set<string>();
+
+function formatEventDate(value: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Paris",
+  }).format(new Date(value));
+}
 
 export function ForumThreadActions({
   topicId,
@@ -42,6 +59,7 @@ export function ForumThreadActions({
   const [currentLocked, setCurrentLocked] = useState(locked);
   const [currentPinned, setCurrentPinned] = useState(pinned);
   const [currentStatus, setCurrentStatus] = useState(status);
+  const [linkedEvent, setLinkedEvent] = useState<LinkedEvent | null>(null);
   const [notice, setNotice] = useState("");
   const [pending, startTransition] = useTransition();
   const followLoginHref = `/connexion?message=connexion-requise&retour=${encodeURIComponent(`/forum/${boardSlug}/sujet/${topicSlug}`)}`;
@@ -90,6 +108,46 @@ export function ForumThreadActions({
     };
   }, [router, topicId]);
 
+  useEffect(() => {
+    const supabase = createClient();
+    let active = true;
+
+    async function loadLinkedEvent() {
+      const { data: event } = await supabase
+        .from("community_events")
+        .select("slug, title, starts_at, status, related_chronicle_id")
+        .eq("related_topic_id", topicId)
+        .order("starts_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!active || !event) return;
+
+      let chronicle: LinkedEvent["chronicle"] = null;
+      if (event.related_chronicle_id) {
+        const { data } = await supabase
+          .from("chronicles")
+          .select("slug, title")
+          .eq("id", event.related_chronicle_id)
+          .maybeSingle();
+        if (data) chronicle = { slug: data.slug, title: data.title };
+      }
+
+      if (active) {
+        setLinkedEvent({
+          slug: event.slug,
+          title: event.title,
+          startsAt: event.starts_at,
+          status: event.status,
+          chronicle,
+        });
+      }
+    }
+
+    void loadLinkedEvent();
+    return () => { active = false; };
+  }, [topicId]);
+
   function toggleFollow() {
     if (!authenticated || pending) return;
     const next = !following;
@@ -127,6 +185,16 @@ export function ForumThreadActions({
 
   return (
     <div className="forum-thread-actions">
+      {linkedEvent ? (
+        <div className="forum-thread-context">
+          <a href={`/evenements/${linkedEvent.slug}`}>
+            <span>Événement · {linkedEvent.status === "cancelled" ? "Annulé" : linkedEvent.status === "finished" ? "Terminé" : formatEventDate(linkedEvent.startsAt)}</span>
+            <strong>{linkedEvent.title}</strong>
+          </a>
+          {linkedEvent.chronicle ? <a href={`/chroniques/${linkedEvent.chronicle.slug}`}>Chronique · {linkedEvent.chronicle.title}</a> : null}
+        </div>
+      ) : null}
+
       <div className="forum-thread-actions__primary">
         {authenticated ? (
           <button
@@ -173,7 +241,7 @@ export function ForumThreadActions({
         </details>
       ) : null}
 
-      <small>{notice || (authenticated ? "Suivez ce sujet pour retrouver plus facilement ses nouvelles réponses." : "Connectez-vous pour suivre ce sujet.")}</small>
+      {notice ? <small>{notice}</small> : null}
     </div>
   );
 }
