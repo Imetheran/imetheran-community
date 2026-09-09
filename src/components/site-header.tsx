@@ -4,14 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthNav } from "@/components/auth-nav";
 
-const links = [
+const primaryLinks = [
   ["Accueil", "/"],
   ["Forum", "/forum"],
   ["Événements", "/evenements"],
   ["Chroniques", "/chroniques"],
+  ["Personnages", "/personnages"],
+] as const;
+
+const moreLinks = [
   ["Gazettes", "/gazettes"],
   ["Guides", "/guides"],
-  ["Personnages", "/personnages"],
+  ["Membres", "/membres"],
   ["Liens", "/liens"],
 ] as const;
 
@@ -22,6 +26,7 @@ function isCurrentPath(pathname: string, href: string) {
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const moreIsCurrent = moreLinks.some(([, href]) => isCurrentPath(pathname, href));
 
   return (
     <>
@@ -37,16 +42,35 @@ export function SiteHeader() {
           </Link>
 
           <nav className="main-nav" aria-label="Navigation principale">
-            {links.map(([label, href]) => (
+            {primaryLinks.map(([label, href]) => (
               <Link
                 key={href}
                 href={href}
-                className="main-nav__link"
+                className={`main-nav__link${href === "/" ? " main-nav__home" : ""}`}
                 aria-current={isCurrentPath(pathname, href) ? "page" : undefined}
               >
                 {label}
               </Link>
             ))}
+
+            <details className={`main-nav__more${moreIsCurrent ? " is-current" : ""}`} key={pathname}>
+              <summary className="main-nav__more-trigger">
+                <span>Plus</span>
+                <span className="main-nav__more-chevron" aria-hidden="true">⌄</span>
+              </summary>
+              <div className="main-nav__dropdown">
+                {moreLinks.map(([label, href]) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="main-nav__dropdown-link"
+                    aria-current={isCurrentPath(pathname, href) ? "page" : undefined}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </details>
           </nav>
 
           <div className="topbar__member">
