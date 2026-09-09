@@ -4,19 +4,28 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthNav } from "@/components/auth-nav";
 
-const primaryLinks = [
-  ["Accueil", "/"],
-  ["Forum", "/forum"],
-  ["Événements", "/evenements"],
-  ["Chroniques", "/chroniques"],
-  ["Personnages", "/personnages"],
-] as const;
-
-const moreLinks = [
-  ["Gazettes", "/gazettes"],
-  ["Guides", "/guides"],
-  ["Membres", "/membres"],
-  ["Liens", "/liens"],
+const navGroups = [
+  {
+    label: "Chroniques",
+    links: [
+      ["Toutes les chroniques", "/chroniques"],
+      ["Gazettes", "/gazettes"],
+    ],
+  },
+  {
+    label: "Personnages",
+    links: [
+      ["Annuaire des personnages", "/personnages"],
+      ["Liens", "/liens"],
+    ],
+  },
+  {
+    label: "Communauté",
+    links: [
+      ["Membres", "/membres"],
+      ["Guides", "/guides"],
+    ],
+  },
 ] as const;
 
 function isCurrentPath(pathname: string, href: string) {
@@ -24,9 +33,41 @@ function isCurrentPath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function NavGroup({
+  pathname,
+  label,
+  links,
+}: {
+  pathname: string;
+  label: string;
+  links: readonly (readonly [string, string])[];
+}) {
+  const isCurrent = links.some(([, href]) => isCurrentPath(pathname, href));
+
+  return (
+    <details className={`main-nav__group${isCurrent ? " is-current" : ""}`} key={`${label}-${pathname}`}>
+      <summary className="main-nav__group-trigger">
+        <span>{label}</span>
+        <span className="main-nav__group-chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div className="main-nav__dropdown">
+        {links.map(([itemLabel, href]) => (
+          <Link
+            key={href}
+            href={href}
+            className="main-nav__dropdown-link"
+            aria-current={isCurrentPath(pathname, href) ? "page" : undefined}
+          >
+            {itemLabel}
+          </Link>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
-  const moreIsCurrent = moreLinks.some(([, href]) => isCurrentPath(pathname, href));
 
   return (
     <>
@@ -42,35 +83,34 @@ export function SiteHeader() {
           </Link>
 
           <nav className="main-nav" aria-label="Navigation principale">
-            {primaryLinks.map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                className={`main-nav__link${href === "/" ? " main-nav__home" : ""}`}
-                aria-current={isCurrentPath(pathname, href) ? "page" : undefined}
-              >
-                {label}
-              </Link>
-            ))}
+            <Link
+              href="/"
+              className="main-nav__link main-nav__home"
+              aria-current={pathname === "/" ? "page" : undefined}
+            >
+              Accueil
+            </Link>
 
-            <details className={`main-nav__more${moreIsCurrent ? " is-current" : ""}`} key={pathname}>
-              <summary className="main-nav__more-trigger">
-                <span>Plus</span>
-                <span className="main-nav__more-chevron" aria-hidden="true">⌄</span>
-              </summary>
-              <div className="main-nav__dropdown">
-                {moreLinks.map(([label, href]) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="main-nav__dropdown-link"
-                    aria-current={isCurrentPath(pathname, href) ? "page" : undefined}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </details>
+            <Link
+              href="/forum"
+              className="main-nav__link"
+              aria-current={isCurrentPath(pathname, "/forum") ? "page" : undefined}
+            >
+              Forum
+            </Link>
+
+            <NavGroup pathname={pathname} {...navGroups[0]} />
+            <NavGroup pathname={pathname} {...navGroups[1]} />
+
+            <Link
+              href="/evenements"
+              className="main-nav__link"
+              aria-current={isCurrentPath(pathname, "/evenements") ? "page" : undefined}
+            >
+              Événements
+            </Link>
+
+            <NavGroup pathname={pathname} {...navGroups[2]} />
           </nav>
 
           <div className="topbar__member">
