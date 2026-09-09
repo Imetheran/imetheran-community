@@ -7,6 +7,7 @@ import { AuthNav } from "@/components/auth-nav";
 const links = [
   ["Accueil", "/"],
   ["Forum", "/forum"],
+  ["Événements", "/evenements"],
   ["Chroniques", "/chroniques"],
   ["Gazettes", "/gazettes"],
   ["Guides", "/guides"],
