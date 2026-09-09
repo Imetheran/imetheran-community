@@ -121,6 +121,30 @@ function textContent(nodes: BbcodeNode[]): string {
   return nodes.map((node) => node.type === "text" ? node.value : textContent(node.children)).join("");
 }
 
+function renderTextWithMentions(value: string, path: string): ReactNode[] {
+  const result: ReactNode[] = [];
+  const pattern = /(^|[^a-z0-9_-])@([a-z0-9_-]{3,32})/gi;
+  let cursor = 0;
+  let index = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(value))) {
+    const prefixLength = match[1].length;
+    const mentionStart = match.index + prefixLength;
+    if (mentionStart > cursor) result.push(value.slice(cursor, mentionStart));
+    const username = match[2];
+    result.push(
+      <a className="bbcode-mention" href={`/membres/${encodeURIComponent(username)}`} key={`${path}-mention-${index++}`}>
+        @{username}
+      </a>,
+    );
+    cursor = mentionStart + username.length + 1;
+  }
+
+  if (cursor < value.length) result.push(value.slice(cursor));
+  return result;
+}
+
 function safeHref(value: string | null) {
   if (!value) return null;
   const href = value.trim();
@@ -150,7 +174,7 @@ function safeSize(value: string | null) {
 function renderNodes(nodes: BbcodeNode[], mediaMap: ForumMediaRenderMap, path = "bb"): ReactNode[] {
   return nodes.map((node, index) => {
     const key = `${path}-${index}`;
-    if (node.type === "text") return <span key={key}>{node.value}</span>;
+    if (node.type === "text") return <span key={key}>{renderTextWithMentions(node.value, key)}</span>;
 
     const children = renderNodes(node.children, mediaMap, key);
     switch (node.name) {
