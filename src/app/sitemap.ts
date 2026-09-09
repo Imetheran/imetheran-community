@@ -6,6 +6,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     { path: "", priority: 1, changeFrequency: "daily" as const },
     { path: "/forum", priority: 0.9, changeFrequency: "daily" as const },
+    { path: "/evenements", priority: 0.85, changeFrequency: "daily" as const },
     { path: "/chroniques", priority: 0.8, changeFrequency: "weekly" as const },
     { path: "/gazettes", priority: 0.8, changeFrequency: "weekly" as const },
     { path: "/guides", priority: 0.8, changeFrequency: "weekly" as const },
@@ -13,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/guides/charte", priority: 0.75, changeFrequency: "monthly" as const },
     { path: "/guides/roleplay", priority: 0.75, changeFrequency: "monthly" as const },
     { path: "/personnages", priority: 0.7, changeFrequency: "daily" as const },
+    { path: "/membres", priority: 0.65, changeFrequency: "daily" as const },
     { path: "/liens", priority: 0.6, changeFrequency: "weekly" as const },
     { path: "/mentions-legales", priority: 0.35, changeFrequency: "monthly" as const },
     { path: "/confidentialite", priority: 0.35, changeFrequency: "monthly" as const },
