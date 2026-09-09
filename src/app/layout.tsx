@@ -65,6 +65,7 @@ import "./compact-layout.css";
 import "./admin-shell-polish.css";
 import "./admin-interface-clean.css";
 import "./site-interface-simplify.css";
+import "./navigation-compact.css";
 
 export const metadata: Metadata = {
   title: {
