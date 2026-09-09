@@ -67,7 +67,7 @@ export default async function EventsPage() {
   const recent = (recentResult.data ?? []) as EventRow[];
   const events = [...upcoming, ...recent];
   const eventIds = events.map((event) => event.id);
-  const creatorIds = Array.from(new Set(events.map((event) => event.creator_id));
+  const creatorIds = Array.from(new Set(events.map((event) => event.creator_id)));
   const chronicleIds = Array.from(new Set(events.map((event) => event.related_chronicle_id).filter((id): id is string => Boolean(id))));
 
   const [rsvpResult, profileResult, chronicleResult] = await Promise.all([
