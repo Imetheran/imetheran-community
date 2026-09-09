@@ -132,11 +132,7 @@ export default async function CharacterProfilePage({
             </div>
           </div>
           {savedMessage ? <div className="character-live-message" role="status">{savedMessage}</div> : null}
-          <div className="character-profile-hero__layout">
-            <div className="character-profile-portrait" aria-hidden="true">
-              {portraitUrl ? <img className="character-live-portrait" src={portraitUrl} alt="" /> : <span>{initials(character.name)}</span>}
-              <small>{portraitUrl ? "Portrait membre" : "Portrait non renseigné"}</small>
-            </div>
+          <div className="character-profile-hero__layout character-profile-hero__layout--identity">
             <div className="character-profile-identity">
               <div className="character-profile-identity__meta">
                 {(isOwner || canModerate || character.status !== "published") ? <span className="status-pill">{statusLabel(character.status)}</span> : null}
@@ -165,6 +161,11 @@ export default async function CharacterProfilePage({
 
       <section className="character-profile content-frame" aria-label={`Fiche de ${character.name}`}>
         <aside className="character-profile__sidebar">
+          <div className="character-profile-portrait character-profile-portrait--sidebar">
+            {portraitUrl ? <img className="character-live-portrait" src={portraitUrl} alt={`Portrait de ${character.name}`} /> : <span>{initials(character.name)}</span>}
+            <small>Portrait</small>
+          </div>
+
           <section className="character-info-card">
             <p className="character-info-card__label">Repères</p>
             <dl>
