@@ -1,0 +1,96 @@
+.bbcode-mention {
+  padding: .02em .22em;
+  border-radius: .28em;
+  background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.bbcode-mention:hover {
+  background: color-mix(in srgb, var(--accent-soft) 68%, transparent);
+  text-decoration: underline;
+  text-underline-offset: .16em;
+}
+
+.chronicle-linked-events__list {
+  display: grid;
+  gap: .45rem;
+  margin-bottom: .65rem;
+}
+
+.chronicle-linked-events__list > a {
+  display: grid;
+  gap: .12rem;
+  padding: .55rem .6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.chronicle-linked-events__list > a:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--accent-soft) 25%, transparent);
+}
+
+.chronicle-linked-events__list span {
+  color: var(--accent);
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.chronicle-linked-events__list strong {
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.forum-thread-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+}
+
+.forum-thread-context > a {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-height: 32px;
+  padding: .34rem .55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: .7rem;
+  text-decoration: none;
+}
+
+.forum-thread-context > a:first-child {
+  display: grid;
+  gap: .05rem;
+}
+
+.forum-thread-context > a:first-child span {
+  color: var(--accent);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.forum-thread-context > a:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--accent-soft) 25%, transparent);
+}
+
+@media (max-width: 680px) {
+  .forum-thread-context {
+    width: 100%;
+  }
+
+  .forum-thread-context > a:first-child {
+    flex: 1 1 100%;
+  }
+}
