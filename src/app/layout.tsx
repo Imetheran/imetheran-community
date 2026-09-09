@@ -37,6 +37,7 @@ import "./maintenance-theme-ornament.css";
 import "./auth.css";
 import "./account-onboarding.css";
 import "./member-dashboard.css";
+import "./member-activity.css";
 import "./admin.css";
 import "./admin-members.css";
 import "./admin-chronicles.css";
