@@ -41,25 +41,14 @@
   align-items: center;
 }
 
-/* Forum index: names, access and activity are enough to navigate. */
+/* Forum index: keep descriptions that tell members what belongs in each space. */
 .forum-index__header > div:first-child > p:not(.eyebrow),
-.forum-section__subtitle,
-.forum-board__main > p,
 .forum-index__footer strong {
   display: none !important;
 }
 
 .forum-index__header h2 {
   margin-bottom: 0 !important;
-}
-
-.forum-section__header {
-  min-height: 88px !important;
-  grid-template-columns: minmax(260px, 1fr) auto !important;
-}
-
-.forum-board {
-  min-height: 82px !important;
 }
 
 .forum-index__footer > div {
@@ -164,17 +153,7 @@
   padding-block: 1rem !important;
 }
 
-@media (max-width: 1080px) {
-  .forum-section__header {
-    grid-template-columns: minmax(220px, 1fr) auto !important;
-  }
-}
-
 @media (max-width: 780px) {
-  .forum-section__header {
-    grid-template-columns: 1fr !important;
-  }
-
   .account-onboarding__steps article {
     min-height: 100px !important;
   }
