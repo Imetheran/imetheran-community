@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { CharacterDangerZone } from "@/components/character-danger-zone";
 import { CharacterEditor, type EditableCharacter } from "@/components/character-editor";
 import { SiteHeader } from "@/components/site-header";
 import { signedCharacterPortraitUrl } from "@/lib/character-portraits";
@@ -8,9 +9,15 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 function errorMessage(code?: string) {
-  if (code === "portrait") return "Le portrait n’a pas pu être enregistré. Utilisez un JPG, PNG ou WebP de 4 Mo maximum.";
+  if (code === "portrait") return "Le portrait n’a pas pu être enregistré ou supprimé.";
+  if (code === "suppression") return "Le personnage n’a pas pu être supprimé.";
   if (code === "enregistrement") return "Les modifications n’ont pas pu être enregistrées.";
   if (code === "champs") return "Vérifiez les champs de la fiche avant de l’enregistrer.";
+  return null;
+}
+
+function successMessage(code?: string) {
+  if (code === "portrait-supprime") return "Le portrait a été supprimé.";
   return null;
 }
 
@@ -19,7 +26,7 @@ export default async function EditCharacterPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ erreur?: string }>;
+  searchParams: Promise<{ erreur?: string; message?: string }>;
 }) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
@@ -75,11 +82,19 @@ export default async function EditCharacterPage({
     moderation_note: character.moderation_note ?? "",
   };
 
+  const notice = errorMessage(query.erreur) ?? successMessage(query.message);
+
   return (
     <main className="site-shell character-editor-page">
       <SiteHeader />
       <section className="content-frame character-editor-page__content">
-        <CharacterEditor mode="edit" initialCharacter={initialCharacter} notice={errorMessage(query.erreur)} />
+        <CharacterEditor mode="edit" initialCharacter={initialCharacter} notice={notice} />
+        <CharacterDangerZone
+          characterId={character.id}
+          characterSlug={character.slug}
+          characterName={character.name}
+          hasPortrait={Boolean(character.portrait_path)}
+        />
       </section>
     </main>
   );
