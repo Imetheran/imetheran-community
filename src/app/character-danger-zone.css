@@ -1,0 +1,114 @@
+/* Character editor: explicit portrait removal and irreversible character deletion. */
+.character-editor-remove-portrait {
+  margin-top: .7rem;
+  padding: .7rem .8rem;
+  display: flex !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: .6rem;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  cursor: pointer;
+}
+
+.character-editor-remove-portrait input {
+  width: auto !important;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.character-editor-remove-portrait span {
+  font-size: .7rem !important;
+  letter-spacing: .04em !important;
+  text-transform: none !important;
+}
+
+.character-editor-danger-zone {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  display: grid;
+  gap: .85rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.character-editor-danger-zone > div:first-child {
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.character-editor-danger-zone h2 {
+  margin: .15rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  font-weight: 500;
+}
+
+.character-editor-danger-row {
+  min-height: 72px;
+  padding: .8rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.character-editor-danger-row + .character-editor-danger-row {
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.character-editor-danger-row > div {
+  min-width: 0;
+}
+
+.character-editor-danger-row strong,
+.character-editor-danger-row span {
+  display: block;
+}
+
+.character-editor-danger-row strong {
+  font-family: var(--font-ui);
+  font-size: .76rem;
+  letter-spacing: .04em;
+}
+
+.character-editor-danger-row span {
+  max-width: 72ch;
+  margin-top: .25rem;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.5;
+}
+
+.character-editor-danger-row form {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.character-editor-danger-row--delete {
+  border-color: color-mix(in srgb, #b84b4b 40%, var(--border));
+}
+
+.button--danger {
+  border: 1px solid color-mix(in srgb, #b84b4b 72%, var(--border));
+  background: color-mix(in srgb, #7b2626 38%, var(--surface));
+  color: var(--text);
+}
+
+.button--danger:hover,
+.button--danger:focus-visible {
+  border-color: #d46666;
+  background: color-mix(in srgb, #8f2f2f 52%, var(--surface));
+}
+
+@media (max-width: 720px) {
+  .character-editor-danger-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .character-editor-danger-row form,
+  .character-editor-danger-row .button {
+    width: 100%;
+  }
+}
