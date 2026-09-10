@@ -67,6 +67,7 @@ import "./admin-interface-clean.css";
 import "./site-interface-simplify.css";
 import "./navigation-compact.css";
 import "./character-profile-polish.css";
+import "./character-danger-zone.css";
 
 export const metadata: Metadata = {
   title: {
